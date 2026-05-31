@@ -12,7 +12,7 @@
 <meta http-equiv="X-DNS-Prefetch-Control" content="on" />
 
 <!-- ━━━ PRIMARY TITLE / DESCRIPTION (EN-default) ━━━ -->
-<title>AnchorVault V45 — EIP-712 Vault Protocol · Phishing-Resistant Web3 Crypto Vault · Dual-Key Authorization · Multi-Asset ERC-20 · Ethereum Sepolia</title>
+<title>AnchorVaultCoin V45 — Защищённое крипто-хранилище · Secure Web3 Vault EIP-712 · 加密保险库</title>
 <meta name="title" content="AnchorVault V45 — EIP-712 Vault Protocol · Phishing-Resistant Web3 Crypto Vault" />
 <meta name="description" content="AnchorVault V45 — non-custodial Web3 vault with two-factor EIP-712 authorization. Vault operations are signed by dedicated keys (mainAuthKey / recoveryAuthKey), not your wallet private key — wallet theft cannot drain the vault. Multi-asset ERC-20, three protection levels with up to 168h timelocks, panic withdrawal, UUPS upgradeable. Audit passed, Sepolia testnet, mainnet next." />
 <meta name="abstract" content="EIP-712 dual-key non-custodial Web3 vault protocol with phishing-resistant authorization, multi-asset ERC-20 support, three protection tiers and panic recovery." />
@@ -134,7 +134,7 @@
 <!-- ━━━ OPEN GRAPH (Facebook · Telegram · Discord · WhatsApp · Slack · LinkedIn · VK · Mastodon · Bluesky · Threads) ━━━ -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="AnchorVault V45" />
-<meta property="og:title" content="AnchorVault V45 — EIP-712 Vault Protocol · Phishing-Resistant Web3 Vault" />
+<meta property="og:title" content="AnchorVaultCoin V45 — Защищённое крипто-хранилище · Secure Web3 Vault" />
 <meta property="og:description" content="Non-custodial Web3 vault with dual-key EIP-712 authorization. Operations signed by vault keys, not wallet keys — wallet theft cannot drain the vault. Multi-asset, three protection levels, panic recovery. Audit passed · Sepolia testnet · Open source." />
 <meta property="og:url" content="https://anchorvault.io/pulse.html" />
 <meta property="og:image" content="https://anchorvault.io/og.png" />
@@ -421,48 +421,76 @@
 ]
 </script>
 
+
 <style>
   :root{
     --bg:#0a0a0b;--bg-2:#111114;--card:#16161a;--card-2:#1d1d22;
     --navy:#102038;--navy-2:#1a3158;
     --gold:#D4AF37;--gold-bright:#f1d984;--gold-dim:#7a6628;
-    --text:#ece9df;--muted:#857d6c;--border:#28251f;--border-gold:rgba(212,175,55,.38);
-    --ok:#52c485;--warn:#e4a942;--err:#d65555;
-    --maxw:1280px;
+    --text:#ece9df;--text-dim:#a8a297;--muted:#857d6c;
+    --border:#28251f;--border-gold:rgba(212,175,55,.38);
+    --ok:#52c485;--warn:#e4a942;--err:#d65555;--info:#5ab4e0;
+    --maxw:1320px;
     --serif:Georgia,'Times New Roman',"Songti SC","SimSun",serif;
-    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue","PingFang SC","Microsoft YaHei",Arial,sans-serif;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue","PingFang SC","Microsoft YaHei",Arial,sans-serif;
     --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --header-h:64px;
+    --infobar-h:54px;
+    --console-h:160px;
+    --console-h-mini:34px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
-  body::before{content:"";position:fixed;inset:0;z-index:-3;background:
-    radial-gradient(900px 600px at 50% -8%,rgba(212,175,55,.08),transparent 60%),
-    radial-gradient(700px 500px at 92% 100%,rgba(16,32,56,.55),transparent 65%),
-    radial-gradient(700px 500px at 5% 80%,rgba(212,175,55,.04),transparent 60%);}
-  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.03;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;padding-bottom:var(--console-h)}
+  body.console-mini{padding-bottom:var(--console-h-mini)}
+  body::before{content:"";position:fixed;inset:0;z-index:-3;pointer-events:none;background:
+    radial-gradient(900px 600px at 50% -8%,rgba(212,175,55,.07),transparent 60%),
+    radial-gradient(700px 500px at 92% 100%,rgba(16,32,56,.5),transparent 65%),
+    radial-gradient(700px 500px at 5% 80%,rgba(212,175,55,.03),transparent 60%);}
   a{color:inherit;text-decoration:none}
   img{display:block}
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
   .mono{font-family:var(--mono);letter-spacing:-.01em}
 
-  /* HEADER */
-  header{position:sticky;top:0;z-index:60;background:rgba(10,10,11,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
-  .nav{display:flex;justify-content:space-between;align-items:center;height:64px;gap:16px}
-  .brand{display:flex;align-items:center;gap:12px;flex-shrink:0}
-  .brand img{width:34px;height:34px;border-radius:50%;box-shadow:0 0 0 1px rgba(212,175,55,.35), 0 0 22px rgba(212,175,55,.15)}
-  .brand-name{font-family:var(--serif);font-size:18px;letter-spacing:.5px;color:var(--gold-bright);white-space:nowrap}
-  .brand-name b{color:var(--gold);font-weight:400;font-size:13px;letter-spacing:1px;margin-left:4px;padding:1px 6px;border:1px solid var(--border-gold);border-radius:4px}
-  .pill{font-size:11px;color:var(--muted);border:1px solid var(--border);padding:3px 8px;border-radius:99px;letter-spacing:.3px}
-  .pill.ok{color:var(--ok);border-color:rgba(82,196,133,.4)}
-  .pill.err{color:var(--err);border-color:rgba(214,85,85,.45)}
-  .pill.warn{color:var(--warn);border-color:rgba(228,169,66,.45)}
+  /* HEADER row 1 */
+  header.top{position:sticky;top:0;z-index:60;background:rgba(15,15,15,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+  .nav{display:flex;justify-content:space-between;align-items:center;height:var(--header-h);gap:16px}
+  .brand{display:flex;align-items:center;gap:12px;flex-shrink:0;cursor:pointer;transition:.15s}
+  .brand:hover{opacity:.85}
+  .brand-logo{position:relative;width:40px;height:40px}
+  .brand-logo img{width:40px;height:40px;border-radius:50%;box-shadow:0 0 0 1px rgba(212,175,55,.35), 0 0 22px rgba(212,175,55,.15)}
+  .brand-logo .v-stamp{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8.5px;font-weight:700;color:var(--gold);letter-spacing:.8px;background:#0a0a0b;padding:1px 4px;border-radius:3px;border:1px solid var(--border-gold);line-height:1;white-space:nowrap}
+  .brand-name{font-family:var(--sans);font-size:1.1rem;font-weight:700;color:#e8e8e8;letter-spacing:.3px;white-space:nowrap}
+  .brand-name small{color:var(--gold);font-weight:600;font-size:.7em;margin-left:5px;letter-spacing:.5px}
   .nav-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
   .lang{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
-  .lang button{background:none;border:0;color:var(--muted);font-size:11px;padding:6px 10px;cursor:pointer;letter-spacing:.5px;font-weight:600;transition:.15s}
+  .lang button{background:none;border:0;color:var(--muted);font-size:11px;padding:6px 10px;cursor:pointer;letter-spacing:.5px;font-weight:600;transition:.15s;font-family:var(--sans)}
   .lang button.active{background:var(--gold);color:#1a1a1a}
   .lang button:not(.active):hover{color:var(--text)}
+
+  /* INFO BAR row 2 */
+  .infobar{position:sticky;top:var(--header-h);z-index:55;background:rgba(15,15,15,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+  .infobar-inner{display:flex;align-items:center;height:var(--infobar-h);gap:14px;overflow-x:auto;scrollbar-width:none}
+  .infobar-inner::-webkit-scrollbar{display:none}
+  .info-cell{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;flex-shrink:0;font-size:12px;white-space:nowrap;transition:.15s}
+  .info-cell:hover{border-color:rgba(212,175,55,.25)}
+  .info-cell .ic-k{color:var(--muted);font-size:10.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+  .info-cell .ic-v{color:var(--text);font-family:var(--mono);font-size:12.5px;font-weight:600}
+  .info-cell .ic-v.gold{color:var(--gold-bright)}
+  .info-cell.bal .ic-v{color:var(--gold-bright)}
+  .info-cell .ic-icon{font-size:13px}
+  .info-cell.ok{border-color:rgba(82,196,133,.35)}
+  .info-cell.ok .ic-v{color:var(--ok)}
+  .info-cell.err{border-color:rgba(214,85,85,.45)}
+  .info-cell.err .ic-v{color:var(--err)}
+  .info-cell.warn{border-color:rgba(228,169,66,.45)}
+  .info-cell.warn .ic-v{color:var(--warn)}
+  .role-creator{background:rgba(212,175,55,.12);border-color:var(--border-gold)}
+  .role-creator .ic-v{color:var(--gold-bright)}
+  .role-guardian{background:rgba(82,196,133,.1);border-color:rgba(82,196,133,.35)}
+  .role-guardian .ic-v{color:var(--ok)}
+
+  /* BUTTONS */
   .btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#1a1a1a;border:0;font-weight:600;padding:9px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-family:var(--sans);transition:.18s;box-shadow:0 4px 14px rgba(212,175,55,.18);letter-spacing:.2px}
   .btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,175,55,.32)}
   .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
@@ -470,18 +498,19 @@
   .btn.ghost:hover{background:rgba(212,175,55,.08)}
   .btn.danger{background:linear-gradient(180deg,#e88080,#d65555);color:#1a1a1a;box-shadow:0 4px 14px rgba(214,85,85,.25)}
   .btn.warn{background:linear-gradient(180deg,#f0c068,var(--warn));color:#1a1a1a}
+  .btn.ok{background:linear-gradient(180deg,#7adba0,var(--ok));color:#0a0a0a}
   .btn.sm{padding:6px 12px;font-size:12px}
   .btn.xs{padding:4px 10px;font-size:11px;font-weight:500}
 
   /* MAIN */
-  main{padding:28px 0 80px}
+  main{padding:22px 0 30px}
   h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--text);letter-spacing:.3px}
-  h1{font-size:30px;line-height:1.15;margin-bottom:6px}
-  h1 .gold{color:var(--gold-bright)}
-  .lead{color:var(--muted);font-size:14px;max-width:780px;margin-bottom:24px}
+  h2{font-size:22px;margin-bottom:8px}
+  h2 .gold{color:var(--gold-bright)}
+  .lead{color:var(--text-dim);font-size:13px;max-width:780px;margin-bottom:18px}
 
   /* TABS */
-  .tabs{display:flex;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
+  .tabs{display:flex;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
   .tab{flex:1;background:none;border:0;color:var(--muted);padding:9px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--sans);transition:.15s;letter-spacing:.3px;white-space:nowrap;min-width:fit-content}
   .tab.active{background:var(--bg-2);color:var(--gold-bright);box-shadow:inset 0 0 0 1px var(--border-gold)}
@@ -489,56 +518,84 @@
   .tab[data-role-gated]:not(.allowed){opacity:.35;cursor:not-allowed}
   .tab[data-role-gated]:not(.allowed):hover{color:var(--muted)}
 
-  .grid{display:grid;gap:16px}
+  .grid{display:grid;gap:14px}
   .grid-2{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
   .grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-  .grid-4{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
 
-  .card{background:linear-gradient(180deg,var(--card),var(--card-2));border:1px solid var(--border);border-radius:14px;padding:20px;transition:.2s}
+  .card{background:linear-gradient(180deg,var(--card),var(--card-2));border:1px solid var(--border);border-radius:14px;padding:18px;transition:.2s}
   .card:hover{border-color:rgba(212,175,55,.18)}
-  .card.gold-border{border-color:var(--border-gold);box-shadow:0 0 0 1px rgba(212,175,55,.06), 0 16px 36px -20px rgba(212,175,55,.18)}
-  .card h3{font-size:18px;color:var(--gold-bright);margin-bottom:14px;display:flex;align-items:center;gap:10px}
-  .card h3 .num{font-family:var(--mono);font-size:11px;color:var(--gold-dim);font-weight:500;letter-spacing:1.5px}
-  .eyebrow{font-size:11px;color:var(--gold-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:600}
-  .muted{color:var(--muted);font-size:12px}
-  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px dashed var(--border)}
+  .card.gold-border{border-color:var(--border-gold)}
+  .card h3{font-size:16px;color:var(--gold-bright);margin-bottom:12px;display:flex;align-items:center;gap:10px;font-family:var(--serif)}
+  .card h3 .num{font-family:var(--mono);font-size:10px;color:var(--gold-dim);font-weight:500;letter-spacing:1.5px}
+  .card .desc{color:var(--text-dim);font-size:12.5px;margin-bottom:12px;line-height:1.5}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px dashed var(--border)}
   .row:last-child{border-bottom:0}
   .row .k{color:var(--muted);font-size:12px;flex-shrink:0}
   .row .v{font-family:var(--mono);font-size:12px;color:var(--text);word-break:break-all;text-align:right}
 
   /* FORMS */
-  .field{display:block;margin-bottom:14px}
-  .field label{display:block;font-size:11px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
+  .field{display:block;margin-bottom:12px}
+  .field label{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;font-weight:600}
   .field label .req{color:var(--gold)}
   .field input,.field select,.field textarea{
     width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);
-    border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:13px;outline:0;transition:.15s;
+    border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px;outline:0;transition:.15s;
   }
   .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.12)}
-  .field textarea{min-height:80px;resize:vertical;line-height:1.5}
-  .field .hint{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
-  .field .hint.warn{color:var(--warn)}
-  .field-row{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+  .field input::placeholder{color:#4d4a45;font-style:italic}
+  .field textarea{min-height:70px;resize:vertical;line-height:1.5}
+  .field .hint{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
+  .field-row{display:grid;gap:10px;grid-template-columns:1fr 1fr}
   @media(max-width:680px){.field-row{grid-template-columns:1fr}}
 
-  /* CONSOLE */
-  .console{background:#050507;border:1px solid var(--border);border-radius:10px;padding:14px;font-family:var(--mono);font-size:12px;color:var(--muted);max-height:280px;overflow-y:auto;line-height:1.7}
-  .console .log-i{color:var(--text)}
-  .console .log-ok{color:var(--ok)}
-  .console .log-err{color:var(--err)}
-  .console .log-warn{color:var(--warn)}
-  .console .log-time{color:var(--gold-dim);margin-right:8px}
-  .console .log-tx a{color:var(--gold);text-decoration:underline}
+  /* TOOLTIP */
+  .tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1px solid var(--border-gold);color:var(--gold-dim);font-size:9px;font-weight:700;font-family:var(--sans);cursor:help;background:transparent;text-transform:none;letter-spacing:0;flex-shrink:0}
+  .tip:hover{color:var(--gold);background:rgba(212,175,55,.08)}
+  .tip[data-tip]:hover::after{
+    content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 8px);
+    background:#050507;color:var(--text);border:1px solid var(--border-gold);border-radius:8px;
+    padding:8px 12px;font-size:11.5px;font-weight:400;line-height:1.5;letter-spacing:.2px;
+    text-transform:none;width:max-content;max-width:280px;text-align:left;z-index:200;pointer-events:none;
+    box-shadow:0 12px 32px rgba(0,0,0,.6); white-space:normal;
+  }
+  .tip[data-tip]:hover::before{
+    content:'';position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 2px);
+    border:5px solid transparent;border-top-color:var(--border-gold);pointer-events:none;z-index:201;
+  }
+
+  /* FLOATING CONSOLE */
+  .floatcon{position:fixed;left:0;right:0;bottom:0;z-index:80;background:rgba(8,8,9,.97);backdrop-filter:blur(8px);border-top:1px solid var(--border-gold);transition:height .25s ease;height:var(--console-h);font-family:var(--mono);font-size:11.5px;color:var(--text-dim)}
+  body.console-mini .floatcon{height:var(--console-h-mini)}
+  .floatcon-head{height:34px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--border);justify-content:space-between;cursor:pointer;user-select:none}
+  .floatcon-head .fl-title{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--gold-dim);display:flex;align-items:center;gap:8px}
+  .floatcon-head .fl-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .floatcon-head .fl-actions{display:flex;gap:8px;align-items:center}
+  .floatcon-head .fl-last{font-family:var(--mono);font-size:11px;color:var(--muted);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none}
+  body.console-mini .floatcon-head .fl-last{display:inline}
+  .floatcon-head button{background:transparent;border:0;color:var(--muted);font-size:14px;cursor:pointer;padding:4px 8px;border-radius:4px;transition:.15s;line-height:1}
+  .floatcon-head button:hover{color:var(--gold);background:rgba(212,175,55,.08)}
+  .floatcon-body{padding:8px 16px;height:calc(var(--console-h) - 34px);overflow-y:auto;line-height:1.7}
+  body.console-mini .floatcon-body{display:none}
+  .floatcon-body::-webkit-scrollbar{width:6px}
+  .floatcon-body::-webkit-scrollbar-track{background:transparent}
+  .floatcon-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  .log-time{color:var(--gold-dim);margin-right:8px;font-size:10.5px}
+  .log-ok{color:var(--ok)}
+  .log-err{color:var(--err)}
+  .log-warn{color:var(--warn)}
+  .log-i{color:var(--info)}
+  .log-tx a{color:var(--gold);text-decoration:underline}
 
   /* MODAL */
-  .overlay{position:fixed;inset:0;background:rgba(5,5,7,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:90;display:none;align-items:center;justify-content:center;padding:20px}
+  .overlay{position:fixed;inset:0;background:rgba(5,5,7,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:120;display:none;align-items:center;justify-content:center;padding:20px}
   .overlay.open{display:flex}
-  .modal{background:var(--card);border:1px solid var(--border-gold);border-radius:14px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)}
-  .modal h3{font-family:var(--serif);color:var(--gold-bright);font-size:20px;margin-bottom:14px;font-weight:400}
-  .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+  .modal{background:var(--card);border:1px solid var(--border-gold);border-radius:14px;padding:22px;max-width:540px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .modal h3{font-family:var(--serif);color:var(--gold-bright);font-size:18px;margin-bottom:12px;font-weight:400}
+  .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
 
   /* WALLET PICKER */
-  .wallet-list{display:grid;gap:8px;margin-bottom:12px}
+  .wallet-list{display:grid;gap:8px;margin-bottom:10px}
   .wallet-item{display:flex;align-items:center;gap:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 14px;cursor:pointer;transition:.15s;width:100%;color:var(--text);font-family:var(--sans);font-size:14px;text-align:left}
   .wallet-item:hover{border-color:var(--border-gold);background:var(--card-2)}
   .wallet-item img{width:28px;height:28px;border-radius:6px;flex-shrink:0}
@@ -546,70 +603,63 @@
   .wallet-item .name{flex:1;font-weight:500}
   .wallet-item .tag{font-size:10px;color:var(--gold-dim);letter-spacing:.5px;text-transform:uppercase}
 
-  /* TYPED DATA PREVIEW */
-  .typed-data{background:#050507;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7;max-height:340px;overflow-y:auto}
+  /* TYPED DATA / PREVIEW */
+  .typed-data{background:#050507;border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7;max-height:340px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
   .typed-data .k{color:var(--gold-dim)}
   .typed-data .v{color:var(--text)}
   .typed-data .sec{color:var(--gold-bright);font-weight:600;margin-top:8px;display:block}
 
-  /* ROLE PANEL */
-  .role-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;font-family:var(--sans)}
-  .role-badge.creator{background:rgba(212,175,55,.12);color:var(--gold-bright);border:1px solid var(--border-gold)}
-  .role-badge.guardian{background:rgba(82,196,133,.1);color:var(--ok);border:1px solid rgba(82,196,133,.35)}
-  .role-badge.user{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)}
-
-  .stat{padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:10px}
-  .stat .label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
-  .stat .value{font-family:var(--mono);font-size:18px;color:var(--gold-bright);font-weight:500}
-  .stat .sub{font-size:11px;color:var(--muted);margin-top:3px}
+  /* GUARDS */
+  .panel{display:none}
+  .panel.active{display:block;animation:fadein .2s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
   details summary{cursor:pointer;color:var(--gold);font-size:12px;padding:6px 0;list-style:none}
   details summary::-webkit-details-marker{display:none}
   details summary:before{content:"▸ ";color:var(--gold-dim)}
   details[open] summary:before{content:"▾ "}
 
-  /* HIDE BY DEFAULT */
-  .panel{display:none}
-  .panel.active{display:block;animation:fadein .2s ease}
-  @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-
-  .footer{margin-top:60px;padding:30px 0;border-top:1px solid var(--border);color:var(--muted);font-size:12px;text-align:center}
-  .footer a{color:var(--gold);transition:.15s}
-  .footer a:hover{color:var(--gold-bright)}
-
   .copybtn{background:transparent;border:0;color:var(--gold-dim);cursor:pointer;font-size:11px;padding:2px 5px;border-radius:4px;font-family:var(--mono);transition:.15s}
   .copybtn:hover{color:var(--gold);background:rgba(212,175,55,.08)}
 
-  .notif{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border-gold);border-radius:10px;padding:14px 20px;color:var(--text);font-size:13px;box-shadow:0 16px 50px rgba(0,0,0,.5);z-index:100;animation:slideup .25s ease;max-width:380px}
+  .notif{position:fixed;bottom:calc(var(--console-h) + 16px);right:20px;background:var(--card);border:1px solid var(--border-gold);border-radius:10px;padding:13px 18px;color:var(--text);font-size:13px;box-shadow:0 16px 50px rgba(0,0,0,.5);z-index:130;animation:slideup .25s ease;max-width:340px}
+  body.console-mini .notif{bottom:calc(var(--console-h-mini) + 16px)}
   .notif.ok{border-color:rgba(82,196,133,.5)}
   .notif.err{border-color:rgba(214,85,85,.55)}
   @keyframes slideup{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
 
+  .footer{margin-top:40px;padding:20px 0;border-top:1px solid var(--border);color:var(--muted);font-size:11.5px;text-align:center}
+  .footer a{color:var(--gold);transition:.15s}
+  .footer a:hover{color:var(--gold-bright)}
+
   @media(max-width:680px){
-    h1{font-size:24px}
+    h2{font-size:18px}
     .tabs{padding:4px}
     .tab{padding:8px 10px;font-size:11px}
-    .card{padding:16px}
+    .card{padding:14px}
     .nav-right{gap:6px}
-    .pill{display:none}
-    .pill.always{display:inline}
+    .info-cell{font-size:11px;padding:5px 10px}
+    .floatcon-head .fl-last{display:none!important}
   }
   @media(hover:none){.card:hover{border-color:var(--border)}.btn:hover{transform:none}}
 </style>
+
 </head>
 <body>
-<header>
+<!-- ━━━ HEADER ROW 1 ━━━ -->
+<header class="top">
   <div class="wrap nav">
-    <div class="brand">
-      <img id="logo" alt="AnchorVault" />
-      <span class="brand-name">AnchorVault <b>V45 PULSE</b></span>
-    </div>
+    <a class="brand" id="brandLink" href="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/landing.html" title="AnchorVaultCoin V45">
+      <span class="brand-logo">
+        <img id="logo" alt="AnchorVaultCoin" />
+        <span class="v-stamp">V45</span>
+      </span>
+      <span class="brand-name">AnchorVaultCoin <small>V45</small></span>
+    </a>
     <div class="nav-right">
-      <span id="netPill" class="pill always">Sepolia</span>
-      <span id="rolePill" class="pill always" style="display:none"></span>
       <button id="connectBtn" class="btn">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span data-i18n="connect">Подключить</span>
+        <span data-i18n="connect">Подключить кошелёк</span>
       </button>
       <button id="disconnectBtn" class="btn ghost sm" style="display:none" data-i18n="disconnect">Выйти</button>
       <div class="lang" id="lang">
@@ -621,368 +671,422 @@
   </div>
 </header>
 
-<main class="wrap">
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-bottom:18px">
-    <div>
-      <h1><span class="gold">Pulse</span> <span data-i18n="dashboardSub">— панель управления</span></h1>
-      <p class="lead" data-i18n="dashboardLead">Подпиши операцию ключом сейфа, а не приватником кошелька. Phishing-устойчивая архитектура EIP-712.</p>
+<!-- ━━━ INFO BAR ROW 2 (live data, always visible) ━━━ -->
+<div class="infobar">
+  <div class="wrap infobar-inner" id="infobar">
+    <div class="info-cell" id="cellNet">
+      <span class="ic-icon">🌐</span>
+      <span class="ic-k" data-i18n="ibNet">Сеть</span>
+      <span class="ic-v" id="ibNet">Sepolia</span>
     </div>
-    <div id="addrBox" style="display:none">
-      <div class="eyebrow" data-i18n="connectedAs">Подключено</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span id="addrShort" class="mono" style="color:var(--gold-bright);font-size:14px"></span>
-        <button class="copybtn" id="addrCopy" title="Copy">⧉</button>
-      </div>
+    <div class="info-cell" id="cellRole" style="display:none">
+      <span class="ic-icon">👤</span>
+      <span class="ic-k" data-i18n="ibRole">Роль</span>
+      <span class="ic-v" id="ibRole">—</span>
+    </div>
+    <div class="info-cell" id="cellPause">
+      <span class="ic-icon" id="ibPauseIcon">🟢</span>
+      <span class="ic-k" data-i18n="ibStatus">Статус</span>
+      <span class="ic-v" id="ibPause">—</span>
+    </div>
+    <div class="info-cell">
+      <span class="ic-icon">📦</span>
+      <span class="ic-k" data-i18n="ibBlock">Блок</span>
+      <span class="ic-v" id="ibBlock">—</span>
+    </div>
+    <div class="info-cell" id="cellVault" style="display:none">
+      <span class="ic-icon">🔐</span>
+      <span class="ic-k" data-i18n="ibVault">Сейф</span>
+      <span class="ic-v gold" id="ibVault">—</span>
+    </div>
+    <div class="info-cell bal" id="cellBalAncr" style="display:none">
+      <span class="ic-icon">🪙</span>
+      <span class="ic-k">ANCR</span>
+      <span class="ic-v" id="ibBalAncr">0.00</span>
+    </div>
+    <div class="info-cell bal" id="cellBalUsdt" style="display:none">
+      <span class="ic-icon">💵</span>
+      <span class="ic-k">USDT</span>
+      <span class="ic-v" id="ibBalUsdt">0.00</span>
+    </div>
+    <div class="info-cell">
+      <span class="ic-icon">📈</span>
+      <span class="ic-k">ETH/ANCR</span>
+      <span class="ic-v" id="ibRateEth">…</span>
+    </div>
+    <div class="info-cell">
+      <span class="ic-icon">📉</span>
+      <span class="ic-k">USDT/ANCR</span>
+      <span class="ic-v" id="ibRateUsdt">…</span>
+    </div>
+    <div class="info-cell">
+      <span class="ic-icon">🪂</span>
+      <span class="ic-k">ETH/USD</span>
+      <span class="ic-v" id="ibRateEthUsd">…</span>
+    </div>
+    <div class="info-cell" id="cellAddr" style="display:none">
+      <span class="ic-icon">📍</span>
+      <span class="ic-k" data-i18n="ibAddr">Адрес</span>
+      <span class="ic-v mono" id="ibAddr">—</span>
+      <button class="copybtn" id="addrCopy" title="Copy">⧉</button>
     </div>
   </div>
+</div>
 
+<main class="wrap">
   <div class="tabs" id="tabs">
-    <button class="tab active" data-panel="overview" data-i18n="tabOverview">Обзор</button>
-    <button class="tab" data-panel="vault" data-i18n="tabVault">Мой сейф</button>
-    <button class="tab" data-panel="sign" data-i18n="tabSign">Подписи</button>
+    <button class="tab active" data-panel="vault" data-i18n="tabVault">Мой сейф</button>
+    <button class="tab" data-panel="ops" data-i18n="tabOps">Операции</button>
     <button class="tab" data-panel="creator" data-role-gated="creator" data-i18n="tabCreator">Creator</button>
     <button class="tab" data-panel="guardian" data-role-gated="guardian" data-i18n="tabGuardian">Guardian</button>
     <button class="tab" data-panel="contract" data-i18n="tabContract">Контракт</button>
-    <button class="tab" data-panel="console" data-i18n="tabConsole">Консоль</button>
   </div>
 
-  <!-- ── ОБЗОР ─────────────────────────────── -->
-  <section class="panel active" id="panel-overview">
-    <div class="grid grid-4" style="margin-bottom:18px">
-      <div class="stat"><div class="label" data-i18n="ovChain">Сеть</div><div class="value" id="ovChain">—</div><div class="sub" id="ovChainSub">Sepolia · 11155111</div></div>
-      <div class="stat"><div class="label" data-i18n="ovBlock">Блок</div><div class="value" id="ovBlock">—</div><div class="sub" data-i18n="ovBlockSub">Авто-обновление 12с</div></div>
-      <div class="stat"><div class="label" data-i18n="ovPaused">Пауза</div><div class="value" id="ovPaused">—</div><div class="sub" id="ovPausedSub">isPaused()</div></div>
-      <div class="stat"><div class="label" data-i18n="ovYourRole">Ваша роль</div><div class="value" id="ovRole">—</div><div class="sub" id="ovRoleSub" data-i18n="ovRoleSub">Подключите кошелёк</div></div>
-    </div>
+  <!-- ━━━ МОЙ СЕЙФ ━━━ -->
+  <section class="panel active" id="panel-vault">
+    <h2><span class="gold" data-i18n="vaultLookupTitle">Мой сейф</span></h2>
+    <p class="lead" data-i18n="vaultLookupLead">Введите номер сейфа, чтобы посмотреть содержимое и параметры защиты.</p>
 
-    <div class="grid grid-2">
-      <div class="card gold-border">
-        <h3><span class="num">01</span> <span data-i18n="archTitle">Архитектура авторизации</span></h3>
-        <p class="muted" style="margin-bottom:14px" data-i18n="archDesc">Операции с сейфом подписываются отдельными ключами (mainAuthKey / recoveryAuthKey), а не приватником владельца кошелька. Кража приватного ключа кошелька не даёт доступа к средствам.</p>
-        <div class="row"><span class="k" data-i18n="archMain">Регулярные операции</span><span class="v">mainAuthKey</span></div>
-        <div class="row"><span class="k" data-i18n="archRecov">Аварийные операции</span><span class="v">recoveryAuthKey</span></div>
-        <div class="row"><span class="k" data-i18n="archPanic">Panic (без подписи)</span><span class="v">globalEmergency</span></div>
-      </div>
-
-      <div class="card">
-        <h3><span class="num">02</span> <span data-i18n="contractTitle">Контракт</span></h3>
-        <div class="row"><span class="k">AnchorVaultV45</span><span class="v" id="ovVaultAddr">0xfDa8…8f17</span></div>
-        <div class="row"><span class="k">MockANCR</span><span class="v" id="ovAncrAddr">0x490D…4BDD</span></div>
-        <div class="row"><span class="k" data-i18n="ovCreator">Creator</span><span class="v" id="ovCreatorAddr">—</span></div>
-        <div class="row"><span class="k" data-i18n="ovGuardian">Guardian</span><span class="v" id="ovGuardianAddr">—</span></div>
-        <div class="row"><span class="k" data-i18n="ovImpl">Implementation</span><span class="v"><a href="https://sepolia.etherscan.io/address/0xfDa8F11d80D17bbBBFBBF778D4fDa9f275B48f17" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">Etherscan ↗</a></span></div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:16px">
-      <h3><span class="num">03</span> <span data-i18n="levelsTitle">Уровни защиты</span></h3>
-      <div class="grid grid-3">
-        <div class="stat"><div class="label">SAFE · L0</div><div class="value">0.5%</div><div class="sub" data-i18n="lvlSafe">Без таймлока, для повседневных операций</div></div>
-        <div class="stat"><div class="label">VAULT · L1</div><div class="value">1.5%</div><div class="sub" data-i18n="lvlVault">До 72 ч таймлок, защита крупных балансов</div></div>
-        <div class="stat"><div class="label">FORTRESS · L2</div><div class="value">2.0%</div><div class="sub" data-i18n="lvlFortress">До 168 ч таймлок, максимальная защита</div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── МОЙ СЕЙФ ──────────────────────────── -->
-  <section class="panel" id="panel-vault">
     <div class="card">
-      <h3><span class="num">01</span> <span data-i18n="vaultLookupTitle">Просмотр сейфа</span></h3>
       <div class="field-row">
         <div class="field">
-          <label>Vault ID <span class="req">*</span></label>
-          <input id="lookupVaultId" placeholder="uint256, пример: 1" />
-          <div class="hint" data-i18n="vaultIdHint">Идентификатор вашего сейфа в контракте</div>
+          <label>
+            <span data-i18n="lblVaultId">Номер сейфа</span>
+            <span class="req">*</span>
+            <span class="tip" data-tip-i18n="tipVaultId" data-tip="Уникальный номер вашего сейфа в контракте. Если у вас несколько сейфов — каждый имеет свой номер.">?</span>
+          </label>
+          <input id="lookupVaultId" placeholder="напр. 1" inputmode="numeric"/>
         </div>
         <div class="field" style="display:flex;align-items:flex-end">
-          <button class="btn ghost" id="loadVaultBtn" style="width:100%" data-i18n="loadVault">Загрузить</button>
+          <button class="btn" id="loadVaultBtn" style="width:100%" data-i18n="loadVault">Загрузить</button>
         </div>
       </div>
-      <div id="vaultInfo" class="grid grid-3" style="margin-top:8px"></div>
+      <div id="vaultInfo" class="grid grid-3" style="margin-top:6px"></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3 data-i18n="archTitle">Как работает защита</h3>
+      <p class="desc" data-i18n="archDesc">Операции с сейфом подписываются отдельными ключами (основной и резервный), а не приватником вашего кошелька. Даже если злоумышленник украдёт ключ кошелька — он не получит доступа к средствам.</p>
+      <div class="row"><span class="k" data-i18n="archMain">Повседневные операции</span><span class="v">Основной ключ</span></div>
+      <div class="row"><span class="k" data-i18n="archRecov">Аварийные операции</span><span class="v">Резервный ключ</span></div>
+      <div class="row"><span class="k" data-i18n="archPanic">Сверхсрочный вывод</span><span class="v" data-i18n="archPanicV">без подписи</span></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3 data-i18n="levelsTitle">Уровни защиты</h3>
+      <div class="grid grid-3">
+        <div>
+          <div style="color:var(--gold-bright);font-weight:600;font-size:14px">SAFE</div>
+          <div style="font-family:var(--mono);font-size:18px;color:var(--gold-bright);margin:2px 0">0.5%</div>
+          <div style="color:var(--text-dim);font-size:12px" data-i18n="lvlSafe">Без задержек, для повседневных операций.</div>
+        </div>
+        <div>
+          <div style="color:var(--gold-bright);font-weight:600;font-size:14px">VAULT</div>
+          <div style="font-family:var(--mono);font-size:18px;color:var(--gold-bright);margin:2px 0">1.5%</div>
+          <div style="color:var(--text-dim);font-size:12px" data-i18n="lvlVault">Задержка до 72 ч, защита крупных сумм.</div>
+        </div>
+        <div>
+          <div style="color:var(--gold-bright);font-weight:600;font-size:14px">FORTRESS</div>
+          <div style="font-family:var(--mono);font-size:18px;color:var(--gold-bright);margin:2px 0">2.0%</div>
+          <div style="color:var(--text-dim);font-size:12px" data-i18n="lvlFortress">Задержка до 168 ч, максимальная защита.</div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- ── ПОДПИСИ ───────────────────────────── -->
-  <section class="panel" id="panel-sign">
-    <p class="lead" data-i18n="signLead">Сборка EIP-712-сообщений для всех операций сейфа. Подпишите ключом сейфа в любом кошельке, потом получатель отправляет транзакцию.</p>
+  <!-- ━━━ ОПЕРАЦИИ ━━━ -->
+  <section class="panel" id="panel-ops">
+    <h2><span class="gold" data-i18n="signLeadTitle">Операции</span></h2>
+    <p class="lead" data-i18n="signLead">Каждая операция подписывается отдельным ключом сейфа. Получившуюся подпись потом отправляет в сеть любая транзакция (например, ваш кошелёк или сервер).</p>
 
     <div class="grid grid-2">
       <!-- WITHDRAW -->
       <div class="card">
-        <h3><span class="num">A</span> <span data-i18n="opWithdraw">Withdraw</span></h3>
-        <p class="muted" style="margin-bottom:12px" data-i18n="opWithdrawDesc">Регулярный вывод из сейфа. Подпись mainAuthKey.</p>
+        <h3><span class="num">A</span> <span data-i18n="opWithdraw">Вывод средств</span></h3>
+        <p class="desc" data-i18n="opWithdrawDesc">Обычный вывод токенов из сейфа. Подписывается основным ключом.</p>
         <div class="field-row">
-          <div class="field"><label>vaultId <span class="req">*</span></label><input data-op="withdraw" data-f="vaultId" placeholder="1"/></div>
-          <div class="field"><label>nonce <span class="req">*</span></label><input data-op="withdraw" data-f="nonce" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipVaultId" data-tip="Уникальный номер вашего сейфа.">?</span></label><input data-op="withdraw" data-f="vaultId" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNonce" data-tip="Защита от повторов. Увеличивается на 1 после каждой подписи. Текущее значение видно в карточке сейфа.">?</span></label><input data-op="withdraw" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label>token (address) <span class="req">*</span></label><input data-op="withdraw" data-f="token" placeholder="0x…"/></div>
-        <div class="field"><label>to (address) <span class="req">*</span></label><input data-op="withdraw" data-f="to" placeholder="0x…"/></div>
+        <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToken" data-tip="Адрес ERC-20 контракта токена в сети Sepolia.">?</span></label><input data-op="withdraw" data-f="token" placeholder=""/></div>
+        <div class="field"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipTo" data-tip="Адрес получателя. Проверяйте внимательно — отмена невозможна.">?</span></label><input data-op="withdraw" data-f="to" placeholder=""/></div>
         <div class="field-row">
-          <div class="field"><label>amount (wei) <span class="req">*</span></label><input data-op="withdraw" data-f="amount" placeholder="1000000000000000000"/></div>
-          <div class="field"><label>deadline (unix) <span class="req">*</span></label><input data-op="withdraw" data-f="deadline" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="Сумма в наименьших единицах (wei). Для токена с 18 знаками 1.0 = 1000000000000000000.">?</span></label><input data-op="withdraw" data-f="amount" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipDeadline" data-tip="Unix-время, после которого подпись становится недействительной. Кнопка ⏰ ставит +1 час.">?</span></label><div style="display:flex;gap:6px"><input data-op="withdraw" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="withdraw" title="+1ч">⏰</button></div></div>
         </div>
         <button class="btn" data-sign="withdraw">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
       <!-- TRANSFER -->
       <div class="card">
-        <h3><span class="num">B</span> <span data-i18n="opTransfer">Transfer</span></h3>
-        <p class="muted" style="margin-bottom:12px" data-i18n="opTransferDesc">Перевод между сейфами с таймлоком. mainAuthKey.</p>
+        <h3><span class="num">B</span> <span data-i18n="opTransfer">Перевод между сейфами</span></h3>
+        <p class="desc" data-i18n="opTransferDesc">Перевод токенов из вашего сейфа в чужой сейф (с задержкой по уровню). Основной ключ.</p>
         <div class="field-row">
-          <div class="field"><label>vaultId <span class="req">*</span></label><input data-op="transfer" data-f="vaultId" placeholder="1"/></div>
-          <div class="field"><label>nonce <span class="req">*</span></label><input data-op="transfer" data-f="nonce" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipVaultId" data-tip="Ваш номер сейфа — откуда переводим.">?</span></label><input data-op="transfer" data-f="vaultId" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNonce" data-tip="Защита от повторов.">?</span></label><input data-op="transfer" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label>token (address) <span class="req">*</span></label><input data-op="transfer" data-f="token" placeholder="0x…"/></div>
-        <div class="field"><label>toVaultOwner (address) <span class="req">*</span></label><input data-op="transfer" data-f="toVaultOwner" placeholder="0x…"/></div>
+        <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToken" data-tip="ERC-20 адрес токена.">?</span></label><input data-op="transfer" data-f="token" placeholder=""/></div>
+        <div class="field"><label><span data-i18n="lblToOwner">Владелец сейфа-получателя</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToOwner" data-tip="Адрес владельца чужого сейфа, куда переводим.">?</span></label><input data-op="transfer" data-f="toVaultOwner" placeholder=""/></div>
         <div class="field-row">
-          <div class="field"><label>toVaultId <span class="req">*</span></label><input data-op="transfer" data-f="toVaultId" placeholder="2"/></div>
-          <div class="field"><label>amount (wei) <span class="req">*</span></label><input data-op="transfer" data-f="amount" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblToVid">Номер сейфа-получателя</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToVid" data-tip="Номер чужого сейфа, куда переводим.">?</span></label><input data-op="transfer" data-f="toVaultId" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="В наименьших единицах (wei).">?</span></label><input data-op="transfer" data-f="amount" placeholder=""/></div>
         </div>
-        <div class="field"><label>deadline (unix) <span class="req">*</span></label><input data-op="transfer" data-f="deadline" placeholder="0"/></div>
+        <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipDeadline" data-tip="Unix-время окончания подписи.">?</span></label><div style="display:flex;gap:6px"><input data-op="transfer" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="transfer" title="+1ч">⏰</button></div></div>
         <button class="btn" data-sign="transfer">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
       <!-- EARLY CLOSE -->
       <div class="card">
-        <h3><span class="num">C</span> <span data-i18n="opEarlyClose">Early Close (5%)</span></h3>
-        <p class="muted" style="margin-bottom:12px" data-i18n="opEarlyCloseDesc">Досрочное закрытие со штрафом 5%. recoveryAuthKey.</p>
+        <h3><span class="num">C</span> <span data-i18n="opEarlyClose">Досрочное закрытие (штраф 5%)</span></h3>
+        <p class="desc" data-i18n="opEarlyCloseDesc">Закрыть сейф досрочно со штрафом 5%. Подписывает резервный ключ. Средства идут владельцу.</p>
         <div class="field-row">
-          <div class="field"><label>vaultId <span class="req">*</span></label><input data-op="earlyClose" data-f="vaultId" placeholder="1"/></div>
-          <div class="field"><label>nonce <span class="req">*</span></label><input data-op="earlyClose" data-f="nonce" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="earlyClose" data-f="vaultId" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="earlyClose" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label>token (address) <span class="req">*</span></label><input data-op="earlyClose" data-f="token" placeholder="0x…"/></div>
-        <div class="field"><label>deadline (unix) <span class="req">*</span></label><input data-op="earlyClose" data-f="deadline" placeholder="0"/></div>
+        <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input data-op="earlyClose" data-f="token" placeholder=""/></div>
+        <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="earlyClose" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="earlyClose" title="+1ч">⏰</button></div></div>
         <button class="btn warn" data-sign="earlyClose">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
       <!-- RECOVER TO SAFE -->
       <div class="card">
-        <h3><span class="num">D</span> <span data-i18n="opRecoverToSafe">Recover to Safe (10%)</span></h3>
-        <p class="muted" style="margin-bottom:12px" data-i18n="opRecoverToSafeDesc">Эвакуация на снапшот emergencyAddress. recoveryAuthKey.</p>
+        <h3><span class="num">D</span> <span data-i18n="opRecoverToSafe">Эвакуация на холодный адрес (штраф 10%)</span></h3>
+        <p class="desc" data-i18n="opRecoverToSafeDesc">Вывод на заранее зафиксированный безопасный адрес. Подписывает резервный ключ.</p>
         <div class="field-row">
-          <div class="field"><label>vaultId <span class="req">*</span></label><input data-op="recoverToSafe" data-f="vaultId" placeholder="1"/></div>
-          <div class="field"><label>nonce <span class="req">*</span></label><input data-op="recoverToSafe" data-f="nonce" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="recoverToSafe" data-f="vaultId" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="recoverToSafe" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label>token (address) <span class="req">*</span></label><input data-op="recoverToSafe" data-f="token" placeholder="0x…"/></div>
-        <div class="field"><label>deadline (unix) <span class="req">*</span></label><input data-op="recoverToSafe" data-f="deadline" placeholder="0"/></div>
+        <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input data-op="recoverToSafe" data-f="token" placeholder=""/></div>
+        <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="recoverToSafe" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="recoverToSafe" title="+1ч">⏰</button></div></div>
         <button class="btn warn" data-sign="recoverToSafe">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
-      <!-- EMERGENCY WITHDRAW TO ANY -->
+      <!-- EMERGENCY ANY -->
       <div class="card">
-        <h3><span class="num">E</span> <span data-i18n="opEmergencyAny">Emergency → Any (15%)</span></h3>
-        <p class="muted" style="margin-bottom:12px" data-i18n="opEmergencyAnyDesc">Вывод на любой адрес со штрафом 15%. recoveryAuthKey.</p>
+        <h3><span class="num">E</span> <span data-i18n="opEmergencyAny">Аварийный вывод на любой адрес (штраф 15%)</span></h3>
+        <p class="desc" data-i18n="opEmergencyAnyDesc">Вывод средств на произвольный адрес. Резервный ключ.</p>
         <div class="field-row">
-          <div class="field"><label>vaultId <span class="req">*</span></label><input data-op="emergencyAny" data-f="vaultId" placeholder="1"/></div>
-          <div class="field"><label>nonce <span class="req">*</span></label><input data-op="emergencyAny" data-f="nonce" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="vaultId" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label>token (address) <span class="req">*</span></label><input data-op="emergencyAny" data-f="token" placeholder="0x…"/></div>
-        <div class="field"><label>to (address) <span class="req">*</span></label><input data-op="emergencyAny" data-f="to" placeholder="0x…"/></div>
-        <div class="field"><label>deadline (unix) <span class="req">*</span></label><input data-op="emergencyAny" data-f="deadline" placeholder="0"/></div>
+        <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="token" placeholder=""/></div>
+        <div class="field"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="to" placeholder=""/></div>
+        <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="emergencyAny" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="emergencyAny" title="+1ч">⏰</button></div></div>
         <button class="btn danger" data-sign="emergencyAny">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
-      <!-- ROTATE AUTH KEYS -->
+      <!-- ROTATE -->
       <div class="card">
-        <h3><span class="num">F</span> <span data-i18n="opRotate">Rotate Auth Keys</span></h3>
-        <p class="muted" style="margin-bottom:12px" data-i18n="opRotateDesc">Смена обоих ключей авторизации. recoveryAuthKey.</p>
+        <h3><span class="num">F</span> <span data-i18n="opRotate">Смена ключей сейфа</span></h3>
+        <p class="desc" data-i18n="opRotateDesc">Замена обоих ключей авторизации сейфа. Подписывает резервный ключ.</p>
         <div class="field-row">
-          <div class="field"><label>vaultId <span class="req">*</span></label><input data-op="rotate" data-f="vaultId" placeholder="1"/></div>
-          <div class="field"><label>nonce <span class="req">*</span></label><input data-op="rotate" data-f="nonce" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="rotate" data-f="vaultId" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="rotate" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label>newMainKey <span class="req">*</span></label><input data-op="rotate" data-f="newMainKey" placeholder="0x…"/></div>
-        <div class="field"><label>newRecoveryKey <span class="req">*</span></label><input data-op="rotate" data-f="newRecoveryKey" placeholder="0x…"/></div>
-        <div class="field"><label>deadline (unix) <span class="req">*</span></label><input data-op="rotate" data-f="deadline" placeholder="0"/></div>
+        <div class="field"><label><span data-i18n="lblNewMain">Новый основной ключ</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNewKey" data-tip="Адрес нового основного ключа сейфа.">?</span></label><input data-op="rotate" data-f="newMainKey" placeholder=""/></div>
+        <div class="field"><label><span data-i18n="lblNewRecov">Новый резервный ключ</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNewKey" data-tip="Адрес нового резервного ключа сейфа.">?</span></label><input data-op="rotate" data-f="newRecoveryKey" placeholder=""/></div>
+        <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="rotate" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="rotate" title="+1ч">⏰</button></div></div>
         <button class="btn warn" data-sign="rotate">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
       <!-- SET TIMELOCK -->
       <div class="card">
-        <h3><span class="num">G</span> <span data-i18n="opTimelock">Set Timelock</span></h3>
-        <p class="muted" style="margin-bottom:12px" data-i18n="opTimelockDesc">Изменение таймлока (зависит от уровня). mainAuthKey.</p>
+        <h3><span class="num">G</span> <span data-i18n="opTimelock">Изменить задержку</span></h3>
+        <p class="desc" data-i18n="opTimelockDesc">Установить задержку при выводе (зависит от уровня сейфа). Основной ключ.</p>
         <div class="field-row">
-          <div class="field"><label>vaultId <span class="req">*</span></label><input data-op="timelock" data-f="vaultId" placeholder="1"/></div>
-          <div class="field"><label>nonce <span class="req">*</span></label><input data-op="timelock" data-f="nonce" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="timelock" data-f="vaultId" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="timelock" data-f="nonce" placeholder=""/></div>
         </div>
         <div class="field-row">
-          <div class="field"><label>newTimelock (сек)</label><input data-op="timelock" data-f="newTimelock" placeholder="172800"/></div>
-          <div class="field"><label>deadline (unix) <span class="req">*</span></label><input data-op="timelock" data-f="deadline" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblTimelock">Задержка (секунды)</span><span class="tip" data-tip-i18n="tipTimelock" data-tip="Время в секундах. 1 час = 3600, 1 сутки = 86400, 1 неделя = 604800.">?</span></label><input data-op="timelock" data-f="newTimelock" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="timelock" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="timelock" title="+1ч">⏰</button></div></div>
         </div>
         <button class="btn" data-sign="timelock">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
-      <!-- VOLUNTARY LOCK -->
+      <!-- VOLUNTARY -->
       <div class="card">
-        <h3><span class="num">H</span> <span data-i18n="opVoluntary">Voluntary Lock</span></h3>
-        <p class="muted" style="margin-bottom:12px" data-i18n="opVoluntaryDesc">Добровольная блокировка вывода до даты. mainAuthKey.</p>
+        <h3><span class="num">H</span> <span data-i18n="opVoluntary">Добровольная блокировка</span></h3>
+        <p class="desc" data-i18n="opVoluntaryDesc">Заблокировать вывод до определённой даты (нельзя отменить досрочно). Основной ключ.</p>
         <div class="field-row">
-          <div class="field"><label>vaultId <span class="req">*</span></label><input data-op="voluntary" data-f="vaultId" placeholder="1"/></div>
-          <div class="field"><label>nonce <span class="req">*</span></label><input data-op="voluntary" data-f="nonce" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="voluntary" data-f="vaultId" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="voluntary" data-f="nonce" placeholder=""/></div>
         </div>
         <div class="field-row">
-          <div class="field"><label>lockUntil (unix) <span class="req">*</span></label><input data-op="voluntary" data-f="lockUntil" placeholder="0"/></div>
-          <div class="field"><label>deadline (unix) <span class="req">*</span></label><input data-op="voluntary" data-f="deadline" placeholder="0"/></div>
+          <div class="field"><label><span data-i18n="lblLockUntil">Заблокировать до</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipLockUntil" data-tip="Unix-время, до которого нельзя выводить.">?</span></label><input data-op="voluntary" data-f="lockUntil" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="voluntary" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="voluntary" title="+1ч">⏰</button></div></div>
         </div>
         <button class="btn" data-sign="voluntary">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
     </div>
 
-    <details style="margin-top:18px">
-      <summary data-i18n="opPanicTitle">Panic Withdraw (без подписи)</summary>
-      <div class="card" style="margin-top:10px">
-        <p class="muted" style="margin-bottom:12px" data-i18n="opPanicDesc">Мгновенная эвакуация 80% на live globalEmergency. Штраф 20%. Подпись НЕ нужна, но вызвать может только владелец сейфа.</p>
+    <details style="margin-top:14px">
+      <summary data-i18n="opPanicTitle">🆘 Сверхсрочный вывод (штраф 20%, без подписи)</summary>
+      <div class="card" style="margin-top:8px;border-color:rgba(214,85,85,.4)">
+        <p class="desc" data-i18n="opPanicDesc">Мгновенный вывод 80% средств на ранее зафиксированный резервный адрес владельца. Подпись не нужна, но вызвать может только владелец сейфа. Используйте только если потеряны оба ключа.</p>
         <div class="field-row">
-          <div class="field"><label>vaultId <span class="req">*</span></label><input id="panicVaultId" placeholder="1"/></div>
-          <div class="field"><label>token (address) <span class="req">*</span></label><input id="panicToken" placeholder="0x…"/></div>
+          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input id="panicVaultId" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="panicToken" placeholder=""/></div>
         </div>
-        <button class="btn danger" id="execPanicBtn">🆘 <span data-i18n="execPanic">Выполнить Panic Withdraw</span></button>
+        <button class="btn danger" id="execPanicBtn">🆘 <span data-i18n="execPanic">Выполнить сверхсрочный вывод</span></button>
       </div>
     </details>
   </section>
 
-  <!-- ── CREATOR ──────────────────────────── -->
+  <!-- ━━━ CREATOR ━━━ -->
   <section class="panel" id="panel-creator">
+    <h2><span class="gold" data-i18n="creatorTitle">Панель Creator</span></h2>
     <div id="creatorGuard" class="card" style="display:none">
       <h3>🔒 <span data-i18n="creatorDenied">Доступ только для Creator</span></h3>
-      <p class="muted" data-i18n="creatorDeniedDesc">Подключитесь адресом 0x6226828cc3d1B9c5fc1c4d9BE3dF7b03A4A70479 для доступа.</p>
+      <p class="desc" data-i18n="creatorDeniedDesc">Подключитесь адресом Creator, чтобы получить доступ к админ-функциям.</p>
     </div>
     <div id="creatorPanel" style="display:none">
       <div class="grid grid-2">
         <div class="card gold-border">
           <h3><span class="num">A</span> <span data-i18n="addToken">Поддерживаемые токены</span></h3>
-          <div class="field"><label>token address <span class="req">*</span></label><input id="addTokenAddr" placeholder="0x…"/></div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <button class="btn" data-call="addSupportedToken">addSupportedToken</button>
-            <button class="btn ghost" data-call="removeSupportedToken">removeSupportedToken</button>
+          <p class="desc" data-i18n="addTokenDesc">Добавление и удаление токенов, которые можно класть в сейфы.</p>
+          <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="addTokenAddr" placeholder=""/></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" data-call="addSupportedToken" data-i18n="btnAdd">Добавить</button>
+            <button class="btn ghost" data-call="removeSupportedToken" data-i18n="btnRemove">Удалить</button>
           </div>
         </div>
 
         <div class="card">
-          <h3><span class="num">B</span> <span data-i18n="welcomeBonus">Welcome Bonus</span></h3>
-          <div class="field"><label>amount (wei) <span class="req">*</span></label><input id="wbAmount" placeholder="100000000000000000000"/></div>
-          <div class="field"><label>maxClaims <span class="req">*</span></label><input id="wbMaxClaims" placeholder="1000"/></div>
-          <button class="btn" data-call="setWelcomeBonus">setWelcomeBonus</button>
+          <h3><span class="num">B</span> <span data-i18n="welcomeBonus">Приветственный бонус</span></h3>
+          <p class="desc" data-i18n="welcomeBonusDesc">Сумма ANCR для первых пользователей и максимальное число выдач.</p>
+          <div class="field-row">
+            <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="В wei (1 ANCR = 1e18).">?</span></label><input id="wbAmount" placeholder=""/></div>
+            <div class="field"><label><span data-i18n="lblMaxClaims">Лимит выдач</span> <span class="req">*</span></label><input id="wbMaxClaims" placeholder=""/></div>
+          </div>
+          <button class="btn" data-call="setWelcomeBonus" data-i18n="btnSave">Сохранить</button>
         </div>
 
         <div class="card">
-          <h3><span class="num">C</span> <span data-i18n="creatorFees">Вывод комиссий (7д таймлок)</span></h3>
-          <div class="field"><label>token <span class="req">*</span></label><input id="cwToken" placeholder="0x…"/></div>
-          <div class="field"><label>to <span class="req">*</span></label><input id="cwTo" placeholder="0x…"/></div>
-          <div class="field"><label>amount (wei) <span class="req">*</span></label><input id="cwAmount" placeholder="0"/></div>
+          <h3><span class="num">C</span> <span data-i18n="creatorFees">Вывод комиссий (7 дней)</span></h3>
+          <p class="desc" data-i18n="creatorFeesDesc">Накопленные комиссии. Сначала «запросить», затем через 7 дней «выполнить».</p>
+          <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="cwToken" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input id="cwTo" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span></label><input id="cwAmount" placeholder=""/></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn" data-call="requestCreatorWithdraw">request</button>
-            <button class="btn ghost" data-call="cancelCreatorWithdraw">cancel</button>
-            <button class="btn warn" data-call="withdrawCreatorFees">execute</button>
+            <button class="btn" data-call="requestCreatorWithdraw" data-i18n="btnRequest">Запросить</button>
+            <button class="btn ghost" data-call="cancelCreatorWithdraw" data-i18n="btnCancel">Отменить</button>
+            <button class="btn warn" data-call="withdrawCreatorFees" data-i18n="btnExecute">Выполнить</button>
           </div>
         </div>
 
         <div class="card">
-          <h3><span class="num">D</span> <span data-i18n="reserveTitle">Стратегический резерв (7д)</span></h3>
-          <div class="field"><label>token <span class="req">*</span></label><input id="rwToken" placeholder="0x…"/></div>
-          <div class="field"><label>to <span class="req">*</span></label><input id="rwTo" placeholder="0x…"/></div>
-          <div class="field"><label>amount (wei) <span class="req">*</span></label><input id="rwAmount" placeholder="0"/></div>
+          <h3><span class="num">D</span> <span data-i18n="reserveTitle">Стратегический резерв (7 дней)</span></h3>
+          <p class="desc" data-i18n="reserveDesc">Вывод из стратегического резерва.</p>
+          <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="rwToken" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input id="rwTo" placeholder=""/></div>
+          <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span></label><input id="rwAmount" placeholder=""/></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn" data-call="requestReserveWithdraw">request</button>
-            <button class="btn ghost" data-call="cancelReserveWithdraw">cancel</button>
-            <button class="btn warn" data-call="withdrawStrategicReserve">execute</button>
+            <button class="btn" data-call="requestReserveWithdraw" data-i18n="btnRequest">Запросить</button>
+            <button class="btn ghost" data-call="cancelReserveWithdraw" data-i18n="btnCancel">Отменить</button>
+            <button class="btn warn" data-call="withdrawStrategicReserve" data-i18n="btnExecute">Выполнить</button>
           </div>
         </div>
 
         <div class="card">
-          <h3><span class="num">E</span> <span data-i18n="creatorTransferTitle">Передача Creatorship (7д cooldown)</span></h3>
-          <div class="field"><label>newCreator <span class="req">*</span></label><input id="tcNewCreator" placeholder="0x…"/></div>
+          <h3><span class="num">E</span> <span data-i18n="creatorTransferTitle">Передача роли Creator (7 дней)</span></h3>
+          <p class="desc" data-i18n="creatorTransferDesc">Двухэтапная: сначала вы инициируете, затем новый владелец принимает.</p>
+          <div class="field"><label><span data-i18n="lblNewCreator">Новый Creator</span> <span class="req">*</span></label><input id="tcNewCreator" placeholder=""/></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn warn" data-call="transferCreatorship">transferCreatorship</button>
-            <button class="btn" data-call="acceptCreatorship">acceptCreatorship</button>
+            <button class="btn warn" data-call="transferCreatorship" data-i18n="btnInitiate">Инициировать</button>
+            <button class="btn" data-call="acceptCreatorship" data-i18n="btnAccept">Принять</button>
           </div>
         </div>
 
         <div class="card">
           <h3><span class="num">F</span> <span data-i18n="guardianTransferTitle">Замена Guardian</span></h3>
-          <div class="field"><label>newGuardian <span class="req">*</span></label><input id="tgNewGuardian" placeholder="0x…"/></div>
-          <button class="btn warn" data-call="transferGuardianship">transferGuardianship</button>
+          <p class="desc" data-i18n="guardianTransferDesc">Указать нового хранителя (Guardian).</p>
+          <div class="field"><label><span data-i18n="lblNewGuardian">Новый Guardian</span> <span class="req">*</span></label><input id="tgNewGuardian" placeholder=""/></div>
+          <button class="btn warn" data-call="transferGuardianship" data-i18n="btnReplace">Заменить</button>
         </div>
 
         <div class="card" style="grid-column:1/-1">
-          <h3><span class="num">G</span> <span data-i18n="unpauseTitle">Снятие паузы</span></h3>
-          <p class="muted" style="margin-bottom:12px" data-i18n="unpauseDesc">Только Creator может снять паузу контракта.</p>
-          <button class="btn ok" data-call="unpause" style="background:linear-gradient(180deg,#7adba0,var(--ok));color:#0a0a0a">▶ unpause()</button>
+          <h3><span class="num">G</span> <span data-i18n="unpauseTitle">Снять паузу контракта</span></h3>
+          <p class="desc" data-i18n="unpauseDesc">Только Creator может вернуть контракт в активный режим после паузы.</p>
+          <button class="btn ok" data-call="unpause">▶ <span data-i18n="btnUnpause">Снять паузу</span></button>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── GUARDIAN ─────────────────────────── -->
+  <!-- ━━━ GUARDIAN ━━━ -->
   <section class="panel" id="panel-guardian">
+    <h2><span class="gold" data-i18n="guardianTitle">Панель Guardian</span></h2>
     <div id="guardianGuard" class="card" style="display:none">
       <h3>🔒 <span data-i18n="guardianDenied">Доступ только для Guardian</span></h3>
-      <p class="muted" data-i18n="guardianDeniedDesc">Подключитесь адресом 0xe0DACa428Abc3F1D5BD333C2D1Ca12dd1a36964D для доступа.</p>
+      <p class="desc" data-i18n="guardianDeniedDesc">Подключитесь адресом Guardian, чтобы получить доступ.</p>
     </div>
     <div id="guardianPanel" style="display:none">
       <div class="grid grid-2">
         <div class="card">
-          <h3><span class="num">A</span> <span data-i18n="standardPause">Стандартная пауза (2д задержка)</span></h3>
-          <p class="muted" style="margin-bottom:14px" data-i18n="standardPauseDesc">Запрос ставится в очередь. Через 2 дня можно выполнить.</p>
+          <h3><span class="num">A</span> <span data-i18n="standardPause">Плановая пауза (2 дня)</span></h3>
+          <p class="desc" data-i18n="standardPauseDesc">Запрос ставится в очередь. Выполнить можно через 2 дня. Используйте при подозрении на атаку.</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn warn" data-call="requestPause">requestPause</button>
-            <button class="btn ghost" data-call="cancelPauseRequest">cancel</button>
-            <button class="btn danger" data-call="executePause">executePause</button>
+            <button class="btn warn" data-call="requestPause" data-i18n="btnRequest">Запросить</button>
+            <button class="btn ghost" data-call="cancelPauseRequest" data-i18n="btnCancel">Отменить</button>
+            <button class="btn danger" data-call="executePause" data-i18n="btnExecute">Выполнить</button>
           </div>
         </div>
 
         <div class="card gold-border">
           <h3><span class="num">B</span> <span data-i18n="emergencyPause">Экстренная пауза (мгновенно)</span></h3>
-          <p class="muted" style="margin-bottom:14px" data-i18n="emergencyPauseDesc">Мгновенная остановка контракта без задержки. Используйте при активной атаке.</p>
-          <button class="btn danger" data-call="emergencyPause">🆘 emergencyPause</button>
+          <p class="desc" data-i18n="emergencyPauseDesc">Мгновенная остановка контракта без задержки. Используйте при активной атаке — снять паузу сможет только Creator.</p>
+          <button class="btn danger" data-call="emergencyPause">🆘 <span data-i18n="btnEmergencyPause">Экстренно остановить</span></button>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── КОНТРАКТ ─────────────────────────── -->
+  <!-- ━━━ КОНТРАКТ ━━━ -->
   <section class="panel" id="panel-contract">
+    <h2><span class="gold" data-i18n="rawCallTitle">Прямой вызов контракта</span></h2>
+    <p class="lead" data-i18n="rawCallLead">Только чтение. Декодер пробует адрес / число / булево / bytes32 в порядке.</p>
     <div class="card">
-      <h3><span class="num">01</span> <span data-i18n="rawCallTitle">Прямой вызов (read-only)</span></h3>
-      <p class="muted" style="margin-bottom:14px" data-i18n="rawCallDesc">eth_call по сигнатуре функции. Декодер пробует uint256/address/bool/bytes32 в порядке очерёдности.</p>
-      <div class="field"><label data-i18n="funcSig">Сигнатура функции <span class="req">*</span></label><input id="rcSig" placeholder="creator()"/><div class="hint">Например: creator(), guardian(), isPaused(), nonces(uint256)</div></div>
-      <div class="field"><label data-i18n="rcArgs">Аргументы (через запятую)</label><input id="rcArgs" placeholder="например: 1"/><div class="hint" data-i18n="rcArgsHint">uint256: число. address: 0x…. bool: true/false. bytes32: 0x…64hex</div></div>
-      <button class="btn" id="rcCall">eth_call</button>
-      <div id="rcResult" class="console" style="margin-top:12px;min-height:60px"></div>
-    </div>
-  </section>
-
-  <!-- ── КОНСОЛЬ ──────────────────────────── -->
-  <section class="panel" id="panel-console">
-    <div class="card">
-      <h3>📡 <span data-i18n="opsLog">Журнал операций</span></h3>
-      <div id="logBox" class="console" style="max-height:520px"></div>
-      <button class="btn ghost sm" style="margin-top:10px" id="clearLog" data-i18n="clearLog">Очистить</button>
+      <div class="field"><label><span data-i18n="funcSig">Сигнатура функции</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipSig" data-tip="Имя функции и типы аргументов, например: balanceOf(address) или nonces(uint256).">?</span></label><input id="rcSig" placeholder=""/></div>
+      <div class="field"><label><span data-i18n="rcArgs">Аргументы</span><span class="tip" data-tip-i18n="tipArgs" data-tip="Через запятую: число для uint, 0x… для address, true/false для bool.">?</span></label><input id="rcArgs" placeholder=""/></div>
+      <button class="btn" id="rcCall" data-i18n="rcRun">Выполнить</button>
+      <div id="rcResult" class="typed-data" style="margin-top:12px;min-height:60px"></div>
     </div>
   </section>
 
   <div class="footer">
-    <p>© 2026 AnchorVault V45 · <span class="mono">0xfDa8…8f17</span> · Sepolia 11155111 · <a href="https://sepolia.etherscan.io/address/0xfDa8F11d80D17bbBBFBBF778D4fDa9f275B48f17" target="_blank" rel="noopener noreferrer">Etherscan</a></p>
-    <p style="margin-top:6px" data-i18n="testnetWarn">Sepolia Testnet. Mainnet после внешнего аудита.</p>
+    <p>AnchorVaultCoin V45 · © 2026 <span data-i18n="rightsReserved">Все права защищены</span> · <a href="https://sepolia.etherscan.io/address/0xfDa8F11d80D17bbBBFBBF778D4fDa9f275B48f17" target="_blank" rel="noopener noreferrer">Etherscan ↗</a></p>
   </div>
 </main>
 
-<!-- ── WALLET MODAL ────────────────────── -->
+<!-- ━━━ FLOATING CONSOLE ━━━ -->
+<div class="floatcon" id="floatcon">
+  <div class="floatcon-head" id="fcHead">
+    <div class="fl-title"><span class="fl-dot"></span><span data-i18n="opsLog">Журнал</span></div>
+    <span class="fl-last" id="fcLast"></span>
+    <div class="fl-actions">
+      <button id="fcClear" title="Очистить">✕</button>
+      <button id="fcToggle" title="Свернуть/развернуть">▾</button>
+    </div>
+  </div>
+  <div class="floatcon-body" id="fcBody"></div>
+</div>
+
+<!-- ━━━ WALLET MODAL ━━━ -->
 <div class="overlay" id="walletModal">
   <div class="modal">
     <h3 data-i18n="pickWallet">Выберите кошелёк</h3>
-    <p class="muted" style="margin-bottom:14px" data-i18n="pickWalletDesc">Обнаружено через EIP-6963. Если ничего не показано — установите кошелёк-расширение.</p>
+    <p class="desc" data-i18n="pickWalletDesc">Обнаружены через EIP-6963. Если список пуст — установите расширение кошелька.</p>
     <div id="walletList" class="wallet-list"></div>
-    <div class="actions">
-      <button class="btn ghost" data-close-modal data-i18n="cancel">Отмена</button>
-    </div>
+    <div class="actions"><button class="btn ghost" data-close-modal data-i18n="cancel">Отмена</button></div>
   </div>
 </div>
 
-<!-- ── SIGN MODAL ──────────────────────── -->
+<!-- ━━━ SIGN MODAL ━━━ -->
 <div class="overlay" id="signModal">
   <div class="modal">
     <h3 data-i18n="confirmSign">Подтвердите подпись</h3>
-    <p class="muted" style="margin-bottom:14px" data-i18n="confirmSignDesc">Внимательно проверьте параметры. Кошелёк покажет точно те же данные.</p>
+    <p class="desc" data-i18n="confirmSignDesc">Внимательно проверьте параметры — кошелёк покажет те же данные.</p>
     <div id="signPreview" class="typed-data"></div>
     <div class="actions">
       <button class="btn ghost" data-close-modal data-i18n="cancel">Отмена</button>
@@ -991,27 +1095,25 @@
   </div>
 </div>
 
-<!-- ── CALL CONFIRM MODAL ─────────────── -->
+<!-- ━━━ CALL CONFIRM MODAL ━━━ -->
 <div class="overlay" id="callModal">
   <div class="modal">
     <h3 data-i18n="confirmCall">Подтвердите вызов</h3>
-    <p class="muted" style="margin-bottom:14px" data-i18n="confirmCallDesc">Транзакция будет отправлена в сеть Sepolia. Газ оплачивает ваш кошелёк.</p>
+    <p class="desc" data-i18n="confirmCallDesc">Транзакция уйдёт в сеть Sepolia. Газ оплачивает ваш кошелёк.</p>
     <div id="callPreview" class="typed-data"></div>
     <div class="actions">
       <button class="btn ghost" data-close-modal data-i18n="cancel">Отмена</button>
-      <button class="btn" id="callConfirm" data-i18n="sendTx">⚓ Отправить транзакцию</button>
+      <button class="btn" id="callConfirm" data-i18n="sendTx">⚓ Отправить</button>
     </div>
   </div>
 </div>
 
-<!-- ── RESULT MODAL ──────────────────── -->
+<!-- ━━━ RESULT MODAL ━━━ -->
 <div class="overlay" id="resultModal">
   <div class="modal">
     <h3 id="resultTitle">—</h3>
-    <div id="resultBody" class="typed-data" style="word-break:break-all"></div>
-    <div class="actions">
-      <button class="btn" data-close-modal data-i18n="close">Закрыть</button>
-    </div>
+    <div id="resultBody" class="typed-data"></div>
+    <div class="actions"><button class="btn" data-close-modal data-i18n="close">Закрыть</button></div>
   </div>
 </div>
 
@@ -1350,7 +1452,9 @@ const State = {
   role: 'guest',           // 'guest' | 'user' | 'creator' | 'guardian'
   pendingSign: null,       // {type, structHash, digest, params, typedData}
   pendingCall: null,       // {sig, args, data, label}
-  cachedReads: {}
+  cachedReads: {},
+  lang: 'ru',
+  ethUsd: null
 };
 
 /* ═══════════════════════════════════════════ LOG ══════════════════════════════ */
@@ -1732,7 +1836,7 @@ function bindTabs(){
       if(t.dataset.roleGated){
         const need = t.dataset.roleGated;
         if(State.role !== need){
-          notif('err','Доступно только для роли '+need.toUpperCase());
+          notif('err',(LANG[State.lang||'ru'].msgRoleOnly||'Только {role}').replace('{role}',need.toUpperCase()));
           return;
         }
       }
@@ -1817,23 +1921,23 @@ function bindSignButtons(){
   });
   document.getElementById('signConfirm').addEventListener('click', async ()=>{
     if(!State.provider || !State.account){
-      notif('err','Сначала подключите кошелёк');
+      notif('err',LANG[State.lang||'ru'].msgConnectFirst||'Подключите кошелёк');
       return;
     }
     if(State.chainId !== CHAIN_ID){
-      notif('err','Не Sepolia. Сменить сеть в кошельке.');
+      notif('err',LANG[State.lang||'ru'].msgWrongNet||'Не та сеть');
       return;
     }
     const p = State.pendingSign;
     if(!p) return;
     try{
       const payload = JSON.stringify(p.built.typedData);
-      log('i','Отправляю на подпись: '+p.opName);
+      {const L=LANG[State.lang||'ru']; log('i',(L.msgSignReqSent||'Запрос на подпись отправлен')+' ['+p.opName+']');}
       const sig = await State.provider.request({
         method:'eth_signTypedData_v4',
         params:[State.account, payload]
       });
-      log('ok','Подпись получена');
+      {const L=LANG[State.lang||'ru']; log('ok',L.msgSignOk||'Подпись создана');}
       closeAllModals();
       // Show result
       const r = sig;
@@ -1851,8 +1955,8 @@ function bindSignButtons(){
         Object.keys(p.built.typedData.message).map(k=>'\n<span class="k">'+k+':</span> <span class="v">'+p.built.typedData.message[k]+'</span>').join('');
       openModal('resultModal');
     }catch(e){
-      log('err','Ошибка подписи: '+(e.message||e));
-      notif('err', 'Подпись отклонена: '+(e.message||e));
+      {const L=LANG[State.lang||'ru']; log('err',(L.msgSignDenied||'Подпись отклонена')+': '+(e.message||e));}
+      {const L=LANG[State.lang||'ru']; notif('err', L.msgSignDenied||'Подпись отклонена');}
     }
   });
 }
@@ -1955,12 +2059,12 @@ function bindAdminButtons(){
   document.querySelectorAll('[data-call]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const name = btn.dataset.call;
-      if(!State.provider){ notif('err','Подключите кошелёк'); return; }
-      if(State.chainId!==CHAIN_ID){ notif('err','Не Sepolia'); return; }
+      if(!State.provider){ notif('err',LANG[State.lang||'ru'].msgConnectFirst||'Подключите кошелёк'); return; }
+      if(State.chainId!==CHAIN_ID){ notif('err',LANG[State.lang||'ru'].msgWrongNet||'Не та сеть'); return; }
       try{
         const info = gatherCall(name);
         if(State.role !== info.role){
-          notif('err', 'Только '+info.role.toUpperCase()+' может вызвать');
+          notif('err', (LANG[State.lang||'ru'].msgRoleOnly||'Только {role}').replace('{role}',info.role.toUpperCase()));
           return;
         }
         State.pendingCall = info;
@@ -1976,30 +2080,30 @@ function bindAdminButtons(){
     if(!info) return;
     closeAllModals();
     try{
-      log('i','Отправляю '+info.sig+'…');
+      {const L=LANG[State.lang||'ru']; log('i',(L.msgTxSending||'Транзакция отправляется')+' ['+info.sig+']');}
       const tx = await State.provider.request({
         method:'eth_sendTransaction',
         params:[{ from: State.account, to: VAULT_ADDR, data: info.data }]
       });
-      log('ok','TX отправлен: ', '<span class="log-tx"><a href="https://sepolia.etherscan.io/tx/'+tx+'" target="_blank" rel="noopener noreferrer">'+tx.slice(0,10)+'…'+tx.slice(-8)+'</a></span>');
-      notif('ok','Транзакция отправлена');
+      {const L=LANG[State.lang||'ru']; log('ok',(L.msgTxSent||'Транзакция отправлена')+': ', '<span class="log-tx"><a href="https://sepolia.etherscan.io/tx/'+tx+'" target="_blank" rel="noopener noreferrer">'+tx.slice(0,10)+'…'+tx.slice(-8)+'</a></span>');
+      notif('ok',(LANG[State.lang||'ru'].msgTxSent||'Транзакция отправлена'));}
       // Poll for receipt
       watchTx(tx);
     }catch(e){
-      log('err','TX отклонён: '+(e.message||e));
-      notif('err','Транзакция отклонена');
+      {const L=LANG[State.lang||'ru']; log('err',(L.msgTxFail||'Транзакция отклонена')+': '+(e.message||e));}
+      {const L=LANG[State.lang||'ru']; notif('err',L.msgTxFail||'Транзакция отклонена');}
     }
   });
 
   // Panic withdraw (no signature needed)
   const panicBtn = document.getElementById('execPanicBtn');
   if(panicBtn) panicBtn.addEventListener('click', async ()=>{
-    if(!State.provider){ notif('err','Подключите кошелёк'); return; }
-    if(State.chainId!==CHAIN_ID){ notif('err','Не Sepolia'); return; }
+    if(!State.provider){ notif('err',LANG[State.lang||'ru'].msgConnectFirst||'Подключите кошелёк'); return; }
+    if(State.chainId!==CHAIN_ID){ notif('err',LANG[State.lang||'ru'].msgWrongNet||'Не та сеть'); return; }
     const vid = document.getElementById('panicVaultId').value.trim();
     const tok = document.getElementById('panicToken').value.trim();
-    if(!vid || !tok){ notif('err','Заполните поля'); return; }
-    if(!isAddress(tok)){ notif('err','Неверный токен'); return; }
+    if(!vid || !tok){ notif('err',LANG[State.lang||'ru'].msgFieldRequired||'Заполните все поля'); return; }
+    if(!isAddress(tok)){ notif('err',LANG[State.lang||'ru'].msgInvalidAddr||'Неверный адрес'); return; }
     try{
       const data = ABI.call('panicWithdraw(uint256,address)', ['uint256','address'], [BigInt(vid), tok]);
       State.pendingCall = { sig:'panicWithdraw(uint256,address)', data, display:[{name:'vaultId',type:'uint256',value:vid},{name:'token',type:'address',value:tok}], role: State.role };
@@ -2016,9 +2120,9 @@ async function watchTx(hash){
       const r = await ethGetTransactionReceipt(hash);
       if(r){
         const ok = r.status==='0x1' || r.status===1;
-        log(ok?'ok':'err','Receipt ('+hash.slice(0,10)+'…): '+(ok?'SUCCESS':'REVERTED')+' block '+parseInt(r.blockNumber,16));
-        notif(ok?'ok':'err', ok?'TX подтверждена':'TX откатилась');
-        refreshOverview();
+        {const L=LANG[State.lang||'ru']; log(ok?'ok':'err',(ok?(L.msgTxOk||'Транзакция подтверждена!'):(L.msgTxFail||'Транзакция откатилась'))+' (block '+parseInt(r.blockNumber,16)+')');}
+        {const L=LANG[State.lang||'ru']; notif(ok?'ok':'err', ok?(L.msgTxOk||'Подтверждено'):(L.msgTxFail||'Откат'));}
+        refreshInfobar();
         return;
       }
     }catch(e){}
@@ -2056,45 +2160,76 @@ function bindRawCall(){
 }
 
 /* ═══════════════════════════════════════════ OVERVIEW REFRESH ═══════════════ */
-async function refreshOverview(){
+async function refreshInfobar(){
+  // block
   try{
     const block = await ethBlockNumber();
-    document.getElementById('ovBlock').textContent = '#'+block;
-    document.getElementById('ovChain').textContent = State.chainId===CHAIN_ID?'Sepolia':State.chainId?('#'+State.chainId):'—';
+    const el=document.getElementById('ibBlock');
+    if(el) el.textContent = '#'+block;
   }catch(e){}
-  // Try paused
+  // paused
   try{
-    const paused = await readBool('paused()');
-    if(paused === null){
-      // Fallback: try isPaused()
-      const p2 = await readBool('isPaused()');
-      const v = (p2===null)? '?' : (p2?'PAUSED':'ACTIVE');
-      const el=document.getElementById('ovPaused');
-      el.textContent = v;
-      el.style.color = p2===true?'var(--err)':p2===false?'var(--ok)':'var(--muted)';
-    }else{
-      const el=document.getElementById('ovPaused');
-      el.textContent = paused?'PAUSED':'ACTIVE';
-      el.style.color = paused?'var(--err)':'var(--ok)';
-    }
-  }catch(e){
-    document.getElementById('ovPaused').textContent='?';
+    let paused = await readBool('paused()');
+    if(paused === null) paused = await readBool('isPaused()');
+    const L = LANG[State.lang||'ru'];
+    const ic = document.getElementById('ibPauseIcon');
+    const el = document.getElementById('ibPause');
+    const cell = document.getElementById('cellPause');
+    if(paused===true){ if(ic) ic.textContent='🔴'; if(el) el.textContent = L.statusPaused||'Приостановлен'; if(cell){cell.classList.add('err');cell.classList.remove('ok');} }
+    else if(paused===false){ if(ic) ic.textContent='🟢'; if(el) el.textContent = L.statusActive||'Активен'; if(cell){cell.classList.add('ok');cell.classList.remove('err');} }
+    else { if(el) el.textContent='?'; }
+  }catch(e){}
+  // user balance ANCR/USDT (если кошелёк подключён)
+  if(State.account){
+    try{
+      const ancr = await readUint('balanceOf(address)', ['address'], [State.account]);
+      if(ancr!==null){
+        const v = Number(ancr) / 1e18;
+        const el=document.getElementById('ibBalAncr');
+        const cell=document.getElementById('cellBalAncr');
+        if(el) el.textContent = fmtNum(v);
+        if(cell) cell.style.display='inline-flex';
+      }
+    }catch(e){}
   }
-  // Creator / Guardian
+}
+
+function fmtNum(n){
+  if(!isFinite(n)) return '—';
+  if(n>=1e6) return (n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(2)+'k';
+  if(n>=1) return n.toFixed(2);
+  if(n>0) return n.toFixed(6);
+  return '0.00';
+}
+
+async function refreshRates(){
+  // Курсы — расчётные из контракта (если есть пул) или из публичного API.
+  // Из-за строгого CSP, используем JSON-RPC fallback и offline-заглушку.
+  // ETH/USD из публичного RPC (через eth_call к Chainlink feed на Sepolia, если знаем адрес).
+  // Fallback: показать «—».
+  // Для V45 без on-chain оракула: фиксированные оценки.
+  // Виталий сможет подменить эти числа когда появится оракул.
   try{
-    const c = await readAddr('creator()');
-    if(c){
-      document.getElementById('ovCreatorAddr').textContent = c.slice(0,8)+'…'+c.slice(-6);
-      State.cachedReads.creator = c;
+    // Sepolia ETH/USD Chainlink: 0x694AA1769357215DE4FAC081bf1f309aDC325306
+    const data = '0xfeaf968c'; // latestRoundData()
+    const r = await ethCall('0x694AA1769357215DE4FAC081bf1f309aDC325306', data);
+    if(r && r.length >= 2 + 5*64){
+      // returns (roundId, answer, startedAt, updatedAt, answeredInRound)
+      // answer is int256 with 8 decimals
+      const hex = r.startsWith('0x') ? r.slice(2) : r;
+      const answer = BigInt('0x' + hex.slice(64, 128));
+      const ethUsd = Number(answer) / 1e8;
+      const el = document.getElementById('ibRateEthUsd');
+      if(el) el.textContent = '$' + ethUsd.toFixed(2);
+      State.ethUsd = ethUsd;
     }
   }catch(e){}
-  try{
-    const g = await readAddr('guardian()');
-    if(g){
-      document.getElementById('ovGuardianAddr').textContent = g.slice(0,8)+'…'+g.slice(-6);
-      State.cachedReads.guardian = g;
-    }
-  }catch(e){}
+  // ANCR — пока нет публичного курса
+  const ru = document.getElementById('ibRateUsdt');
+  const re = document.getElementById('ibRateEth');
+  if(ru) ru.textContent = '—';
+  if(re) re.textContent = '—';
 }
 
 /* ═══════════════════════════════════════════ VAULT INFO LOOKUP ═══════════════ */
@@ -2102,7 +2237,7 @@ async function loadVaultInfo(){
   const idRaw = document.getElementById('lookupVaultId').value.trim();
   const box   = document.getElementById('vaultInfo');
   box.innerHTML = '';
-  if(!idRaw){ notif('err','Введите Vault ID'); return; }
+  if(!idRaw){ notif('err',LANG[State.lang||'ru'].msgFieldRequired||'Введите номер сейфа'); return; }
   const vid = BigInt(idRaw);
   // Try `vaults(uint256)` — return tuple. Контракт может возвращать структуру; декодируем как набор слов.
   // Также пробуем `nonces(uint256)` для подписей.
@@ -2129,146 +2264,236 @@ async function loadVaultInfo(){
 /* ═══════════════════════════════════════════ I18N ═══════════════════════════ */
 const LANG = {
   ru:{
-    connect:'Подключить', disconnect:'Выйти',
-    dashboardSub:'— панель управления',
-    dashboardLead:'Подпиши операцию ключом сейфа, а не приватником кошелька. Phishing-устойчивая архитектура EIP-712.',
-    connectedAs:'Подключено',
-    tabOverview:'Обзор', tabVault:'Мой сейф', tabSign:'Подписи', tabCreator:'Creator', tabGuardian:'Guardian', tabContract:'Контракт', tabConsole:'Консоль',
-    ovChain:'Сеть', ovBlock:'Блок', ovBlockSub:'Авто-обновление 12с', ovPaused:'Пауза', ovYourRole:'Ваша роль', ovRoleSub:'Подключите кошелёк',
-    ovCreator:'Creator', ovGuardian:'Guardian', ovImpl:'Implementation',
-    archTitle:'Архитектура авторизации',
-    archDesc:'Операции с сейфом подписываются отдельными ключами (mainAuthKey / recoveryAuthKey), а не приватником владельца кошелька. Кража приватного ключа кошелька не даёт доступа к средствам.',
-    archMain:'Регулярные операции', archRecov:'Аварийные операции', archPanic:'Panic (без подписи)',
-    contractTitle:'Контракт', levelsTitle:'Уровни защиты',
-    lvlSafe:'Без таймлока, для повседневных операций', lvlVault:'До 72 ч таймлок, защита крупных балансов', lvlFortress:'До 168 ч таймлок, максимальная защита',
-    vaultLookupTitle:'Просмотр сейфа', vaultIdHint:'Идентификатор вашего сейфа в контракте', loadVault:'Загрузить',
-    signLead:'Сборка EIP-712-сообщений для всех операций сейфа. Подпишите ключом сейфа в любом кошельке, потом получатель отправляет транзакцию.',
-    opWithdraw:'Withdraw', opWithdrawDesc:'Регулярный вывод из сейфа. Подпись mainAuthKey.',
-    opTransfer:'Transfer', opTransferDesc:'Перевод между сейфами с таймлоком. mainAuthKey.',
-    opEarlyClose:'Early Close (5%)', opEarlyCloseDesc:'Досрочное закрытие со штрафом 5%. recoveryAuthKey.',
-    opRecoverToSafe:'Recover to Safe (10%)', opRecoverToSafeDesc:'Эвакуация на снапшот emergencyAddress. recoveryAuthKey.',
-    opEmergencyAny:'Emergency → Any (15%)', opEmergencyAnyDesc:'Вывод на любой адрес со штрафом 15%. recoveryAuthKey.',
-    opRotate:'Rotate Auth Keys', opRotateDesc:'Смена обоих ключей авторизации. recoveryAuthKey.',
-    opTimelock:'Set Timelock', opTimelockDesc:'Изменение таймлока (зависит от уровня). mainAuthKey.',
-    opVoluntary:'Voluntary Lock', opVoluntaryDesc:'Добровольная блокировка вывода до даты. mainAuthKey.',
-    opPanicTitle:'Panic Withdraw (без подписи)', opPanicDesc:'Мгновенная эвакуация 80% на live globalEmergency. Штраф 20%. Подпись НЕ нужна, но вызвать может только владелец сейфа.',
-    signOp:'Подписать', execPanic:'Выполнить Panic Withdraw',
-    creatorDenied:'Доступ только для Creator', creatorDeniedDesc:'Подключитесь адресом 0x6226828cc3d1B9c5fc1c4d9BE3dF7b03A4A70479 для доступа.',
-    addToken:'Поддерживаемые токены', welcomeBonus:'Welcome Bonus', creatorFees:'Вывод комиссий (7д таймлок)',
-    reserveTitle:'Стратегический резерв (7д)', creatorTransferTitle:'Передача Creatorship (7д cooldown)', guardianTransferTitle:'Замена Guardian',
-    unpauseTitle:'Снятие паузы', unpauseDesc:'Только Creator может снять паузу контракта.',
-    guardianDenied:'Доступ только для Guardian', guardianDeniedDesc:'Подключитесь адресом 0xe0DACa428Abc3F1D5BD333C2D1Ca12dd1a36964D для доступа.',
-    standardPause:'Стандартная пауза (2д задержка)', standardPauseDesc:'Запрос ставится в очередь. Через 2 дня можно выполнить.',
-    emergencyPause:'Экстренная пауза (мгновенно)', emergencyPauseDesc:'Мгновенная остановка контракта без задержки. Используйте при активной атаке.',
-    rawCallTitle:'Прямой вызов (read-only)', rawCallDesc:'eth_call по сигнатуре функции. Декодер пробует uint256/address/bool/bytes32 в порядке очерёдности.',
-    funcSig:'Сигнатура функции', rcArgs:'Аргументы (через запятую)', rcArgsHint:'uint256: число. address: 0x…. bool: true/false. bytes32: 0x…64hex',
-    opsLog:'Журнал операций', clearLog:'Очистить',
-    pickWallet:'Выберите кошелёк', pickWalletDesc:'Обнаружено через EIP-6963. Если ничего не показано — установите кошелёк-расширение.',
-    confirmSign:'Подтвердите подпись', confirmSignDesc:'Внимательно проверьте параметры. Кошелёк покажет точно те же данные.', signNow:'⚓ Подписать в кошельке',
-    confirmCall:'Подтвердите вызов', confirmCallDesc:'Транзакция будет отправлена в сеть Sepolia. Газ оплачивает ваш кошелёк.', sendTx:'⚓ Отправить транзакцию',
-    cancel:'Отмена', close:'Закрыть',
-    testnetWarn:'Sepolia Testnet. Mainnet после внешнего аудита.'
+    connect:'Подключить кошелёк', disconnect:'Выйти',
+    ibNet:'Сеть', ibRole:'Роль', ibStatus:'Статус', ibBlock:'Блок', ibVault:'Сейф', ibAddr:'Адрес', ibWrongNet:'Не та сеть',
+    statusActive:'Активен', statusPaused:'Приостановлен',
+    roleCreator:'Creator', roleGuardian:'Guardian', roleUser:'Пользователь',
+    tabVault:'Мой сейф', tabOps:'Операции', tabCreator:'Creator', tabGuardian:'Guardian', tabContract:'Контракт',
+    vaultLookupTitle:'Мой сейф', vaultLookupLead:'Введите номер сейфа, чтобы посмотреть содержимое и параметры защиты.', loadVault:'Загрузить',
+    archTitle:'Как работает защита', archDesc:'Операции с сейфом подписываются отдельными ключами (основной и резервный), а не приватником вашего кошелька. Даже если злоумышленник украдёт ключ кошелька — он не получит доступа к средствам.',
+    archMain:'Повседневные операции', archRecov:'Аварийные операции', archPanic:'Сверхсрочный вывод', archPanicV:'без подписи',
+    levelsTitle:'Уровни защиты', lvlSafe:'Без задержек, для повседневных операций.', lvlVault:'Задержка до 72 ч, защита крупных сумм.', lvlFortress:'Задержка до 168 ч, максимальная защита.',
+    signLeadTitle:'Операции', signLead:'Каждая операция подписывается отдельным ключом сейфа. Получившуюся подпись потом отправляет в сеть любая транзакция.',
+    opWithdraw:'Вывод средств', opWithdrawDesc:'Обычный вывод токенов из сейфа. Подписывается основным ключом.',
+    opTransfer:'Перевод между сейфами', opTransferDesc:'Перевод токенов из вашего сейфа в чужой сейф (с задержкой по уровню). Основной ключ.',
+    opEarlyClose:'Досрочное закрытие (штраф 5%)', opEarlyCloseDesc:'Закрыть сейф досрочно со штрафом 5%. Подписывает резервный ключ. Средства идут владельцу.',
+    opRecoverToSafe:'Эвакуация на холодный адрес (штраф 10%)', opRecoverToSafeDesc:'Вывод на заранее зафиксированный безопасный адрес. Подписывает резервный ключ.',
+    opEmergencyAny:'Аварийный вывод на любой адрес (штраф 15%)', opEmergencyAnyDesc:'Вывод средств на произвольный адрес. Резервный ключ.',
+    opRotate:'Смена ключей сейфа', opRotateDesc:'Замена обоих ключей авторизации сейфа. Подписывает резервный ключ.',
+    opTimelock:'Изменить задержку', opTimelockDesc:'Установить задержку при выводе (зависит от уровня сейфа). Основной ключ.',
+    opVoluntary:'Добровольная блокировка', opVoluntaryDesc:'Заблокировать вывод до определённой даты (нельзя отменить досрочно). Основной ключ.',
+    opPanicTitle:'🆘 Сверхсрочный вывод (штраф 20%, без подписи)', opPanicDesc:'Мгновенный вывод 80% средств на ранее зафиксированный резервный адрес владельца. Подпись не нужна, но вызвать может только владелец сейфа. Используйте только если потеряны оба ключа.',
+    signOp:'Подписать', execPanic:'Выполнить сверхсрочный вывод',
+    lblVaultId:'Номер сейфа', lblNonce:'Счётчик', lblToken:'Адрес токена', lblTo:'Куда отправить', lblAmount:'Сумма', lblDeadline:'Срок действия',
+    lblToOwner:'Владелец сейфа-получателя', lblToVid:'Номер сейфа-получателя', lblNewMain:'Новый основной ключ', lblNewRecov:'Новый резервный ключ',
+    lblTimelock:'Задержка (секунды)', lblLockUntil:'Заблокировать до', lblMaxClaims:'Лимит выдач', lblNewCreator:'Новый Creator', lblNewGuardian:'Новый Guardian',
+    creatorTitle:'Панель Creator', creatorDenied:'Доступ только для Creator', creatorDeniedDesc:'Подключитесь адресом Creator, чтобы получить доступ к админ-функциям.',
+    addToken:'Поддерживаемые токены', addTokenDesc:'Добавление и удаление токенов, которые можно класть в сейфы.',
+    welcomeBonus:'Приветственный бонус', welcomeBonusDesc:'Сумма ANCR для первых пользователей и максимальное число выдач.',
+    creatorFees:'Вывод комиссий (7 дней)', creatorFeesDesc:'Накопленные комиссии. Сначала «запросить», затем через 7 дней «выполнить».',
+    reserveTitle:'Стратегический резерв (7 дней)', reserveDesc:'Вывод из стратегического резерва.',
+    creatorTransferTitle:'Передача роли Creator (7 дней)', creatorTransferDesc:'Двухэтапная: сначала вы инициируете, затем новый владелец принимает.',
+    guardianTransferTitle:'Замена Guardian', guardianTransferDesc:'Указать нового хранителя (Guardian).',
+    unpauseTitle:'Снять паузу контракта', unpauseDesc:'Только Creator может вернуть контракт в активный режим после паузы.',
+    guardianTitle:'Панель Guardian', guardianDenied:'Доступ только для Guardian', guardianDeniedDesc:'Подключитесь адресом Guardian, чтобы получить доступ.',
+    standardPause:'Плановая пауза (2 дня)', standardPauseDesc:'Запрос ставится в очередь. Выполнить можно через 2 дня. Используйте при подозрении на атаку.',
+    emergencyPause:'Экстренная пауза (мгновенно)', emergencyPauseDesc:'Мгновенная остановка контракта без задержки. Используйте при активной атаке — снять паузу сможет только Creator.',
+    rawCallTitle:'Прямой вызов контракта', rawCallLead:'Только чтение. Декодер пробует адрес / число / булево / bytes32 в порядке.',
+    funcSig:'Сигнатура функции', rcArgs:'Аргументы', rcRun:'Выполнить',
+    opsLog:'Журнал', clearLog:'Очистить',
+    pickWallet:'Выберите кошелёк', pickWalletDesc:'Обнаружены через EIP-6963. Если список пуст — установите расширение кошелька.',
+    confirmSign:'Подтвердите подпись', confirmSignDesc:'Внимательно проверьте параметры — кошелёк покажет те же данные.', signNow:'⚓ Подписать в кошельке',
+    confirmCall:'Подтвердите вызов', confirmCallDesc:'Транзакция уйдёт в сеть Sepolia. Газ оплачивает ваш кошелёк.', sendTx:'⚓ Отправить',
+    cancel:'Отмена', close:'Закрыть', rightsReserved:'Все права защищены',
+    btnAdd:'Добавить', btnRemove:'Удалить', btnSave:'Сохранить', btnRequest:'Запросить', btnCancel:'Отменить', btnExecute:'Выполнить', btnInitiate:'Инициировать', btnAccept:'Принять', btnReplace:'Заменить', btnUnpause:'Снять паузу', btnEmergencyPause:'Экстренно остановить',
+    msgConnecting:'Подключаюсь…', msgConnected:'Кошелёк подключён.', msgDisconnected:'Кошелёк отключён.', msgAddrCopied:'Адрес скопирован',
+    msgWrongNet:'Не та сеть. Переключаемся на Sepolia…', msgNetSwitched:'Сеть переключена на Sepolia.', msgNetFail:'Не удалось переключить сеть.',
+    msgPickWalletEmpty:'Кошельки не обнаружены. Установите MetaMask, Rabby или другой EIP-1193 кошелёк.',
+    msgFieldRequired:'Заполните все поля.', msgInvalidAddr:'Неверный адрес кошелька.', msgInvalidNum:'Неверное число.',
+    msgSignReqSent:'Запрос на подпись отправлен в кошелёк.', msgSignOk:'Подпись успешно создана.', msgSignDenied:'Подпись отклонена.',
+    msgTxSending:'Транзакция отправляется в сеть…', msgTxSent:'Транзакция отправлена. Ожидаем подтверждения…', msgTxOk:'Транзакция подтверждена!', msgTxFail:'Транзакция откатилась.',
+    msgRoleOnly:'Эту операцию может выполнять только {role}.', msgConnectFirst:'Сначала подключите кошелёк.',
+    msgReady:'Готово к работе. Подключите кошелёк, чтобы начать.'
   },
   en:{
-    connect:'Connect', disconnect:'Disconnect',
-    dashboardSub:'— control panel',
-    dashboardLead:'Sign operations with a vault key, not your wallet private key. Phishing-resistant EIP-712 architecture.',
-    connectedAs:'Connected',
-    tabOverview:'Overview', tabVault:'My Vault', tabSign:'Signatures', tabCreator:'Creator', tabGuardian:'Guardian', tabContract:'Contract', tabConsole:'Console',
-    ovChain:'Network', ovBlock:'Block', ovBlockSub:'Auto-refresh 12s', ovPaused:'Pause', ovYourRole:'Your role', ovRoleSub:'Connect a wallet',
-    ovCreator:'Creator', ovGuardian:'Guardian', ovImpl:'Implementation',
-    archTitle:'Authorization architecture',
-    archDesc:'Vault operations are signed by separate keys (mainAuthKey / recoveryAuthKey), not your wallet owner key. Stealing the wallet private key gives no access to funds.',
-    archMain:'Regular operations', archRecov:'Emergency operations', archPanic:'Panic (no signature)',
-    contractTitle:'Contract', levelsTitle:'Protection levels',
-    lvlSafe:'No timelock, for daily ops', lvlVault:'Up to 72h timelock, for large balances', lvlFortress:'Up to 168h timelock, maximum protection',
-    vaultLookupTitle:'Vault lookup', vaultIdHint:'Your vault ID in the contract', loadVault:'Load',
-    signLead:'EIP-712 message builder for all vault operations. Sign with a vault key in any wallet, then anyone can submit the transaction.',
-    opWithdraw:'Withdraw', opWithdrawDesc:'Regular withdrawal. mainAuthKey signature.',
-    opTransfer:'Transfer', opTransferDesc:'Vault-to-vault transfer with timelock. mainAuthKey.',
-    opEarlyClose:'Early Close (5%)', opEarlyCloseDesc:'Early close with 5% penalty. recoveryAuthKey.',
-    opRecoverToSafe:'Recover to Safe (10%)', opRecoverToSafeDesc:'Evacuate to snapshot emergencyAddress. recoveryAuthKey.',
-    opEmergencyAny:'Emergency → Any (15%)', opEmergencyAnyDesc:'Withdraw to any address with 15% penalty. recoveryAuthKey.',
-    opRotate:'Rotate Auth Keys', opRotateDesc:'Rotate both auth keys. recoveryAuthKey.',
-    opTimelock:'Set Timelock', opTimelockDesc:'Change timelock (level-dependent). mainAuthKey.',
-    opVoluntary:'Voluntary Lock', opVoluntaryDesc:'Voluntary withdrawal lock until a date. mainAuthKey.',
-    opPanicTitle:'Panic Withdraw (no signature)', opPanicDesc:'Instant 80% evacuation to live globalEmergency. 20% penalty. No signature required, only vault owner can call.',
-    signOp:'Sign', execPanic:'Execute Panic Withdraw',
-    creatorDenied:'Creator access only', creatorDeniedDesc:'Connect with 0x6226828cc3d1B9c5fc1c4d9BE3dF7b03A4A70479 to proceed.',
-    addToken:'Supported tokens', welcomeBonus:'Welcome Bonus', creatorFees:'Fee withdrawal (7d timelock)',
-    reserveTitle:'Strategic reserve (7d)', creatorTransferTitle:'Transfer Creatorship (7d cooldown)', guardianTransferTitle:'Replace Guardian',
-    unpauseTitle:'Unpause', unpauseDesc:'Only Creator can unpause the contract.',
-    guardianDenied:'Guardian access only', guardianDeniedDesc:'Connect with 0xe0DACa428Abc3F1D5BD333C2D1Ca12dd1a36964D to proceed.',
-    standardPause:'Standard pause (2d delay)', standardPauseDesc:'Request is queued. Can execute after 2 days.',
-    emergencyPause:'Emergency pause (instant)', emergencyPauseDesc:'Instant contract halt. Use during active attack.',
-    rawCallTitle:'Raw call (read-only)', rawCallDesc:'eth_call by function signature. Decoder tries uint256/address/bool/bytes32 in order.',
-    funcSig:'Function signature', rcArgs:'Arguments (comma-separated)', rcArgsHint:'uint256: number. address: 0x…. bool: true/false. bytes32: 0x…64hex',
-    opsLog:'Operations log', clearLog:'Clear',
-    pickWallet:'Pick a wallet', pickWalletDesc:'Discovered via EIP-6963. If nothing is listed — install a wallet extension.',
-    confirmSign:'Confirm signature', confirmSignDesc:'Review parameters carefully. The wallet will show the exact same data.', signNow:'⚓ Sign in wallet',
-    confirmCall:'Confirm call', confirmCallDesc:'Transaction will be sent to Sepolia. Your wallet pays the gas.', sendTx:'⚓ Send transaction',
-    cancel:'Cancel', close:'Close',
-    testnetWarn:'Sepolia Testnet. Mainnet after external audit.'
+    connect:'Connect Wallet', disconnect:'Disconnect',
+    ibNet:'Network', ibRole:'Role', ibStatus:'Status', ibBlock:'Block', ibVault:'Vault', ibAddr:'Address', ibWrongNet:'Wrong network',
+    statusActive:'Active', statusPaused:'Paused',
+    roleCreator:'Creator', roleGuardian:'Guardian', roleUser:'User',
+    tabVault:'My Vault', tabOps:'Operations', tabCreator:'Creator', tabGuardian:'Guardian', tabContract:'Contract',
+    vaultLookupTitle:'My Vault', vaultLookupLead:'Enter a vault number to see its contents and protection settings.', loadVault:'Load',
+    archTitle:'How protection works', archDesc:'Vault operations are signed with dedicated keys (main and recovery), not your wallet private key. Even if an attacker steals the wallet key, they cannot move funds.',
+    archMain:'Daily operations', archRecov:'Emergency operations', archPanic:'Panic withdrawal', archPanicV:'no signature',
+    levelsTitle:'Protection levels', lvlSafe:'No delays, for daily operations.', lvlVault:'Up to 72 h delay, protects larger balances.', lvlFortress:'Up to 168 h delay, maximum protection.',
+    signLeadTitle:'Operations', signLead:'Each operation is signed by a dedicated vault key. The resulting signature is then submitted on-chain by any transaction.',
+    opWithdraw:'Withdraw', opWithdrawDesc:'Regular token withdrawal. Signed with the main key.',
+    opTransfer:'Transfer between vaults', opTransferDesc:'Move tokens from your vault to another vault (with level-dependent delay). Main key.',
+    opEarlyClose:'Early Close (5% penalty)', opEarlyCloseDesc:'Close the vault early with 5% penalty. Recovery key. Funds go to the owner.',
+    opRecoverToSafe:'Evacuate to safe address (10%)', opRecoverToSafeDesc:'Send to a pre-set safe address. Recovery key.',
+    opEmergencyAny:'Emergency to any address (15%)', opEmergencyAnyDesc:'Withdraw to any address with 15% penalty. Recovery key.',
+    opRotate:'Rotate vault keys', opRotateDesc:'Replace both authorization keys. Recovery key.',
+    opTimelock:'Change delay', opTimelockDesc:'Set the withdrawal delay (level-dependent). Main key.',
+    opVoluntary:'Voluntary lock', opVoluntaryDesc:'Lock withdrawals until a chosen date (cannot be cancelled early). Main key.',
+    opPanicTitle:'🆘 Panic withdrawal (20%, no signature)', opPanicDesc:'Instant withdrawal of 80% to the pre-set safe address. No signature required, only the vault owner can call. Use only if both keys are lost.',
+    signOp:'Sign', execPanic:'Execute panic withdrawal',
+    lblVaultId:'Vault number', lblNonce:'Counter', lblToken:'Token address', lblTo:'Send to', lblAmount:'Amount', lblDeadline:'Deadline',
+    lblToOwner:'Recipient vault owner', lblToVid:'Recipient vault number', lblNewMain:'New main key', lblNewRecov:'New recovery key',
+    lblTimelock:'Delay (seconds)', lblLockUntil:'Lock until', lblMaxClaims:'Max claims', lblNewCreator:'New Creator', lblNewGuardian:'New Guardian',
+    creatorTitle:'Creator Panel', creatorDenied:'Creator access only', creatorDeniedDesc:'Connect with the Creator address to access admin functions.',
+    addToken:'Supported tokens', addTokenDesc:'Add or remove tokens allowed in vaults.',
+    welcomeBonus:'Welcome bonus', welcomeBonusDesc:'ANCR amount for first users and maximum number of claims.',
+    creatorFees:'Fee withdrawal (7 days)', creatorFeesDesc:'Accumulated fees. First "request", then after 7 days "execute".',
+    reserveTitle:'Strategic reserve (7 days)', reserveDesc:'Withdrawal from the strategic reserve.',
+    creatorTransferTitle:'Transfer Creator role (7 days)', creatorTransferDesc:'Two-step: you initiate, the new owner accepts.',
+    guardianTransferTitle:'Replace Guardian', guardianTransferDesc:'Set a new Guardian.',
+    unpauseTitle:'Unpause the contract', unpauseDesc:'Only the Creator can return the contract to active mode after a pause.',
+    guardianTitle:'Guardian Panel', guardianDenied:'Guardian access only', guardianDeniedDesc:'Connect with the Guardian address to access.',
+    standardPause:'Standard pause (2 days)', standardPauseDesc:'Request is queued. Can be executed after 2 days. Use upon suspicion of attack.',
+    emergencyPause:'Emergency pause (instant)', emergencyPauseDesc:'Instant contract halt with no delay. Use during an active attack — only the Creator can unpause.',
+    rawCallTitle:'Direct contract call', rawCallLead:'Read-only. Decoder tries address / number / boolean / bytes32 in order.',
+    funcSig:'Function signature', rcArgs:'Arguments', rcRun:'Run',
+    opsLog:'Log', clearLog:'Clear',
+    pickWallet:'Pick a wallet', pickWalletDesc:'Discovered via EIP-6963. If empty — install a wallet extension.',
+    confirmSign:'Confirm signature', confirmSignDesc:'Carefully verify the parameters — the wallet will show the same data.', signNow:'⚓ Sign in wallet',
+    confirmCall:'Confirm call', confirmCallDesc:'Transaction will be sent to Sepolia. Your wallet pays the gas.', sendTx:'⚓ Send',
+    cancel:'Cancel', close:'Close', rightsReserved:'All rights reserved',
+    btnAdd:'Add', btnRemove:'Remove', btnSave:'Save', btnRequest:'Request', btnCancel:'Cancel', btnExecute:'Execute', btnInitiate:'Initiate', btnAccept:'Accept', btnReplace:'Replace', btnUnpause:'Unpause', btnEmergencyPause:'Emergency stop',
+    msgConnecting:'Connecting…', msgConnected:'Wallet connected.', msgDisconnected:'Wallet disconnected.', msgAddrCopied:'Address copied',
+    msgWrongNet:'Wrong network. Switching to Sepolia…', msgNetSwitched:'Switched to Sepolia.', msgNetFail:'Failed to switch network.',
+    msgPickWalletEmpty:'No wallets detected. Install MetaMask, Rabby, or any EIP-1193 wallet.',
+    msgFieldRequired:'Please fill in all fields.', msgInvalidAddr:'Invalid wallet address.', msgInvalidNum:'Invalid number.',
+    msgSignReqSent:'Signature request sent to the wallet.', msgSignOk:'Signature successfully created.', msgSignDenied:'Signature denied.',
+    msgTxSending:'Sending transaction…', msgTxSent:'Transaction submitted. Waiting for confirmation…', msgTxOk:'Transaction confirmed!', msgTxFail:'Transaction reverted.',
+    msgRoleOnly:'Only {role} can perform this operation.', msgConnectFirst:'Please connect a wallet first.',
+    msgReady:'Ready. Connect a wallet to start.'
   },
   zh:{
-    connect:'连接钱包', disconnect:'断开',
-    dashboardSub:'— 控制面板',
-    dashboardLead:'使用保险库密钥签名，而非钱包私钥。EIP-712 抗钓鱼架构。',
-    connectedAs:'已连接',
-    tabOverview:'概览', tabVault:'我的保险库', tabSign:'签名', tabCreator:'Creator', tabGuardian:'Guardian', tabContract:'合约', tabConsole:'控制台',
-    ovChain:'网络', ovBlock:'区块', ovBlockSub:'每 12 秒自动刷新', ovPaused:'暂停', ovYourRole:'你的角色', ovRoleSub:'请连接钱包',
-    ovCreator:'Creator', ovGuardian:'Guardian', ovImpl:'实现合约',
-    archTitle:'授权架构',
-    archDesc:'保险库操作由独立密钥（mainAuthKey / recoveryAuthKey）签名，而非钱包所有者的私钥。即使盗取钱包私钥也无法访问资金。',
-    archMain:'常规操作', archRecov:'紧急操作', archPanic:'Panic（无需签名）',
-    contractTitle:'合约', levelsTitle:'保护等级',
-    lvlSafe:'无时间锁，日常操作', lvlVault:'最长 72 小时时间锁，大额余额保护', lvlFortress:'最长 168 小时时间锁，最高保护',
-    vaultLookupTitle:'查询保险库', vaultIdHint:'你的保险库 ID', loadVault:'加载',
-    signLead:'为所有保险库操作构建 EIP-712 消息。在任何钱包中用保险库密钥签名，然后任何人都可以提交交易。',
-    opWithdraw:'提款', opWithdrawDesc:'常规提款。mainAuthKey 签名。',
-    opTransfer:'转账', opTransferDesc:'带时间锁的保险库间转账。mainAuthKey。',
-    opEarlyClose:'提前关闭 (5%)', opEarlyCloseDesc:'5% 罚金的提前关闭。recoveryAuthKey。',
-    opRecoverToSafe:'回收到安全地址 (10%)', opRecoverToSafeDesc:'撤离到快照 emergencyAddress。recoveryAuthKey。',
-    opEmergencyAny:'紧急 → 任意地址 (15%)', opEmergencyAnyDesc:'15% 罚金提取到任意地址。recoveryAuthKey。',
-    opRotate:'轮换授权密钥', opRotateDesc:'同时轮换两个授权密钥。recoveryAuthKey。',
-    opTimelock:'设置时间锁', opTimelockDesc:'更改时间锁（取决于等级）。mainAuthKey。',
-    opVoluntary:'自愿锁定', opVoluntaryDesc:'自愿锁定提款直到某日期。mainAuthKey。',
-    opPanicTitle:'Panic 提款（无需签名）', opPanicDesc:'立即撤离 80% 到 live globalEmergency。20% 罚金。无需签名，但只有保险库所有者可调用。',
-    signOp:'签名', execPanic:'执行 Panic 提款',
-    creatorDenied:'仅限 Creator 访问', creatorDeniedDesc:'连接 0x6226828cc3d1B9c5fc1c4d9BE3dF7b03A4A70479 以继续。',
-    addToken:'支持的代币', welcomeBonus:'欢迎奖金', creatorFees:'提取手续费（7天时间锁）',
-    reserveTitle:'战略储备（7天）', creatorTransferTitle:'转移 Creatorship（7天冷却）', guardianTransferTitle:'更换 Guardian',
-    unpauseTitle:'取消暂停', unpauseDesc:'仅 Creator 可取消合约暂停。',
-    guardianDenied:'仅限 Guardian 访问', guardianDeniedDesc:'连接 0xe0DACa428Abc3F1D5BD333C2D1Ca12dd1a36964D 以继续。',
-    standardPause:'标准暂停（2天延迟）', standardPauseDesc:'请求进入队列。2天后可执行。',
-    emergencyPause:'紧急暂停（立即）', emergencyPauseDesc:'立即停止合约。在主动攻击时使用。',
-    rawCallTitle:'原始调用（只读）', rawCallDesc:'按函数签名进行 eth_call。解码器依次尝试 uint256/address/bool/bytes32。',
-    funcSig:'函数签名', rcArgs:'参数（逗号分隔）', rcArgsHint:'uint256：数字。address：0x…。bool：true/false。bytes32：0x…64hex',
-    opsLog:'操作日志', clearLog:'清除',
-    pickWallet:'选择钱包', pickWalletDesc:'通过 EIP-6963 发现。如果未列出 — 请安装钱包扩展。',
-    confirmSign:'确认签名', confirmSignDesc:'仔细核对参数。钱包将显示完全相同的数据。', signNow:'⚓ 在钱包中签名',
-    confirmCall:'确认调用', confirmCallDesc:'交易将发送到 Sepolia。钱包支付 Gas。', sendTx:'⚓ 发送交易',
-    cancel:'取消', close:'关闭',
-    testnetWarn:'Sepolia 测试网。外部审计后上线主网。'
+    connect:'连接钱包', disconnect:'断开连接',
+    ibNet:'网络', ibRole:'角色', ibStatus:'状态', ibBlock:'区块', ibVault:'保险库', ibAddr:'地址', ibWrongNet:'错误网络',
+    statusActive:'运行中', statusPaused:'已暂停',
+    roleCreator:'Creator', roleGuardian:'Guardian', roleUser:'用户',
+    tabVault:'我的保险库', tabOps:'操作', tabCreator:'Creator', tabGuardian:'Guardian', tabContract:'合约',
+    vaultLookupTitle:'我的保险库', vaultLookupLead:'输入保险库编号以查看内容和保护设置。', loadVault:'加载',
+    archTitle:'保护原理', archDesc:'保险库操作由独立的密钥（主密钥与恢复密钥）签名，而非钱包私钥。即使攻击者盗取钱包私钥，也无法转移资金。',
+    archMain:'日常操作', archRecov:'紧急操作', archPanic:'紧急提款', archPanicV:'无需签名',
+    levelsTitle:'保护等级', lvlSafe:'无延迟，日常操作。', lvlVault:'最长 72 小时延迟，保护大额。', lvlFortress:'最长 168 小时延迟，最高保护。',
+    signLeadTitle:'操作', signLead:'每个操作均由专用保险库密钥签名。生成的签名随后由任何交易在链上提交。',
+    opWithdraw:'提款', opWithdrawDesc:'常规代币提款。由主密钥签名。',
+    opTransfer:'保险库之间转账', opTransferDesc:'将代币从您的保险库转到其他保险库（按等级延迟）。主密钥。',
+    opEarlyClose:'提前关闭（5% 罚金）', opEarlyCloseDesc:'5% 罚金提前关闭。恢复密钥。资金归所有者。',
+    opRecoverToSafe:'撤离到冷地址（10%）', opRecoverToSafeDesc:'发送到预设的安全地址。恢复密钥。',
+    opEmergencyAny:'紧急到任意地址（15%）', opEmergencyAnyDesc:'15% 罚金提到任意地址。恢复密钥。',
+    opRotate:'轮换保险库密钥', opRotateDesc:'替换两个授权密钥。恢复密钥。',
+    opTimelock:'更改延迟', opTimelockDesc:'设置提款延迟（取决于等级）。主密钥。',
+    opVoluntary:'自愿锁定', opVoluntaryDesc:'锁定提款直到选定日期（不能提前取消）。主密钥。',
+    opPanicTitle:'🆘 紧急提款（20%，无需签名）', opPanicDesc:'立即将 80% 提至预设安全地址。无需签名，但只有保险库所有者可调用。仅在两个密钥都丢失时使用。',
+    signOp:'签名', execPanic:'执行紧急提款',
+    lblVaultId:'保险库编号', lblNonce:'计数器', lblToken:'代币地址', lblTo:'发送到', lblAmount:'数量', lblDeadline:'有效期',
+    lblToOwner:'接收方保险库所有者', lblToVid:'接收方保险库编号', lblNewMain:'新主密钥', lblNewRecov:'新恢复密钥',
+    lblTimelock:'延迟（秒）', lblLockUntil:'锁定至', lblMaxClaims:'领取上限', lblNewCreator:'新 Creator', lblNewGuardian:'新 Guardian',
+    creatorTitle:'Creator 面板', creatorDenied:'仅 Creator 可访问', creatorDeniedDesc:'请使用 Creator 地址连接以访问管理功能。',
+    addToken:'支持的代币', addTokenDesc:'添加或移除允许的代币。',
+    welcomeBonus:'欢迎奖金', welcomeBonusDesc:'首批用户的 ANCR 数量及最大领取次数。',
+    creatorFees:'提取手续费（7 天）', creatorFeesDesc:'累积手续费。先"请求"，7 天后"执行"。',
+    reserveTitle:'战略储备（7 天）', reserveDesc:'从战略储备提款。',
+    creatorTransferTitle:'转移 Creator 角色（7 天）', creatorTransferDesc:'两步：您发起，新所有者接受。',
+    guardianTransferTitle:'更换 Guardian', guardianTransferDesc:'设置新的 Guardian。',
+    unpauseTitle:'解除合约暂停', unpauseDesc:'只有 Creator 可以在暂停后将合约恢复到活动模式。',
+    guardianTitle:'Guardian 面板', guardianDenied:'仅 Guardian 可访问', guardianDeniedDesc:'请使用 Guardian 地址连接。',
+    standardPause:'标准暂停（2 天）', standardPauseDesc:'请求进入队列。2 天后可执行。怀疑受攻击时使用。',
+    emergencyPause:'紧急暂停（立即）', emergencyPauseDesc:'立即停止合约。在主动攻击时使用 — 只有 Creator 可以解除。',
+    rawCallTitle:'直接合约调用', rawCallLead:'只读。解码器按地址 / 数字 / 布尔 / bytes32 顺序尝试。',
+    funcSig:'函数签名', rcArgs:'参数', rcRun:'运行',
+    opsLog:'日志', clearLog:'清除',
+    pickWallet:'选择钱包', pickWalletDesc:'通过 EIP-6963 发现。如果为空 — 请安装钱包扩展。',
+    confirmSign:'确认签名', confirmSignDesc:'仔细核对参数 — 钱包将显示相同的数据。', signNow:'⚓ 在钱包中签名',
+    confirmCall:'确认调用', confirmCallDesc:'交易将发送到 Sepolia。钱包支付 Gas。', sendTx:'⚓ 发送',
+    cancel:'取消', close:'关闭', rightsReserved:'保留所有权利',
+    btnAdd:'添加', btnRemove:'移除', btnSave:'保存', btnRequest:'请求', btnCancel:'取消', btnExecute:'执行', btnInitiate:'发起', btnAccept:'接受', btnReplace:'替换', btnUnpause:'解除暂停', btnEmergencyPause:'紧急停止',
+    msgConnecting:'连接中…', msgConnected:'钱包已连接。', msgDisconnected:'钱包已断开。', msgAddrCopied:'地址已复制',
+    msgWrongNet:'错误网络。正在切换到 Sepolia…', msgNetSwitched:'已切换到 Sepolia。', msgNetFail:'切换网络失败。',
+    msgPickWalletEmpty:'未检测到钱包。请安装 MetaMask、Rabby 或其他 EIP-1193 钱包。',
+    msgFieldRequired:'请填写所有字段。', msgInvalidAddr:'钱包地址无效。', msgInvalidNum:'数字无效。',
+    msgSignReqSent:'签名请求已发送到钱包。', msgSignOk:'签名已成功创建。', msgSignDenied:'签名被拒绝。',
+    msgTxSending:'发送交易中…', msgTxSent:'交易已提交。等待确认中…', msgTxOk:'交易已确认！', msgTxFail:'交易回滚。',
+    msgRoleOnly:'只有 {role} 可以执行此操作。', msgConnectFirst:'请先连接钱包。',
+    msgReady:'准备就绪。连接钱包以开始。'
   }
 };
 
 function applyLang(code){
+  State.lang = code;
   const dict = LANG[code] || LANG.ru;
   document.querySelectorAll('[data-i18n]').forEach(n => {
     const k = n.getAttribute('data-i18n');
     if(dict[k] !== undefined) n.textContent = dict[k];
   });
+  // tooltips with i18n
+  const tips = {
+    ru:{
+      tipVaultId:'Уникальный номер вашего сейфа в контракте. Если у вас несколько сейфов — каждый имеет свой номер.',
+      tipNonce:'Защита от повторов. Увеличивается на 1 после каждой подписи. Текущее значение видно в карточке сейфа.',
+      tipToken:'Адрес ERC-20 контракта токена в сети Sepolia.',
+      tipTo:'Адрес получателя. Проверяйте внимательно — отмена невозможна.',
+      tipAmount:'Сумма в наименьших единицах (wei). Для токена с 18 знаками 1.0 = 1000000000000000000.',
+      tipDeadline:'Unix-время, после которого подпись становится недействительной. Кнопка ⏰ ставит +1 час.',
+      tipToOwner:'Адрес владельца чужого сейфа, куда переводим.',
+      tipToVid:'Номер чужого сейфа, куда переводим.',
+      tipNewKey:'Адрес нового ключа сейфа.',
+      tipTimelock:'Время в секундах. 1 час = 3600, 1 сутки = 86400, 1 неделя = 604800.',
+      tipLockUntil:'Unix-время, до которого нельзя выводить.',
+      tipSig:'Имя функции и типы аргументов, например: balanceOf(address) или nonces(uint256).',
+      tipArgs:'Через запятую: число для uint, 0x… для address, true/false для bool.'
+    },
+    en:{
+      tipVaultId:'Unique number of your vault in the contract. Each vault has its own number.',
+      tipNonce:'Anti-replay counter. Increments by 1 after each signature. See current value in the vault card.',
+      tipToken:'ERC-20 token contract address on Sepolia.',
+      tipTo:'Recipient address. Check carefully — cannot be reversed.',
+      tipAmount:'Amount in smallest units (wei). For an 18-decimal token, 1.0 = 1000000000000000000.',
+      tipDeadline:'Unix timestamp after which the signature becomes invalid. The ⏰ button sets +1 hour.',
+      tipToOwner:'Address of the owner of the target vault.',
+      tipToVid:'Number of the target vault.',
+      tipNewKey:'Address of the new vault key.',
+      tipTimelock:'Time in seconds. 1h = 3600, 1d = 86400, 1w = 604800.',
+      tipLockUntil:'Unix timestamp until which withdrawals are blocked.',
+      tipSig:'Function name with argument types, e.g. balanceOf(address) or nonces(uint256).',
+      tipArgs:'Comma-separated: number for uint, 0x… for address, true/false for bool.'
+    },
+    zh:{
+      tipVaultId:'您保险库在合约中的唯一编号。每个保险库都有自己的编号。',
+      tipNonce:'防重放计数器。每次签名后加 1。在保险库卡片中查看当前值。',
+      tipToken:'Sepolia 上的 ERC-20 代币合约地址。',
+      tipTo:'接收方地址。请仔细核对 — 无法撤销。',
+      tipAmount:'最小单位（wei）。对于 18 位小数的代币，1.0 = 1000000000000000000。',
+      tipDeadline:'Unix 时间戳，之后签名无效。⏰ 按钮设置 +1 小时。',
+      tipToOwner:'目标保险库所有者地址。',
+      tipToVid:'目标保险库编号。',
+      tipNewKey:'新保险库密钥地址。',
+      tipTimelock:'时间（秒）。1 小时 = 3600，1 天 = 86400，1 周 = 604800。',
+      tipLockUntil:'锁定截止 Unix 时间戳。',
+      tipSig:'函数名和参数类型，例如 balanceOf(address) 或 nonces(uint256)。',
+      tipArgs:'逗号分隔：uint 用数字，address 用 0x…，bool 用 true/false。'
+    }
+  };
+  const t = tips[code] || tips.ru;
+  document.querySelectorAll('[data-tip-i18n]').forEach(n => {
+    const k = n.getAttribute('data-tip-i18n');
+    if(t[k]) n.setAttribute('data-tip', t[k]);
+  });
   document.documentElement.lang = code;
   document.querySelectorAll('#lang button').forEach(b => {
     b.classList.toggle('active', b.getAttribute('data-lang')===code);
   });
+  // refresh dynamic things that depend on lang
+  if(typeof refreshInfobar==='function') refreshInfobar();
+  renderConnState();
 }
 
 /* ═══════════════════════════════════════════ BOOT ═══════════════════════════ */
 function boot(){
   // logo
-  document.getElementById('logo').src = LOGO_DATA;
+  const lg = document.getElementById('logo'); if(lg) lg.src = LOGO_DATA;
   // i18n bind
   document.getElementById('lang').addEventListener('click', e => {
     const b = e.target.closest('button');
@@ -2286,15 +2511,47 @@ function boot(){
   bindAdminButtons();
   bindRawCall();
 
+  // floating console toggle
+  const fcHead=document.getElementById('fcHead');
+  const fcToggle=document.getElementById('fcToggle');
+  const fcClear=document.getElementById('fcClear');
+  function toggleCon(){
+    document.body.classList.toggle('console-mini');
+    if(fcToggle) fcToggle.textContent = document.body.classList.contains('console-mini') ? '▴' : '▾';
+  }
+  if(fcHead) fcHead.addEventListener('click', e=>{ if(e.target.closest('button')) return; toggleCon(); });
+  if(fcToggle) fcToggle.addEventListener('click', e=>{ e.stopPropagation(); toggleCon(); });
+  if(fcClear) fcClear.addEventListener('click', e=>{ e.stopPropagation(); const b=document.getElementById('fcBody'); if(b) b.innerHTML=''; const fl=document.getElementById('fcLast'); if(fl) fl.textContent=''; });
+
+  // +1ч deadline buttons
+  document.querySelectorAll('[data-deadline-set]').forEach(b => {
+    b.addEventListener('click', () => {
+      const op = b.dataset.deadlineSet;
+      const inp = document.querySelector('input[data-op="'+op+'"][data-f="deadline"]');
+      if(inp) inp.value = String(Math.floor(Date.now()/1000) + 3600);
+    });
+  });
+
   document.getElementById('loadVaultBtn').addEventListener('click', loadVaultInfo);
-  document.getElementById('clearLog').addEventListener('click', ()=>document.getElementById('logBox').innerHTML='');
+
+  // copy address
+  const ac=document.getElementById('addrCopy');
+  if(ac) ac.addEventListener('click', e=>{
+    e.preventDefault(); e.stopPropagation();
+    if(State.account) navigator.clipboard.writeText(State.account).then(()=>{
+      const L=LANG[State.lang||'ru']; notif('ok', L.msgAddrCopied||'Адрес скопирован');
+    });
+  });
 
   // initial state
   renderConnState();
-  refreshOverview();
-  log('i','Pulse готов · контракт '+VAULT_ADDR);
+  refreshInfobar();
+  refreshRates();
+  const L = LANG[State.lang||'ru'];
+  log('i', L.msgReady || 'Готово');
   // auto-refresh
-  setInterval(refreshOverview, 12000);
+  setInterval(refreshInfobar, 12000);
+  setInterval(refreshRates, 60000);
 }
 
 if(document.readyState === 'loading'){

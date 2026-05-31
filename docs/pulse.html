@@ -534,6 +534,18 @@
   .row .k{color:var(--muted);font-size:12px;flex-shrink:0}
   .row .v{font-family:var(--mono);font-size:12px;color:var(--text);word-break:break-all;text-align:right}
 
+  /* HOWTO блок в модалке открытия сейфа */
+  .howto-block{background:rgba(109,212,154,.07);border:1px solid rgba(109,212,154,.35);border-radius:10px;padding:0}
+  .howto-summary{cursor:pointer;list-style:none;padding:12px 14px;font-size:13px;font-weight:600;color:var(--ok);user-select:none}
+  .howto-summary::-webkit-details-marker{display:none}
+  .howto-block[open] .howto-summary{border-bottom:1px solid rgba(109,212,154,.25)}
+  .howto-body{padding:12px 14px;color:var(--text);font-size:12.5px;line-height:1.6}
+  .howto-body p{margin:0 0 8px}
+  .howto-body ol{margin:0 0 10px 18px;padding:0;line-height:1.65}
+  .howto-body ol li{margin-bottom:5px}
+  .howto-warn{background:rgba(240,184,90,.12);border:1px solid rgba(240,184,90,.4);border-radius:8px;padding:9px 11px;color:var(--warn);font-size:12px;line-height:1.5;margin:8px 0}
+  .howto-wallets{font-size:11.5px;color:var(--text-dim);border-top:1px dashed var(--border);padding-top:8px;margin-top:4px}
+
   /* FORMS — компактные, не на всю ширину */
   .field{display:block;margin-bottom:10px}
   .field label{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;font-weight:600}
@@ -1098,6 +1110,23 @@
         <li data-i18n="ovWarn4">При открытии берётся комиссия сервиса 0.2%.</li>
       </ul>
     </div>
+
+    <details class="howto-block" style="margin-bottom:16px">
+      <summary class="howto-summary">🟢 <span data-i18n="ovHowTitle">Как это работает (для новичков) — нажмите, чтобы развернуть</span></summary>
+      <div class="howto-body">
+        <p data-i18n="ovHow1">Сейчас вы вошли в пульт своим основным кошельком (MetaMask, Rabby и т.д.). Этот кошелёк НЕ управляет сейфом. Вам нужны три отдельных адреса-ключа.</p>
+        <p data-i18n="ovHow2"><b>Шаги:</b></p>
+        <ol>
+          <li data-i18n="ovHowS1">Откройте свой кошелёк (например MetaMask) в браузере.</li>
+          <li data-i18n="ovHowS2">Нажмите на иконку аккаунта → «Добавить аккаунт» / «Create Account».</li>
+          <li data-i18n="ovHowS3">Создайте так 2 новых адреса — это будут Основной ключ и Резервный ключ.</li>
+          <li data-i18n="ovHowS4">Для Резервного адреса (куда эвакуировать) — заведите ОТДЕЛЬНЫЙ кошелёк: другой браузерный профиль, другое устройство или аппаратный кошелёк (Ledger/Trezor).</li>
+        </ol>
+        <div class="howto-warn" data-i18n="ovHowWarn">⚠️ Самое важное: Резервный адрес должен быть в ДРУГОМ кошельке с ДРУГОЙ seed-фразой. Если все адреса из одной seed-фразы — при её краже потеряете всё сразу, и защита не сработает.</div>
+        <p data-i18n="ovHow3">После открытия сейфа сохраните seed-фразы всех кошельков в надёжном месте (бумага, не скриншот).</p>
+        <p class="howto-wallets"><span data-i18n="ovHowWallets">Популярные кошельки:</span> MetaMask · Rabby · OKX Wallet · Trust Wallet · Coinbase Wallet · Ledger · Trezor</p>
+      </div>
+    </details>
 
     <div class="field-row">
       <div class="field addr"><label><span data-i18n="ovToken">Токен</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToken" data-tip="Адрес токена, который кладёте в сейф.">?</span></label><input id="ovTokenInput" placeholder="0x…"/></div>
@@ -2404,6 +2433,16 @@ const LANG = {
     ovWarn2:'Резервный адрес НЕ может совпадать с адресом вашего кошелька — это и есть защита: при краже кошелька деньги уйдут на резервный адрес, а не вору.',
     ovWarn3:'Основной и резервный ключи — это ОТДЕЛЬНЫЕ адреса, не ваш кошелёк. Не теряйте их: восстановление возможно только через резервный адрес.',
     ovWarn4:'При открытии берётся комиссия сервиса 0.2%.',
+    ovHowTitle:'Как это работает (для новичков) — нажмите, чтобы развернуть',
+    ovHow1:'Сейчас вы вошли в пульт своим основным кошельком (MetaMask, Rabby и т.д.). Этот кошелёк НЕ управляет сейфом. Вам нужны три отдельных адреса-ключа.',
+    ovHow2:'Шаги:',
+    ovHowS1:'Откройте свой кошелёк (например MetaMask) в браузере.',
+    ovHowS2:'Нажмите на иконку аккаунта → «Добавить аккаунт».',
+    ovHowS3:'Создайте так 2 новых адреса — это будут Основной ключ и Резервный ключ.',
+    ovHowS4:'Для Резервного адреса (куда эвакуировать) заведите ОТДЕЛЬНЫЙ кошелёк: другой браузерный профиль, другое устройство или аппаратный кошелёк (Ledger/Trezor).',
+    ovHowWarn:'⚠️ Самое важное: Резервный адрес должен быть в ДРУГОМ кошельке с ДРУГОЙ seed-фразой. Если все адреса из одной seed-фразы — при её краже потеряете всё сразу, и защита не сработает.',
+    ovHow3:'После открытия сейфа сохраните seed-фразы всех кошельков в надёжном месте (бумага, не скриншот).',
+    ovHowWallets:'Популярные кошельки:',
     ovToken:'Токен', ovLevel:'Уровень защиты', ovAmount:'Сумма', ovName:'Название сейфа', ovMainKey:'Основной ключ', ovRecovKey:'Резервный ключ', ovEmergency:'Резервный адрес (куда эвакуировать)',
     ovAgreeText:'Я понимаю, что резервный адрес нельзя изменить мгновенно и он не принадлежит моему кошельку. Я не потеряю основной и резервный ключи.',
     ovConfirmBtn:'⚓ Открыть сейф', ovMustAgree:'Поставьте галочку согласия', ovBadToken:'Неверный адрес токена',
@@ -2472,6 +2511,16 @@ const LANG = {
     ovWarn2:'The recovery address CANNOT equal your wallet address — that is the protection: if your wallet is stolen, funds go to the recovery address, not the thief.',
     ovWarn3:'Main and recovery keys are SEPARATE addresses, not your wallet. Do not lose them: recovery is only possible via the recovery address.',
     ovWarn4:'A 0.2% service fee applies on opening.',
+    ovHowTitle:'How it works (for beginners) — click to expand',
+    ovHow1:'You are currently logged into the panel with your main wallet (MetaMask, Rabby, etc.). This wallet does NOT manage the vault. You need three separate key-addresses.',
+    ovHow2:'Steps:',
+    ovHowS1:'Open your wallet (e.g. MetaMask) in the browser.',
+    ovHowS2:'Click the account icon → "Create Account".',
+    ovHowS3:'Create 2 new addresses this way — these become the Main key and the Recovery key.',
+    ovHowS4:'For the Recovery address (evacuation target) use a SEPARATE wallet: a different browser profile, a different device, or a hardware wallet (Ledger/Trezor).',
+    ovHowWarn:'⚠️ Most important: the Recovery address must be in a DIFFERENT wallet with a DIFFERENT seed phrase. If all addresses come from one seed phrase, a single theft loses everything and the protection fails.',
+    ovHow3:'After creating the vault, store the seed phrases of all wallets in a safe place (paper, not a screenshot).',
+    ovHowWallets:'Popular wallets:',
     ovToken:'Token', ovLevel:'Protection level', ovAmount:'Amount', ovName:'Vault name', ovMainKey:'Main key', ovRecovKey:'Recovery key', ovEmergency:'Recovery address (evacuation target)',
     ovAgreeText:'I understand the recovery address cannot be changed instantly and does not belong to my wallet. I will not lose the main and recovery keys.',
     ovConfirmBtn:'⚓ Open vault', ovMustAgree:'Please check the consent box', ovBadToken:'Invalid token address',
@@ -2540,6 +2589,16 @@ const LANG = {
     ovWarn2:'恢复地址不能等于您的钱包地址 — 这就是保护：如果钱包被盗，资金将转到恢复地址，而非窃贼。',
     ovWarn3:'主密钥和恢复密钥是独立的地址，不是您的钱包。请勿丢失：只能通过恢复地址恢复。',
     ovWarn4:'开设时收取 0.2% 服务费。',
+    ovHowTitle:'工作原理（新手入门）— 点击展开',
+    ovHow1:'您当前使用主钱包（MetaMask、Rabby 等）登录面板。该钱包不管理保险库。您需要三个独立的密钥地址。',
+    ovHow2:'步骤：',
+    ovHowS1:'在浏览器中打开您的钱包（例如 MetaMask）。',
+    ovHowS2:'点击账户图标 →「创建账户」。',
+    ovHowS3:'这样创建 2 个新地址 — 它们将作为主密钥和恢复密钥。',
+    ovHowS4:'对于恢复地址（撤离目标），请使用单独的钱包：不同的浏览器配置文件、不同的设备或硬件钱包（Ledger/Trezor）。',
+    ovHowWarn:'⚠️ 最重要：恢复地址必须位于使用不同助记词的不同钱包中。如果所有地址都来自同一助记词，一旦被盗将失去全部，保护将失效。',
+    ovHow3:'创建保险库后，请将所有钱包的助记词保存在安全的地方（纸质，而非截图）。',
+    ovHowWallets:'热门钱包：',
     ovToken:'代币', ovLevel:'保护等级', ovAmount:'数量', ovName:'保险库名称', ovMainKey:'主密钥', ovRecovKey:'恢复密钥', ovEmergency:'恢复地址（撤离目标）',
     ovAgreeText:'我理解恢复地址不能立即更改且不属于我的钱包。我不会丢失主密钥和恢复密钥。',
     ovConfirmBtn:'⚓ 开设保险库', ovMustAgree:'请勾选同意框', ovBadToken:'代币地址无效',

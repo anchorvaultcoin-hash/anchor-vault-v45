@@ -517,7 +517,8 @@
   .tab{flex:1;background:none;border:0;color:var(--muted);padding:9px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--sans);transition:.15s;letter-spacing:.3px;white-space:nowrap;min-width:fit-content}
   .tab.active{background:var(--bg-2);color:var(--gold-bright);box-shadow:inset 0 0 0 1px var(--border-gold)}
   .tab:not(.active):hover{color:var(--text)}
-  .tab[data-role-gated]:not(.allowed){display:none}
+  .tab[data-role-gated]:not(.allowed){opacity:.35;cursor:not-allowed}
+  .tab[data-role-gated]:not(.allowed):hover{color:var(--muted)}
 
   .grid{display:grid;gap:14px}
   .grid-2{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}

@@ -1480,11 +1480,14 @@ function ts(){
   return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
 }
 function log(kind, msg, extra){
-  const box=document.getElementById('logBox');
+  const box=document.getElementById('fcBody');
+  if(!box){ console.log('['+kind+']', msg); return; }
   const line=document.createElement('div');
   line.innerHTML = '<span class="log-time">'+ts()+'</span><span class="log-'+kind+'">'+msg+'</span>'+(extra||'');
   box.appendChild(line);
   box.scrollTop=box.scrollHeight;
+  const fl=document.getElementById('fcLast');
+  if(fl) fl.textContent = msg.replace(/<[^>]+>/g,'').slice(0,80);
 }
 function notif(kind,msg,ms){
   const el=document.createElement('div');

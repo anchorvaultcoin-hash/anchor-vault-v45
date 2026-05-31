@@ -752,7 +752,7 @@
     <button class="tab" data-panel="ops" data-i18n="tabOps">Операции</button>
     <button class="tab" data-panel="creator" data-role-gated="creator" data-i18n="tabCreator">Creator</button>
     <button class="tab" data-panel="guardian" data-role-gated="guardian" data-i18n="tabGuardian">Guardian</button>
-    <button class="tab" data-panel="contract" data-role-gated="admin" data-i18n="tabContract">Контракт</button>
+    <button class="tab" data-panel="contract" data-role-gated="creator guardian" data-i18n="tabContract">Контракт</button>
   </div>
   </div>
 
@@ -1886,7 +1886,14 @@ function bindTabs(){
     t.addEventListener('click', ()=>{
       if(t.dataset.roleGated){
         const need = t.dataset.roleGated;
-        if(State.role !== need){
+        let allowed;
+        if(need.includes(" ")){
+            const roles = need.split(" ");
+            allowed = roles.includes(State.role);
+        } else {
+            allowed = (State.role === need);
+        }
+        if(!allowed){
           notif('err',(LANG[State.lang||'ru'].msgRoleOnly||'Только {role}').replace('{role}',need.toUpperCase()));
           return;
         }

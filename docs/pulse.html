@@ -424,12 +424,12 @@
 
 <style>
   :root{
-    --bg:#0a0a0b;--bg-2:#111114;--card:#16161a;--card-2:#1d1d22;
-    --navy:#102038;--navy-2:#1a3158;
-    --gold:#D4AF37;--gold-bright:#f1d984;--gold-dim:#7a6628;
-    --text:#ece9df;--text-dim:#a8a297;--muted:#857d6c;
-    --border:#28251f;--border-gold:rgba(212,175,55,.38);
-    --ok:#52c485;--warn:#e4a942;--err:#d65555;--info:#5ab4e0;
+    --bg:#1a1a1f;--bg-2:#22222a;--card:#2a2a32;--card-2:#33333d;
+    --navy:#1e2f4a;--navy-2:#2a4570;
+    --gold:#E6C055;--gold-bright:#F4D77E;--gold-dim:#998142;
+    --text:#f5f2e8;--text-dim:#cfc9b8;--muted:#a39c89;
+    --border:#3d3a32;--border-gold:rgba(230,192,85,.45);
+    --ok:#6dd49a;--warn:#f0b85a;--err:#e87070;--info:#7cc4e8;
     --maxw:1320px;
     --serif:Georgia,'Times New Roman',"Songti SC","SimSun",serif;
     --sans:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue","PingFang SC","Microsoft YaHei",Arial,sans-serif;
@@ -444,16 +444,16 @@
   body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;padding-bottom:var(--console-h)}
   body.console-mini{padding-bottom:var(--console-h-mini)}
   body::before{content:"";position:fixed;inset:0;z-index:-3;pointer-events:none;background:
-    radial-gradient(900px 600px at 50% -8%,rgba(212,175,55,.07),transparent 60%),
-    radial-gradient(700px 500px at 92% 100%,rgba(16,32,56,.5),transparent 65%),
-    radial-gradient(700px 500px at 5% 80%,rgba(212,175,55,.03),transparent 60%);}
+    radial-gradient(900px 600px at 50% -8%,rgba(230,192,85,.12),transparent 60%),
+    radial-gradient(700px 500px at 92% 100%,rgba(30,47,74,.6),transparent 65%),
+    radial-gradient(700px 500px at 5% 80%,rgba(230,192,85,.05),transparent 60%);}
   a{color:inherit;text-decoration:none}
   img{display:block}
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
   .mono{font-family:var(--mono);letter-spacing:-.01em}
 
   /* HEADER row 1 */
-  header.top{position:sticky;top:0;z-index:60;background:rgba(15,15,15,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+  header.top{position:sticky;top:0;z-index:60;background:rgba(40,40,48,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
   .nav{display:flex;justify-content:space-between;align-items:center;height:var(--header-h);gap:16px}
   .brand{display:flex;align-items:center;gap:12px;flex-shrink:0;cursor:pointer;transition:.15s}
   .brand:hover{opacity:.85}
@@ -462,7 +462,7 @@
   .brand-name-wrap{display:flex;flex-direction:column;line-height:1.15;gap:2px}
   .brand-name{font-family:var(--sans);font-size:1.05rem;font-weight:700;color:#e8e8e8;letter-spacing:.3px;white-space:nowrap}
   .brand-name small{color:var(--gold);font-weight:600;font-size:.7em;margin-left:5px;letter-spacing:.5px}
-  .brand-sub{font-size:10.5px;color:var(--gold-dim);font-weight:500;letter-spacing:.6px;text-transform:uppercase;white-space:nowrap}
+  .brand-sub{font-size:10.5px;color:var(--text-dim);font-weight:500;letter-spacing:.6px;text-transform:uppercase;white-space:nowrap}
   .nav-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
   .lang{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
   .lang button{background:none;border:0;color:var(--muted);font-size:11px;padding:6px 10px;cursor:pointer;letter-spacing:.5px;font-weight:600;transition:.15s;font-family:var(--sans)}
@@ -470,12 +470,12 @@
   .lang button:not(.active):hover{color:var(--text)}
 
   /* INFO BAR row 2 */
-  .infobar{position:sticky;top:var(--header-h);z-index:55;background:rgba(15,15,15,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+  .infobar{position:sticky;top:var(--header-h);z-index:55;background:rgba(40,40,48,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
   .infobar-inner{display:flex;align-items:center;height:var(--infobar-h);gap:14px;overflow-x:auto;scrollbar-width:none}
   .infobar-inner::-webkit-scrollbar{display:none}
   .info-cell{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;flex-shrink:0;font-size:12px;white-space:nowrap;transition:.15s}
   .info-cell:hover{border-color:rgba(212,175,55,.25)}
-  .info-cell .ic-k{color:var(--muted);font-size:10.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+  .info-cell .ic-k{color:var(--text-dim);font-size:10.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
   .info-cell .ic-v{color:var(--text);font-family:var(--mono);font-size:12.5px;font-weight:600}
   .info-cell .ic-v.gold{color:var(--gold-bright)}
   .info-cell.bal .ic-v{color:var(--gold-bright)}
@@ -508,7 +508,7 @@
   h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--text);letter-spacing:.3px}
   h2{font-size:22px;margin-bottom:8px}
   h2 .gold{color:var(--gold-bright)}
-  .lead{color:var(--text-dim);font-size:13px;max-width:780px;margin-bottom:18px}
+  .lead{color:var(--text);font-size:13px;max-width:780px;margin-bottom:18px}
 
   /* TABS - sticky под infobar */
   .tabs-wrap{position:sticky;top:calc(var(--header-h) + var(--infobar-h));z-index:54;background:var(--bg);padding:14px 0 4px;margin-bottom:14px}
@@ -539,14 +539,14 @@
   .field label{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;font-weight:600}
   .field label .req{color:var(--gold)}
   .field input,.field select,.field textarea{
-    width:100%;max-width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);
+    width:100%;max-width:100%;background:#15151a;color:var(--text);border:1px solid var(--border);
     border-radius:8px;padding:8px 11px;font-family:var(--mono);font-size:12.5px;outline:0;transition:.15s;
   }
   .field.short input{max-width:160px}
   .field.medium input{max-width:280px}
   .field.addr input{max-width:100%;font-size:11.5px}
   .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.12)}
-  .field input::placeholder{color:#4d4a45;font-style:italic;font-size:11.5px}
+  .field input::placeholder{color:#7a7466;font-style:italic;font-size:11.5px}
   .field textarea{min-height:60px;resize:vertical;line-height:1.5}
   .field .hint{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
   .field-row{display:grid;gap:10px;grid-template-columns:1fr 1fr}
@@ -579,7 +579,7 @@
   }
 
   /* FLOATING CONSOLE */
-  .floatcon{position:fixed;left:0;right:0;bottom:0;z-index:80;background:rgba(8,8,9,.97);backdrop-filter:blur(8px);border-top:1px solid var(--border-gold);transition:height .25s ease;height:var(--console-h);font-family:var(--mono);font-size:11.5px;color:var(--text-dim)}
+  .floatcon{position:fixed;left:0;right:0;bottom:0;z-index:80;background:rgba(32,32,38,.97);backdrop-filter:blur(8px);border-top:1px solid var(--border-gold);transition:height .25s ease;height:var(--console-h);font-family:var(--mono);font-size:11.5px;color:var(--text-dim)}
   body.console-mini .floatcon{height:var(--console-h-mini)}
   .floatcon-head{height:34px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--border);justify-content:space-between;cursor:pointer;user-select:none}
   .floatcon-head .fl-title{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--gold-dim);display:flex;align-items:center;gap:8px}
@@ -603,7 +603,7 @@
   .log-tx a{color:var(--gold);text-decoration:underline}
 
   /* MODAL */
-  .overlay{position:fixed;inset:0;background:rgba(5,5,7,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:120;display:none;align-items:center;justify-content:center;padding:20px}
+  .overlay{position:fixed;inset:0;background:rgba(20,20,24,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:120;display:none;align-items:center;justify-content:center;padding:20px}
   .overlay.open{display:flex}
   .modal{background:var(--card);border:1px solid var(--border-gold);border-radius:14px;padding:22px;max-width:540px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)}
   .modal h3{font-family:var(--serif);color:var(--gold-bright);font-size:18px;margin-bottom:12px;font-weight:400}
@@ -619,7 +619,7 @@
   .wallet-item .tag{font-size:10px;color:var(--gold-dim);letter-spacing:.5px;text-transform:uppercase}
 
   /* TYPED DATA / PREVIEW */
-  .typed-data{background:#050507;border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7;max-height:340px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+  .typed-data{background:#15151a;border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7;max-height:340px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
   .typed-data .k{color:var(--gold-dim)}
   .typed-data .v{color:var(--text)}
   .typed-data .sec{color:var(--gold-bright);font-weight:600;margin-top:8px;display:block}
@@ -706,11 +706,6 @@
       <span class="ic-k" data-i18n="ibStatus">Статус</span>
       <span class="ic-v" id="ibPause">—</span>
     </div>
-    <div class="info-cell">
-      <span class="ic-icon">📦</span>
-      <span class="ic-k" data-i18n="ibBlock">Блок</span>
-      <span class="ic-v" id="ibBlock">—</span>
-    </div>
     <div class="info-cell" id="cellVault" style="display:none">
       <span class="ic-icon">🔐</span>
       <span class="ic-k" data-i18n="ibVault">Сейф</span>
@@ -757,7 +752,7 @@
     <button class="tab" data-panel="ops" data-i18n="tabOps">Операции</button>
     <button class="tab" data-panel="creator" data-role-gated="creator" data-i18n="tabCreator">Creator</button>
     <button class="tab" data-panel="guardian" data-role-gated="guardian" data-i18n="tabGuardian">Guardian</button>
-    <button class="tab" data-panel="contract" data-i18n="tabContract">Контракт</button>
+    <button class="tab" data-panel="contract" data-role-gated="admin" data-i18n="tabContract">Контракт</button>
   </div>
   </div>
 
@@ -1655,7 +1650,7 @@ async function connectWallet(detail){
       log('i','Аккаунт сменён: '+State.account);
       determineRole();
       renderConnState();
-      refreshOverview();
+      refreshInfobar();
     });
     provider.on && provider.on('chainChanged', (cid)=>{
       State.chainId = parseInt(cid,16);
@@ -1663,7 +1658,7 @@ async function connectWallet(detail){
       renderConnState();
     });
     renderConnState();
-    refreshOverview();
+    refreshInfobar();
   }catch(e){
     log('err','Ошибка подключения: '+(e.message||e));
   }
@@ -1723,7 +1718,9 @@ function renderConnState(){
   }
   document.querySelectorAll('.tab[data-role-gated]').forEach(t=>{
     const need = t.dataset.roleGated;
-    const allowed = State.role === need;
+    let allowed;
+    if(need === 'admin') allowed = (State.role === 'creator' || State.role === 'guardian');
+    else allowed = (State.role === need);
     t.classList.toggle('allowed', allowed);
     t.style.display = allowed ? '' : 'none';
   });

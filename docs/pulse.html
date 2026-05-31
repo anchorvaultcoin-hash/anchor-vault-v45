@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#0a0a0b" />
 <meta name="color-scheme" content="dark" />
 <meta http-equiv="Content-Security-Policy"
-      content="default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src https://sepolia.gateway.tenderly.co https://1rpc.io https://ethereum-sepolia-rpc.publicnode.com https://rpc.sepolia.org; base-uri 'none'; form-action 'none'; frame-ancestors 'none';" />
+      content="default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src https://sepolia.gateway.tenderly.co https://1rpc.io https://ethereum-sepolia-rpc.publicnode.com https://rpc.sepolia.org; manifest-src 'self'; base-uri 'none'; form-action 'none';" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta http-equiv="X-DNS-Prefetch-Control" content="on" />
 
@@ -457,11 +457,12 @@
   .nav{display:flex;justify-content:space-between;align-items:center;height:var(--header-h);gap:16px}
   .brand{display:flex;align-items:center;gap:12px;flex-shrink:0;cursor:pointer;transition:.15s}
   .brand:hover{opacity:.85}
-  .brand-logo{position:relative;width:40px;height:40px}
+  .brand-logo{position:relative;width:40px;height:40px;flex-shrink:0}
   .brand-logo img{width:40px;height:40px;border-radius:50%;box-shadow:0 0 0 1px rgba(212,175,55,.35), 0 0 22px rgba(212,175,55,.15)}
-  .brand-logo .v-stamp{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8.5px;font-weight:700;color:var(--gold);letter-spacing:.8px;background:#0a0a0b;padding:1px 4px;border-radius:3px;border:1px solid var(--border-gold);line-height:1;white-space:nowrap}
-  .brand-name{font-family:var(--sans);font-size:1.1rem;font-weight:700;color:#e8e8e8;letter-spacing:.3px;white-space:nowrap}
+  .brand-name-wrap{display:flex;flex-direction:column;line-height:1.15;gap:2px}
+  .brand-name{font-family:var(--sans);font-size:1.05rem;font-weight:700;color:#e8e8e8;letter-spacing:.3px;white-space:nowrap}
   .brand-name small{color:var(--gold);font-weight:600;font-size:.7em;margin-left:5px;letter-spacing:.5px}
+  .brand-sub{font-size:10.5px;color:var(--gold-dim);font-weight:500;letter-spacing:.6px;text-transform:uppercase;white-space:nowrap}
   .nav-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
   .lang{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
   .lang button{background:none;border:0;color:var(--muted);font-size:11px;padding:6px 10px;cursor:pointer;letter-spacing:.5px;font-weight:600;transition:.15s;font-family:var(--sans)}
@@ -509,8 +510,9 @@
   h2 .gold{color:var(--gold-bright)}
   .lead{color:var(--text-dim);font-size:13px;max-width:780px;margin-bottom:18px}
 
-  /* TABS */
-  .tabs{display:flex;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none}
+  /* TABS - sticky под infobar */
+  .tabs-wrap{position:sticky;top:calc(var(--header-h) + var(--infobar-h));z-index:54;background:var(--bg);padding:14px 0 4px;margin-bottom:14px}
+  .tabs{display:flex;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px;overflow-x:auto;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
   .tab{flex:1;background:none;border:0;color:var(--muted);padding:9px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--sans);transition:.15s;letter-spacing:.3px;white-space:nowrap;min-width:fit-content}
   .tab.active{background:var(--bg-2);color:var(--gold-bright);box-shadow:inset 0 0 0 1px var(--border-gold)}
@@ -533,20 +535,34 @@
   .row .k{color:var(--muted);font-size:12px;flex-shrink:0}
   .row .v{font-family:var(--mono);font-size:12px;color:var(--text);word-break:break-all;text-align:right}
 
-  /* FORMS */
-  .field{display:block;margin-bottom:12px}
-  .field label{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;font-weight:600}
+  /* FORMS — компактные, не на всю ширину */
+  .field{display:block;margin-bottom:10px}
+  .field label{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;font-weight:600}
   .field label .req{color:var(--gold)}
   .field input,.field select,.field textarea{
-    width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);
-    border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:13px;outline:0;transition:.15s;
+    width:100%;max-width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);
+    border-radius:8px;padding:8px 11px;font-family:var(--mono);font-size:12.5px;outline:0;transition:.15s;
   }
+  .field.short input{max-width:160px}
+  .field.medium input{max-width:280px}
+  .field.addr input{max-width:100%;font-size:11.5px}
   .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.12)}
-  .field input::placeholder{color:#4d4a45;font-style:italic}
-  .field textarea{min-height:70px;resize:vertical;line-height:1.5}
+  .field input::placeholder{color:#4d4a45;font-style:italic;font-size:11.5px}
+  .field textarea{min-height:60px;resize:vertical;line-height:1.5}
   .field .hint{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
   .field-row{display:grid;gap:10px;grid-template-columns:1fr 1fr}
-  @media(max-width:680px){.field-row{grid-template-columns:1fr}}
+  .field-row-3{display:grid;gap:10px;grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:680px){.field-row,.field-row-3{grid-template-columns:1fr}}
+
+  /* Кнопки в формах — рядом, компактные */
+  .btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .btn-group .btn{flex:0 0 auto}
+
+  /* Input wrap with reveal eye */
+  .input-eye{position:relative}
+  .input-eye input{padding-right:36px}
+  .input-eye .eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:var(--gold-dim);cursor:pointer;font-size:14px;padding:4px;border-radius:4px;transition:.15s;line-height:1}
+  .input-eye .eye:hover{color:var(--gold);background:rgba(212,175,55,.08)}
 
   /* TOOLTIP */
   .tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1px solid var(--border-gold);color:var(--gold-dim);font-size:9px;font-weight:700;font-family:var(--sans);cursor:help;background:transparent;text-transform:none;letter-spacing:0;flex-shrink:0}
@@ -652,9 +668,11 @@
     <a class="brand" id="brandLink" href="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/landing.html" title="AnchorVaultCoin V45">
       <span class="brand-logo">
         <img id="logo" alt="AnchorVaultCoin" />
-        <span class="v-stamp">V45</span>
       </span>
-      <span class="brand-name">AnchorVaultCoin <small>V45</small></span>
+      <span class="brand-name-wrap">
+        <span class="brand-name">AnchorVaultCoin <small>V45</small></span>
+        <span class="brand-sub" data-i18n="brandSub">Панель управления</span>
+      </span>
     </a>
     <div class="nav-right">
       <button id="connectBtn" class="btn">
@@ -734,12 +752,14 @@
 </div>
 
 <main class="wrap">
+  <div class="tabs-wrap">
   <div class="tabs" id="tabs">
     <button class="tab active" data-panel="vault" data-i18n="tabVault">Мой сейф</button>
     <button class="tab" data-panel="ops" data-i18n="tabOps">Операции</button>
     <button class="tab" data-panel="creator" data-role-gated="creator" data-i18n="tabCreator">Creator</button>
     <button class="tab" data-panel="guardian" data-role-gated="guardian" data-i18n="tabGuardian">Guardian</button>
     <button class="tab" data-panel="contract" data-i18n="tabContract">Контракт</button>
+  </div>
   </div>
 
   <!-- ━━━ МОЙ СЕЙФ ━━━ -->
@@ -748,20 +768,18 @@
     <p class="lead" data-i18n="vaultLookupLead">Введите номер сейфа, чтобы посмотреть содержимое и параметры защиты.</p>
 
     <div class="card">
-      <div class="field-row">
-        <div class="field">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <div class="field short" style="margin:0">
           <label>
             <span data-i18n="lblVaultId">Номер сейфа</span>
             <span class="req">*</span>
             <span class="tip" data-tip-i18n="tipVaultId" data-tip="Уникальный номер вашего сейфа в контракте. Если у вас несколько сейфов — каждый имеет свой номер.">?</span>
           </label>
-          <input id="lookupVaultId" placeholder="напр. 1" inputmode="numeric"/>
+          <input id="lookupVaultId" placeholder="1" inputmode="numeric"/>
         </div>
-        <div class="field" style="display:flex;align-items:flex-end">
-          <button class="btn" id="loadVaultBtn" style="width:100%" data-i18n="loadVault">Загрузить</button>
-        </div>
+        <button class="btn" id="loadVaultBtn" data-i18n="loadVault">Загрузить</button>
       </div>
-      <div id="vaultInfo" class="grid grid-3" style="margin-top:6px"></div>
+      <div id="vaultInfo" class="grid grid-3" style="margin-top:12px"></div>
     </div>
 
     <div class="card" style="margin-top:14px">
@@ -805,14 +823,14 @@
         <h3><span class="num">A</span> <span data-i18n="opWithdraw">Вывод средств</span></h3>
         <p class="desc" data-i18n="opWithdrawDesc">Обычный вывод токенов из сейфа. Подписывается основным ключом.</p>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipVaultId" data-tip="Уникальный номер вашего сейфа.">?</span></label><input data-op="withdraw" data-f="vaultId" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNonce" data-tip="Защита от повторов. Увеличивается на 1 после каждой подписи. Текущее значение видно в карточке сейфа.">?</span></label><input data-op="withdraw" data-f="nonce" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipVaultId" data-tip="Уникальный номер вашего сейфа.">?</span></label><input data-op="withdraw" data-f="vaultId" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNonce" data-tip="Защита от повторов. Увеличивается на 1 после каждой подписи. Текущее значение видно в карточке сейфа.">?</span></label><input data-op="withdraw" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToken" data-tip="Адрес ERC-20 контракта токена в сети Sepolia.">?</span></label><input data-op="withdraw" data-f="token" placeholder=""/></div>
-        <div class="field"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipTo" data-tip="Адрес получателя. Проверяйте внимательно — отмена невозможна.">?</span></label><input data-op="withdraw" data-f="to" placeholder=""/></div>
+        <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToken" data-tip="Адрес ERC-20 контракта токена в сети Sepolia.">?</span></label><div class="input-eye"><input type="password" data-op="withdraw" data-f="token" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
+        <div class="field addr"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipTo" data-tip="Адрес получателя. Проверяйте внимательно — отмена невозможна.">?</span></label><div class="input-eye"><input type="password" data-op="withdraw" data-f="to" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="Сумма в наименьших единицах (wei). Для токена с 18 знаками 1.0 = 1000000000000000000.">?</span></label><input data-op="withdraw" data-f="amount" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipDeadline" data-tip="Unix-время, после которого подпись становится недействительной. Кнопка ⏰ ставит +1 час.">?</span></label><div style="display:flex;gap:6px"><input data-op="withdraw" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="withdraw" title="+1ч">⏰</button></div></div>
+          <div class="field medium"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="Сумма в наименьших единицах (wei). Для токена с 18 знаками 1.0 = 1000000000000000000.">?</span></label><input data-op="withdraw" data-f="amount" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipDeadline" data-tip="Unix-время, после которого подпись становится недействительной. Кнопка ⏰ ставит +1 час.">?</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="withdraw" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="withdraw" title="+1ч">⏰</button></div></div>
         </div>
         <button class="btn" data-sign="withdraw">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
@@ -822,16 +840,16 @@
         <h3><span class="num">B</span> <span data-i18n="opTransfer">Перевод между сейфами</span></h3>
         <p class="desc" data-i18n="opTransferDesc">Перевод токенов из вашего сейфа в чужой сейф (с задержкой по уровню). Основной ключ.</p>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipVaultId" data-tip="Ваш номер сейфа — откуда переводим.">?</span></label><input data-op="transfer" data-f="vaultId" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNonce" data-tip="Защита от повторов.">?</span></label><input data-op="transfer" data-f="nonce" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipVaultId" data-tip="Ваш номер сейфа — откуда переводим.">?</span></label><input data-op="transfer" data-f="vaultId" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNonce" data-tip="Защита от повторов.">?</span></label><input data-op="transfer" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToken" data-tip="ERC-20 адрес токена.">?</span></label><input data-op="transfer" data-f="token" placeholder=""/></div>
-        <div class="field"><label><span data-i18n="lblToOwner">Владелец сейфа-получателя</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToOwner" data-tip="Адрес владельца чужого сейфа, куда переводим.">?</span></label><input data-op="transfer" data-f="toVaultOwner" placeholder=""/></div>
+        <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToken" data-tip="ERC-20 адрес токена.">?</span></label><div class="input-eye"><input type="password" data-op="transfer" data-f="token" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
+        <div class="field addr"><label><span data-i18n="lblToOwner">Владелец сейфа-получателя</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToOwner" data-tip="Адрес владельца чужого сейфа, куда переводим.">?</span></label><div class="input-eye"><input type="password" data-op="transfer" data-f="toVaultOwner" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblToVid">Номер сейфа-получателя</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToVid" data-tip="Номер чужого сейфа, куда переводим.">?</span></label><input data-op="transfer" data-f="toVaultId" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="В наименьших единицах (wei).">?</span></label><input data-op="transfer" data-f="amount" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblToVid">Номер сейфа-получателя</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToVid" data-tip="Номер чужого сейфа, куда переводим.">?</span></label><input data-op="transfer" data-f="toVaultId" placeholder=""/></div>
+          <div class="field medium"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="В наименьших единицах (wei).">?</span></label><input data-op="transfer" data-f="amount" placeholder=""/></div>
         </div>
-        <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipDeadline" data-tip="Unix-время окончания подписи.">?</span></label><div style="display:flex;gap:6px"><input data-op="transfer" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="transfer" title="+1ч">⏰</button></div></div>
+        <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipDeadline" data-tip="Unix-время окончания подписи.">?</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="transfer" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="transfer" title="+1ч">⏰</button></div></div>
         <button class="btn" data-sign="transfer">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
@@ -840,11 +858,11 @@
         <h3><span class="num">C</span> <span data-i18n="opEarlyClose">Досрочное закрытие (штраф 5%)</span></h3>
         <p class="desc" data-i18n="opEarlyCloseDesc">Закрыть сейф досрочно со штрафом 5%. Подписывает резервный ключ. Средства идут владельцу.</p>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="earlyClose" data-f="vaultId" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="earlyClose" data-f="nonce" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="earlyClose" data-f="vaultId" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="earlyClose" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input data-op="earlyClose" data-f="token" placeholder=""/></div>
-        <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="earlyClose" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="earlyClose" title="+1ч">⏰</button></div></div>
+        <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><div class="input-eye"><input type="password" data-op="earlyClose" data-f="token" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
+        <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="earlyClose" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="earlyClose" title="+1ч">⏰</button></div></div>
         <button class="btn warn" data-sign="earlyClose">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
@@ -853,11 +871,11 @@
         <h3><span class="num">D</span> <span data-i18n="opRecoverToSafe">Эвакуация на холодный адрес (штраф 10%)</span></h3>
         <p class="desc" data-i18n="opRecoverToSafeDesc">Вывод на заранее зафиксированный безопасный адрес. Подписывает резервный ключ.</p>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="recoverToSafe" data-f="vaultId" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="recoverToSafe" data-f="nonce" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="recoverToSafe" data-f="vaultId" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="recoverToSafe" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input data-op="recoverToSafe" data-f="token" placeholder=""/></div>
-        <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="recoverToSafe" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="recoverToSafe" title="+1ч">⏰</button></div></div>
+        <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><div class="input-eye"><input type="password" data-op="recoverToSafe" data-f="token" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
+        <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="recoverToSafe" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="recoverToSafe" title="+1ч">⏰</button></div></div>
         <button class="btn warn" data-sign="recoverToSafe">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
@@ -866,12 +884,12 @@
         <h3><span class="num">E</span> <span data-i18n="opEmergencyAny">Аварийный вывод на любой адрес (штраф 15%)</span></h3>
         <p class="desc" data-i18n="opEmergencyAnyDesc">Вывод средств на произвольный адрес. Резервный ключ.</p>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="vaultId" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="nonce" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="vaultId" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="token" placeholder=""/></div>
-        <div class="field"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="to" placeholder=""/></div>
-        <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="emergencyAny" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="emergencyAny" title="+1ч">⏰</button></div></div>
+        <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><div class="input-eye"><input type="password" data-op="emergencyAny" data-f="token" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
+        <div class="field addr"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><div class="input-eye"><input type="password" data-op="emergencyAny" data-f="to" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
+        <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="emergencyAny" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="emergencyAny" title="+1ч">⏰</button></div></div>
         <button class="btn danger" data-sign="emergencyAny">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
@@ -880,12 +898,12 @@
         <h3><span class="num">F</span> <span data-i18n="opRotate">Смена ключей сейфа</span></h3>
         <p class="desc" data-i18n="opRotateDesc">Замена обоих ключей авторизации сейфа. Подписывает резервный ключ.</p>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="rotate" data-f="vaultId" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="rotate" data-f="nonce" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="rotate" data-f="vaultId" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="rotate" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field"><label><span data-i18n="lblNewMain">Новый основной ключ</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNewKey" data-tip="Адрес нового основного ключа сейфа.">?</span></label><input data-op="rotate" data-f="newMainKey" placeholder=""/></div>
-        <div class="field"><label><span data-i18n="lblNewRecov">Новый резервный ключ</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNewKey" data-tip="Адрес нового резервного ключа сейфа.">?</span></label><input data-op="rotate" data-f="newRecoveryKey" placeholder=""/></div>
-        <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="rotate" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="rotate" title="+1ч">⏰</button></div></div>
+        <div class="field addr"><label><span data-i18n="lblNewMain">Новый основной ключ</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNewKey" data-tip="Адрес нового основного ключа сейфа.">?</span></label><div class="input-eye"><input type="password" data-op="rotate" data-f="newMainKey" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
+        <div class="field addr"><label><span data-i18n="lblNewRecov">Новый резервный ключ</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNewKey" data-tip="Адрес нового резервного ключа сейфа.">?</span></label><div class="input-eye"><input type="password" data-op="rotate" data-f="newRecoveryKey" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
+        <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="rotate" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="rotate" title="+1ч">⏰</button></div></div>
         <button class="btn warn" data-sign="rotate">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
@@ -894,12 +912,12 @@
         <h3><span class="num">G</span> <span data-i18n="opTimelock">Изменить задержку</span></h3>
         <p class="desc" data-i18n="opTimelockDesc">Установить задержку при выводе (зависит от уровня сейфа). Основной ключ.</p>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="timelock" data-f="vaultId" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="timelock" data-f="nonce" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="timelock" data-f="vaultId" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="timelock" data-f="nonce" placeholder=""/></div>
         </div>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblTimelock">Задержка (секунды)</span><span class="tip" data-tip-i18n="tipTimelock" data-tip="Время в секундах. 1 час = 3600, 1 сутки = 86400, 1 неделя = 604800.">?</span></label><input data-op="timelock" data-f="newTimelock" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="timelock" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="timelock" title="+1ч">⏰</button></div></div>
+          <div class="field short"><label><span data-i18n="lblTimelock">Задержка (секунды)</span><span class="tip" data-tip-i18n="tipTimelock" data-tip="Время в секундах. 1 час = 3600, 1 сутки = 86400, 1 неделя = 604800.">?</span></label><input data-op="timelock" data-f="newTimelock" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="timelock" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="timelock" title="+1ч">⏰</button></div></div>
         </div>
         <button class="btn" data-sign="timelock">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
@@ -909,12 +927,12 @@
         <h3><span class="num">H</span> <span data-i18n="opVoluntary">Добровольная блокировка</span></h3>
         <p class="desc" data-i18n="opVoluntaryDesc">Заблокировать вывод до определённой даты (нельзя отменить досрочно). Основной ключ.</p>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="voluntary" data-f="vaultId" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="voluntary" data-f="nonce" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="voluntary" data-f="vaultId" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="voluntary" data-f="nonce" placeholder=""/></div>
         </div>
         <div class="field-row">
-          <div class="field"><label><span data-i18n="lblLockUntil">Заблокировать до</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipLockUntil" data-tip="Unix-время, до которого нельзя выводить.">?</span></label><input data-op="voluntary" data-f="lockUntil" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px"><input data-op="voluntary" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="voluntary" title="+1ч">⏰</button></div></div>
+          <div class="field short"><label><span data-i18n="lblLockUntil">Заблокировать до</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipLockUntil" data-tip="Unix-время, до которого нельзя выводить.">?</span></label><input data-op="voluntary" data-f="lockUntil" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="voluntary" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="voluntary" title="+1ч">⏰</button></div></div>
         </div>
         <button class="btn" data-sign="voluntary">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
@@ -946,7 +964,7 @@
           <h3><span class="num">A</span> <span data-i18n="addToken">Поддерживаемые токены</span></h3>
           <p class="desc" data-i18n="addTokenDesc">Добавление и удаление токенов, которые можно класть в сейфы.</p>
           <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="addTokenAddr" placeholder=""/></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="btn-group">
             <button class="btn" data-call="addSupportedToken" data-i18n="btnAdd">Добавить</button>
             <button class="btn ghost" data-call="removeSupportedToken" data-i18n="btnRemove">Удалить</button>
           </div>
@@ -968,7 +986,7 @@
           <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="cwToken" placeholder=""/></div>
           <div class="field"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input id="cwTo" placeholder=""/></div>
           <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span></label><input id="cwAmount" placeholder=""/></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="btn-group">
             <button class="btn" data-call="requestCreatorWithdraw" data-i18n="btnRequest">Запросить</button>
             <button class="btn ghost" data-call="cancelCreatorWithdraw" data-i18n="btnCancel">Отменить</button>
             <button class="btn warn" data-call="withdrawCreatorFees" data-i18n="btnExecute">Выполнить</button>
@@ -981,7 +999,7 @@
           <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="rwToken" placeholder=""/></div>
           <div class="field"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input id="rwTo" placeholder=""/></div>
           <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span></label><input id="rwAmount" placeholder=""/></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="btn-group">
             <button class="btn" data-call="requestReserveWithdraw" data-i18n="btnRequest">Запросить</button>
             <button class="btn ghost" data-call="cancelReserveWithdraw" data-i18n="btnCancel">Отменить</button>
             <button class="btn warn" data-call="withdrawStrategicReserve" data-i18n="btnExecute">Выполнить</button>
@@ -992,7 +1010,7 @@
           <h3><span class="num">E</span> <span data-i18n="creatorTransferTitle">Передача роли Creator (7 дней)</span></h3>
           <p class="desc" data-i18n="creatorTransferDesc">Двухэтапная: сначала вы инициируете, затем новый владелец принимает.</p>
           <div class="field"><label><span data-i18n="lblNewCreator">Новый Creator</span> <span class="req">*</span></label><input id="tcNewCreator" placeholder=""/></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="btn-group">
             <button class="btn warn" data-call="transferCreatorship" data-i18n="btnInitiate">Инициировать</button>
             <button class="btn" data-call="acceptCreatorship" data-i18n="btnAccept">Принять</button>
           </div>
@@ -1026,7 +1044,7 @@
         <div class="card">
           <h3><span class="num">A</span> <span data-i18n="standardPause">Плановая пауза (2 дня)</span></h3>
           <p class="desc" data-i18n="standardPauseDesc">Запрос ставится в очередь. Выполнить можно через 2 дня. Используйте при подозрении на атаку.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="btn-group">
             <button class="btn warn" data-call="requestPause" data-i18n="btnRequest">Запросить</button>
             <button class="btn ghost" data-call="cancelPauseRequest" data-i18n="btnCancel">Отменить</button>
             <button class="btn danger" data-call="executePause" data-i18n="btnExecute">Выполнить</button>
@@ -1652,39 +1670,57 @@ function determineRole(){
 function renderConnState(){
   const cBtn=document.getElementById('connectBtn');
   const dBtn=document.getElementById('disconnectBtn');
-  const addrBox=document.getElementById('addrBox');
-  const rolePill=document.getElementById('rolePill');
-  const netPill=document.getElementById('netPill');
   if(State.account){
-    cBtn.style.display='none';
-    dBtn.style.display='inline-flex';
-    addrBox.style.display='block';
-    document.getElementById('addrShort').textContent = State.account.slice(0,6)+'…'+State.account.slice(-4);
-    rolePill.style.display='inline-block';
-    rolePill.className = 'pill always ' + (State.role==='creator'?'warn': State.role==='guardian'?'ok':'');
-    rolePill.textContent = State.role.toUpperCase();
+    if(cBtn) cBtn.style.display='none';
+    if(dBtn) dBtn.style.display='inline-flex';
+    const cellAddr=document.getElementById('cellAddr');
+    const ibAddr=document.getElementById('ibAddr');
+    if(cellAddr && ibAddr){
+      cellAddr.style.display='inline-flex';
+      ibAddr.textContent=State.account.slice(0,6)+'…'+State.account.slice(-4);
+    }
+    const cellRole=document.getElementById('cellRole');
+    const ibRole=document.getElementById('ibRole');
+    if(cellRole && ibRole){
+      cellRole.style.display='inline-flex';
+      cellRole.classList.remove('role-creator','role-guardian');
+      if(State.role==='creator') cellRole.classList.add('role-creator');
+      else if(State.role==='guardian') cellRole.classList.add('role-guardian');
+      ibRole.textContent = roleLabel(State.role);
+    }
   }else{
-    cBtn.style.display='inline-flex';
-    dBtn.style.display='none';
-    addrBox.style.display='none';
-    rolePill.style.display='none';
+    if(cBtn) cBtn.style.display='inline-flex';
+    if(dBtn) dBtn.style.display='none';
+    const cellAddr=document.getElementById('cellAddr');
+    const cellRole=document.getElementById('cellRole');
+    if(cellAddr) cellAddr.style.display='none';
+    if(cellRole) cellRole.style.display='none';
   }
-  netPill.className = 'pill always ' + (State.chainId===CHAIN_ID?'ok':State.chainId?'err':'');
-  netPill.textContent = State.chainId===CHAIN_ID ? 'Sepolia ✓' : State.chainId?('Wrong net #'+State.chainId):'Sepolia';
-  // Tab gating
+  const cellNet=document.getElementById('cellNet');
+  const ibNet=document.getElementById('ibNet');
+  if(cellNet && ibNet){
+    cellNet.classList.remove('ok','err','warn');
+    if(State.chainId===CHAIN_ID){ cellNet.classList.add('ok'); ibNet.textContent='Sepolia ✓'; }
+    else if(State.chainId){ cellNet.classList.add('err'); const L=LANG[State.lang||'ru']; ibNet.textContent = (L.ibWrongNet||'Wrong net') + ' #' + State.chainId; }
+    else ibNet.textContent='Sepolia';
+  }
   document.querySelectorAll('.tab[data-role-gated]').forEach(t=>{
     const need = t.dataset.roleGated;
     const allowed = State.role === need;
     t.classList.toggle('allowed', allowed);
   });
-  // Creator/guardian panel guards
-  document.getElementById('creatorGuard').style.display = State.role==='creator' ? 'none' : 'block';
-  document.getElementById('creatorPanel').style.display = State.role==='creator' ? 'block' : 'none';
-  document.getElementById('guardianGuard').style.display = State.role==='guardian' ? 'none' : 'block';
-  document.getElementById('guardianPanel').style.display = State.role==='guardian' ? 'block' : 'none';
-  // Overview role
-  const r=document.getElementById('ovRole');
-  r.textContent = State.role==='guest'?'—':State.role.toUpperCase();
+  const cg=document.getElementById('creatorGuard'); if(cg) cg.style.display = State.role==='creator' ? 'none' : 'block';
+  const cp=document.getElementById('creatorPanel'); if(cp) cp.style.display = State.role==='creator' ? 'block' : 'none';
+  const gg=document.getElementById('guardianGuard'); if(gg) gg.style.display = State.role==='guardian' ? 'none' : 'block';
+  const gp=document.getElementById('guardianPanel'); if(gp) gp.style.display = State.role==='guardian' ? 'block' : 'none';
+}
+
+function roleLabel(r){
+  const L = LANG[State.lang||'ru'];
+  if(r==='creator') return L.roleCreator||'Creator';
+  if(r==='guardian') return L.roleGuardian||'Guardian';
+  if(r==='user') return L.roleUser||'User';
+  return '—';
 }
 
 /* ═══════════════════════════════════════════ READ HELPERS ════════════════════ */
@@ -2265,6 +2301,7 @@ async function loadVaultInfo(){
 const LANG = {
   ru:{
     connect:'Подключить кошелёк', disconnect:'Выйти',
+    brandSub:'Панель управления',
     ibNet:'Сеть', ibRole:'Роль', ibStatus:'Статус', ibBlock:'Блок', ibVault:'Сейф', ibAddr:'Адрес', ibWrongNet:'Не та сеть',
     statusActive:'Активен', statusPaused:'Приостановлен',
     roleCreator:'Creator', roleGuardian:'Guardian', roleUser:'Пользователь',
@@ -2317,6 +2354,7 @@ const LANG = {
   },
   en:{
     connect:'Connect Wallet', disconnect:'Disconnect',
+    brandSub:'Control Panel',
     ibNet:'Network', ibRole:'Role', ibStatus:'Status', ibBlock:'Block', ibVault:'Vault', ibAddr:'Address', ibWrongNet:'Wrong network',
     statusActive:'Active', statusPaused:'Paused',
     roleCreator:'Creator', roleGuardian:'Guardian', roleUser:'User',
@@ -2369,6 +2407,7 @@ const LANG = {
   },
   zh:{
     connect:'连接钱包', disconnect:'断开连接',
+    brandSub:'控制面板',
     ibNet:'网络', ibRole:'角色', ibStatus:'状态', ibBlock:'区块', ibVault:'保险库', ibAddr:'地址', ibWrongNet:'错误网络',
     statusActive:'运行中', statusPaused:'已暂停',
     roleCreator:'Creator', roleGuardian:'Guardian', roleUser:'用户',
@@ -2517,11 +2556,25 @@ function boot(){
   const fcClear=document.getElementById('fcClear');
   function toggleCon(){
     document.body.classList.toggle('console-mini');
-    if(fcToggle) fcToggle.textContent = document.body.classList.contains('console-mini') ? '▴' : '▾';
+    const mini = document.body.classList.contains('console-mini');
+    if(fcToggle) fcToggle.textContent = mini ? '▴' : '▾';
   }
   if(fcHead) fcHead.addEventListener('click', e=>{ if(e.target.closest('button')) return; toggleCon(); });
   if(fcToggle) fcToggle.addEventListener('click', e=>{ e.stopPropagation(); toggleCon(); });
   if(fcClear) fcClear.addEventListener('click', e=>{ e.stopPropagation(); const b=document.getElementById('fcBody'); if(b) b.innerHTML=''; const fl=document.getElementById('fcLast'); if(fl) fl.textContent=''; });
+
+  // Eye toggle for address inputs
+  document.querySelectorAll('[data-toggle-eye]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.preventDefault();
+      const wrap = btn.closest('.input-eye');
+      if(!wrap) return;
+      const inp = wrap.querySelector('input');
+      if(!inp) return;
+      if(inp.type==='password'){ inp.type='text'; btn.textContent='🙈'; }
+      else { inp.type='password'; btn.textContent='👁'; }
+    });
+  });
 
   // +1ч deadline buttons
   document.querySelectorAll('[data-deadline-set]').forEach(b => {

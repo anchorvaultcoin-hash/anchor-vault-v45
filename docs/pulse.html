@@ -517,8 +517,7 @@
   .tab{flex:1;background:none;border:0;color:var(--muted);padding:9px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--sans);transition:.15s;letter-spacing:.3px;white-space:nowrap;min-width:fit-content}
   .tab.active{background:var(--bg-2);color:var(--gold-bright);box-shadow:inset 0 0 0 1px var(--border-gold)}
   .tab:not(.active):hover{color:var(--text)}
-  .tab[data-role-gated]:not(.allowed){opacity:.35;cursor:not-allowed}
-  .tab[data-role-gated]:not(.allowed):hover{color:var(--muted)}
+  .tab[data-role-gated]:not(.allowed){display:none}
 
   .grid{display:grid;gap:14px}
   .grid-2{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
@@ -1577,6 +1576,7 @@ async function pickWallet(){
   Wallets.discovered.forEach(d => {
     const btn = document.createElement('button');
     btn.className='wallet-item';
+    btn.type='button';
     if(d.info.icon){
       const img=document.createElement('img'); img.src=d.info.icon; img.alt=d.info.name; btn.appendChild(img);
     }else{
@@ -1586,23 +1586,37 @@ async function pickWallet(){
     }
     const name=document.createElement('span'); name.className='name'; name.textContent=d.info.name||'Unknown'; btn.appendChild(name);
     const tag=document.createElement('span'); tag.className='tag'; tag.textContent='EIP-6963'; btn.appendChild(tag);
-    btn.addEventListener('click', ()=>connectWallet(d));
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('[AnchorVault] Wallet clicked:', d.info.name);
+      connectWallet(d).catch(err=>{
+        console.error('[AnchorVault] connectWallet error:', err);
+        log('err','Ошибка: '+(err && err.message ? err.message : String(err)));
+      });
+    });
     list.appendChild(btn);
   });
   openModal('walletModal');
 }
 
 async function connectWallet(detail){
-  closeAllModals();
   try{
     const provider = detail.provider;
+    if(!provider || typeof provider.request !== 'function'){
+      log('err','Кошелёк не доступен (нет provider.request)');
+      return;
+    }
     State.providerInfo = detail.info;
     log('i','Подключаюсь к '+detail.info.name+'…');
+    console.log('[AnchorVault] Calling eth_requestAccounts on', detail.info.name);
     const accs = await provider.request({method:'eth_requestAccounts'});
+    console.log('[AnchorVault] Accounts:', accs);
     if(!accs || !accs[0]){
       log('err','Адрес не получен');
       return;
     }
+    closeAllModals();
     State.provider = provider;
     State.account = accs[0].toLowerCase();
     const cidHex = await provider.request({method:'eth_chainId'});
@@ -1708,6 +1722,7 @@ function renderConnState(){
     const need = t.dataset.roleGated;
     const allowed = State.role === need;
     t.classList.toggle('allowed', allowed);
+    t.style.display = allowed ? '' : 'none';
   });
   const cg=document.getElementById('creatorGuard'); if(cg) cg.style.display = State.role==='creator' ? 'none' : 'block';
   const cp=document.getElementById('creatorPanel'); if(cp) cp.style.display = State.role==='creator' ? 'block' : 'none';

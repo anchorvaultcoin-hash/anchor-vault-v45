@@ -436,7 +436,7 @@
     --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
     --header-h:64px;
     --infobar-h:54px;
-    --console-h:160px;
+    --console-h:120px;
     --console-h-mini:34px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -504,14 +504,14 @@
   .btn.xs{padding:4px 10px;font-size:11px;font-weight:500}
 
   /* MAIN */
-  main{padding:22px 0 30px}
+  main{padding:14px 0 20px}
   h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--text);letter-spacing:.3px}
-  h2{font-size:22px;margin-bottom:8px}
+  h2{font-size:18px;margin-bottom:4px}
   h2 .gold{color:var(--gold-bright)}
-  .lead{color:var(--text);font-size:13px;max-width:780px;margin-bottom:18px}
+  .lead{color:var(--text);font-size:12px;max-width:780px;margin-bottom:10px}
 
   /* TABS - sticky под infobar */
-  .tabs-wrap{position:sticky;top:calc(var(--header-h) + var(--infobar-h));z-index:54;background:var(--bg);padding:14px 0 4px;margin-bottom:14px}
+  .tabs-wrap{position:sticky;top:calc(var(--header-h) + var(--infobar-h));z-index:54;background:var(--bg);padding:10px 0 4px;margin-bottom:10px}
   .tabs{display:flex;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px;overflow-x:auto;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
   .tab{flex:1;background:none;border:0;color:var(--muted);padding:9px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--sans);transition:.15s;letter-spacing:.3px;white-space:nowrap;min-width:fit-content}
@@ -519,17 +519,18 @@
   .tab:not(.active):hover{color:var(--text)}
   .tab[data-role-gated]:not(.allowed){display:none}
 
-  .grid{display:grid;gap:14px}
-  .grid-2{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
-  .grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .grid{display:grid;gap:10px}
+  .grid-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  .grid-3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  .grid-ops{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(285px,1fr))}
 
-  .card{background:linear-gradient(180deg,var(--card),var(--card-2));border:1px solid var(--border);border-radius:14px;padding:18px;transition:.2s}
+  .card{background:linear-gradient(180deg,var(--card),var(--card-2));border:1px solid var(--border);border-radius:12px;padding:13px;transition:.2s}
   .card:hover{border-color:rgba(212,175,55,.18)}
   .card.gold-border{border-color:var(--border-gold)}
-  .card h3{font-size:16px;color:var(--gold-bright);margin-bottom:12px;display:flex;align-items:center;gap:10px;font-family:var(--serif)}
+  .card h3{font-size:14px;color:var(--gold-bright);margin-bottom:8px;display:flex;align-items:center;gap:8px;font-family:var(--serif)}
   .card h3 .num{font-family:var(--mono);font-size:10px;color:var(--gold-dim);font-weight:500;letter-spacing:1.5px}
-  .card .desc{color:var(--text-dim);font-size:12.5px;margin-bottom:12px;line-height:1.5}
-  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px dashed var(--border)}
+  .card .desc{color:var(--text-dim);font-size:11.5px;margin-bottom:8px;line-height:1.4}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:5px 0;border-bottom:1px dashed var(--border)}
   .row:last-child{border-bottom:0}
   .row .k{color:var(--muted);font-size:12px;flex-shrink:0}
   .row .v{font-family:var(--mono);font-size:12px;color:var(--text);word-break:break-all;text-align:right}
@@ -547,12 +548,12 @@
   .howto-wallets{font-size:11.5px;color:var(--text-dim);border-top:1px dashed var(--border);padding-top:8px;margin-top:4px}
 
   /* FORMS — компактные, не на всю ширину */
-  .field{display:block;margin-bottom:10px}
-  .field label{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;font-weight:600}
+  .field{display:block;margin-bottom:7px}
+  .field label{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px;font-weight:600}
   .field label .req{color:var(--gold)}
   .field input,.field select,.field textarea{
     width:100%;max-width:100%;background:#15151a;color:var(--text);border:1px solid var(--border);
-    border-radius:8px;padding:8px 11px;font-family:var(--mono);font-size:12.5px;outline:0;transition:.15s;
+    border-radius:7px;padding:6px 9px;font-family:var(--mono);font-size:12px;outline:0;transition:.15s;
   }
   .field.short input{max-width:160px}
   .field.medium input{max-width:280px}
@@ -561,7 +562,7 @@
   .field input::placeholder{color:#7a7466;font-style:italic;font-size:11.5px}
   .field textarea{min-height:60px;resize:vertical;line-height:1.5}
   .field .hint{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
-  .field-row{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+  .field-row{display:grid;gap:8px;grid-template-columns:1fr 1fr}
   .field-row-3{display:grid;gap:10px;grid-template-columns:1fr 1fr 1fr}
   @media(max-width:680px){.field-row,.field-row-3{grid-template-columns:1fr}}
 
@@ -789,34 +790,20 @@
       <div id="vaultInfo" class="grid grid-3" style="margin-top:12px"></div>
     </div>
 
-    <div class="card" style="margin-top:14px">
-      <h3 data-i18n="archTitle">Как работает защита</h3>
-      <p class="desc" data-i18n="archDesc">Операции с сейфом подписываются отдельными ключами (основной и резервный), а не приватником вашего кошелька. Даже если злоумышленник украдёт ключ кошелька — он не получит доступа к средствам.</p>
-      <div class="row"><span class="k" data-i18n="archMain">Повседневные операции</span><span class="v">Основной ключ</span></div>
-      <div class="row"><span class="k" data-i18n="archRecov">Аварийные операции</span><span class="v">Резервный ключ</span></div>
-      <div class="row"><span class="k" data-i18n="archPanic">Сверхсрочный вывод</span><span class="v" data-i18n="archPanicV">без подписи</span></div>
-    </div>
-
-    <div class="card" style="margin-top:14px">
-      <h3 data-i18n="levelsTitle">Уровни защиты</h3>
-      <div class="grid grid-3">
-        <div>
-          <div style="color:var(--gold-bright);font-weight:600;font-size:14px">SAFE</div>
-          <div style="font-family:var(--mono);font-size:18px;color:var(--gold-bright);margin:2px 0">0.5%</div>
-          <div style="color:var(--text-dim);font-size:12px" data-i18n="lvlSafe">Без задержек, для повседневных операций.</div>
-        </div>
-        <div>
-          <div style="color:var(--gold-bright);font-weight:600;font-size:14px">VAULT</div>
-          <div style="font-family:var(--mono);font-size:18px;color:var(--gold-bright);margin:2px 0">1.5%</div>
-          <div style="color:var(--text-dim);font-size:12px" data-i18n="lvlVault">Задержка до 72 ч, защита крупных сумм.</div>
-        </div>
-        <div>
-          <div style="color:var(--gold-bright);font-weight:600;font-size:14px">FORTRESS</div>
-          <div style="font-family:var(--mono);font-size:18px;color:var(--gold-bright);margin:2px 0">2.0%</div>
-          <div style="color:var(--text-dim);font-size:12px" data-i18n="lvlFortress">Задержка до 168 ч, максимальная защита.</div>
+    <details class="howto-block" style="margin-top:10px">
+      <summary class="howto-summary">ℹ️ <span data-i18n="archTitle">Как работает защита и уровни</span></summary>
+      <div class="howto-body">
+        <p class="desc" data-i18n="archDesc">Операции с сейфом подписываются отдельными ключами (основной и резервный), а не приватником вашего кошелька. Даже если злоумышленник украдёт ключ кошелька — он не получит доступа к средствам.</p>
+        <div class="row"><span class="k" data-i18n="archMain">Повседневные операции</span><span class="v">Основной ключ</span></div>
+        <div class="row"><span class="k" data-i18n="archRecov">Аварийные операции</span><span class="v">Резервный ключ</span></div>
+        <div class="row"><span class="k" data-i18n="archPanic">Сверхсрочный вывод</span><span class="v" data-i18n="archPanicV">без подписи</span></div>
+        <div class="grid grid-3" style="margin-top:8px">
+          <div><div style="color:var(--gold-bright);font-weight:600;font-size:13px">SAFE · 0.5%</div><div style="color:var(--text-dim);font-size:11.5px" data-i18n="lvlSafe">Без задержек, для повседневных операций.</div></div>
+          <div><div style="color:var(--gold-bright);font-weight:600;font-size:13px">VAULT · 1.5%</div><div style="color:var(--text-dim);font-size:11.5px" data-i18n="lvlVault">Задержка до 72 ч, защита крупных сумм.</div></div>
+          <div><div style="color:var(--gold-bright);font-weight:600;font-size:13px">FORTRESS · 2.0%</div><div style="color:var(--text-dim);font-size:11.5px" data-i18n="lvlFortress">Задержка до 168 ч, максимальная защита.</div></div>
         </div>
       </div>
-    </div>
+    </details>
   </section>
 
   <!-- ━━━ ОПЕРАЦИИ ━━━ -->
@@ -836,7 +823,7 @@
       <button class="btn" id="ssSend">📤 <span data-i18n="btnSend">Перевести</span></button>
     </div>
 
-    <div class="grid grid-2">
+    <div class="grid-ops">
       <!-- WITHDRAW -->
       <div class="card">
         <h3><span class="num">A</span> <span data-i18n="opWithdraw">Вывод средств</span></h3>
@@ -979,9 +966,10 @@
         <div class="card">
           <h3><span class="num">B</span> <span data-i18n="welcomeBonus">Приветственный бонус</span></h3>
           <p class="desc" data-i18n="welcomeBonusDesc">Сумма ANCR для первых пользователей и максимальное число выдач.</p>
+          <div class="howto-warn" style="margin-bottom:10px" data-i18n="wbMaxHint">⚠️ Максимум по контракту: 0.005 токена (5000000000000000 wei). Больше нельзя — транзакция отклонится.</div>
           <div class="field-row">
-            <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="В wei (1 ANCR = 1e18).">?</span></label><input id="wbAmount" placeholder=""/></div>
-            <div class="field"><label><span data-i18n="lblMaxClaims">Лимит выдач</span> <span class="req">*</span></label><input id="wbMaxClaims" placeholder=""/></div>
+            <div class="field short"><label><span data-i18n="lblAmount">Сумма (wei)</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="В wei. Максимум 5000000000000000 (0.005 токена).">?</span></label><div style="display:flex;gap:6px;align-items:stretch"><input id="wbAmount" placeholder=""/><button class="btn ghost xs" id="wbMaxBtn" title="Максимум">MAX</button></div></div>
+            <div class="field short"><label><span data-i18n="lblMaxClaims">Лимит выдач</span> <span class="req">*</span></label><input id="wbMaxClaims" placeholder="1000"/></div>
           </div>
           <button class="btn" data-call="setWelcomeBonus" data-i18n="btnSave">Сохранить</button>
         </div>
@@ -989,9 +977,10 @@
         <div class="card">
           <h3><span class="num">C</span> <span data-i18n="creatorFees">Вывод комиссий (7 дней)</span></h3>
           <p class="desc" data-i18n="creatorFeesDesc">Накопленные комиссии. Сначала «запросить», затем через 7 дней «выполнить».</p>
-          <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="cwToken" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input id="cwTo" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span></label><input id="cwAmount" placeholder=""/></div>
+          <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="cwToken" placeholder="0x…"/></div>
+          <div class="btn-group" style="margin-bottom:8px"><button class="btn ghost xs" id="cwCheck" data-i18n="btnCheckBalance">Узнать накопленное</button><span id="cwBalance" class="mono" style="color:var(--gold-bright);font-size:12px;align-self:center"></span></div>
+          <div class="field addr"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input id="cwTo" placeholder="0x…"/></div>
+          <div class="field medium"><label><span data-i18n="lblAmount">Сумма (wei)</span> <span class="req">*</span></label><input id="cwAmount" placeholder=""/></div>
           <div class="btn-group">
             <button class="btn" data-call="requestCreatorWithdraw" data-i18n="btnRequest">Запросить</button>
             <button class="btn ghost" data-call="cancelCreatorWithdraw" data-i18n="btnCancel">Отменить</button>
@@ -1002,9 +991,10 @@
         <div class="card">
           <h3><span class="num">D</span> <span data-i18n="reserveTitle">Стратегический резерв (7 дней)</span></h3>
           <p class="desc" data-i18n="reserveDesc">Вывод из стратегического резерва.</p>
-          <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="rwToken" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input id="rwTo" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span></label><input id="rwAmount" placeholder=""/></div>
+          <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="rwToken" placeholder="0x…"/></div>
+          <div class="btn-group" style="margin-bottom:8px"><button class="btn ghost xs" id="rwCheck" data-i18n="btnCheckBalance">Узнать накопленное</button><span id="rwBalance" class="mono" style="color:var(--gold-bright);font-size:12px;align-self:center"></span></div>
+          <div class="field addr"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input id="rwTo" placeholder="0x…"/></div>
+          <div class="field medium"><label><span data-i18n="lblAmount">Сумма (wei)</span> <span class="req">*</span></label><input id="rwAmount" placeholder=""/></div>
           <div class="btn-group">
             <button class="btn" data-call="requestReserveWithdraw" data-i18n="btnRequest">Запросить</button>
             <button class="btn ghost" data-call="cancelReserveWithdraw" data-i18n="btnCancel">Отменить</button>
@@ -1971,8 +1961,12 @@ function bindTabs(){
     t.addEventListener('click', ()=>{
       if(t.dataset.roleGated){
         const need = t.dataset.roleGated;
-        if(State.role !== need){
-          notif('err',(LANG[State.lang||'ru'].msgRoleOnly||'Только {role}').replace('{role}',need.toUpperCase()));
+        let allowed;
+        if(need === 'admin') allowed = (State.role === 'creator' || State.role === 'guardian');
+        else allowed = (State.role === need);
+        if(!allowed){
+          const roleName = need==='admin' ? 'Creator / Guardian' : need.toUpperCase();
+          notif('err',(LANG[State.lang||'ru'].msgRoleOnly||'Только {role}').replace('{role}',roleName));
           return;
         }
       }
@@ -2145,12 +2139,19 @@ const ADMIN_CALLS = {
     sig:'transferCreatorship(address)', role:'creator',
     inputs:[{el:'tcNewCreator', type:'address', name:'newCreator'}]
   },
-  acceptCreatorship: { sig:'acceptCreatorship()', role:'creator', inputs:[] },
+  // acceptCreatorship вызывает НОВЫЙ владелец (ещё не creator) → роль any
+  acceptCreatorship: { sig:'acceptCreatorship()', role:'any', inputs:[] },
   transferGuardianship: {
     sig:'transferGuardianship(address)', role:'creator',
     inputs:[{el:'tgNewGuardian', type:'address', name:'newGuardian'}]
   },
+  // acceptGuardianship вызывает НОВЫЙ guardian → роль any
+  acceptGuardianship: { sig:'acceptGuardianship()', role:'any', inputs:[] },
   unpause: { sig:'unpause()', role:'creator', inputs:[] },
+  donateToRewardPool: {
+    sig:'donateToRewardPool(address,uint256)', role:'any',
+    inputs:[{el:'dpToken', type:'address', name:'token'},{el:'dpAmount', type:'uint256', name:'amount'}]
+  },
   // GUARDIAN
   requestPause: { sig:'requestPause()', role:'guardian', inputs:[] },
   cancelPauseRequest: { sig:'cancelPauseRequest()', role:'guardian', inputs:[] },
@@ -2161,6 +2162,14 @@ const ADMIN_CALLS = {
 function gatherCall(name){
   const cfg = ADMIN_CALLS[name];
   if(!cfg) throw new Error('Unknown call '+name);
+  // Защита лимита приветственного бонуса (MAX_WELCOME_BONUS = MIN_DEPOSIT/2 = 5e15)
+  if(name === 'setWelcomeBonus'){
+    const amtEl = document.getElementById('wbAmount');
+    if(amtEl && amtEl.value.trim()){
+      const amt = BigInt(amtEl.value.trim());
+      if(amt > 5000000000000000n) throw new Error((LANG[State.lang||'ru'].wbOverLimit||'Бонус превышает максимум 5000000000000000 wei'));
+    }
+  }
   const args = [];
   const types = [];
   const display = [];
@@ -2205,7 +2214,7 @@ function bindAdminButtons(){
       if(State.chainId!==CHAIN_ID){ notif('err',LANG[State.lang||'ru'].msgWrongNet||'Не та сеть'); return; }
       try{
         const info = gatherCall(name);
-        if(State.role !== info.role){
+        if(info.role !== 'any' && State.role !== info.role){
           notif('err', (LANG[State.lang||'ru'].msgRoleOnly||'Только {role}').replace('{role}',info.role.toUpperCase()));
           return;
         }
@@ -2443,6 +2452,9 @@ const LANG = {
     ovHowWarn:'⚠️ Самое важное: Резервный адрес должен быть в ДРУГОМ кошельке с ДРУГОЙ seed-фразой. Если все адреса из одной seed-фразы — при её краже потеряете всё сразу, и защита не сработает.',
     ovHow3:'После открытия сейфа сохраните seed-фразы всех кошельков в надёжном месте (бумага, не скриншот).',
     ovHowWallets:'Популярные кошельки:',
+    wbMaxHint:'⚠️ Максимум по контракту: 0.005 токена (5000000000000000 wei). Больше нельзя — транзакция отклонится.',
+    wbOverLimit:'Бонус превышает максимум 5000000000000000 wei (0.005 токена)',
+    btnCheckBalance:'Узнать накопленное',
     ovToken:'Токен', ovLevel:'Уровень защиты', ovAmount:'Сумма', ovName:'Название сейфа', ovMainKey:'Основной ключ', ovRecovKey:'Резервный ключ', ovEmergency:'Резервный адрес (куда эвакуировать)',
     ovAgreeText:'Я понимаю, что резервный адрес нельзя изменить мгновенно и он не принадлежит моему кошельку. Я не потеряю основной и резервный ключи.',
     ovConfirmBtn:'⚓ Открыть сейф', ovMustAgree:'Поставьте галочку согласия', ovBadToken:'Неверный адрес токена',
@@ -2521,6 +2533,9 @@ const LANG = {
     ovHowWarn:'⚠️ Most important: the Recovery address must be in a DIFFERENT wallet with a DIFFERENT seed phrase. If all addresses come from one seed phrase, a single theft loses everything and the protection fails.',
     ovHow3:'After creating the vault, store the seed phrases of all wallets in a safe place (paper, not a screenshot).',
     ovHowWallets:'Popular wallets:',
+    wbMaxHint:'⚠️ Contract maximum: 0.005 token (5000000000000000 wei). More than that will be rejected.',
+    wbOverLimit:'Bonus exceeds the maximum of 5000000000000000 wei (0.005 token)',
+    btnCheckBalance:'Check accrued',
     ovToken:'Token', ovLevel:'Protection level', ovAmount:'Amount', ovName:'Vault name', ovMainKey:'Main key', ovRecovKey:'Recovery key', ovEmergency:'Recovery address (evacuation target)',
     ovAgreeText:'I understand the recovery address cannot be changed instantly and does not belong to my wallet. I will not lose the main and recovery keys.',
     ovConfirmBtn:'⚓ Open vault', ovMustAgree:'Please check the consent box', ovBadToken:'Invalid token address',
@@ -2599,6 +2614,9 @@ const LANG = {
     ovHowWarn:'⚠️ 最重要：恢复地址必须位于使用不同助记词的不同钱包中。如果所有地址都来自同一助记词，一旦被盗将失去全部，保护将失效。',
     ovHow3:'创建保险库后，请将所有钱包的助记词保存在安全的地方（纸质，而非截图）。',
     ovHowWallets:'热门钱包：',
+    wbMaxHint:'⚠️ 合约上限：0.005 代币（5000000000000000 wei）。超过将被拒绝。',
+    wbOverLimit:'奖金超过上限 5000000000000000 wei（0.005 代币）',
+    btnCheckBalance:'查询累计',
     ovToken:'代币', ovLevel:'保护等级', ovAmount:'数量', ovName:'保险库名称', ovMainKey:'主密钥', ovRecovKey:'恢复密钥', ovEmergency:'恢复地址（撤离目标）',
     ovAgreeText:'我理解恢复地址不能立即更改且不属于我的钱包。我不会丢失主密钥和恢复密钥。',
     ovConfirmBtn:'⚓ 开设保险库', ovMustAgree:'请勾选同意框', ovBadToken:'代币地址无效',
@@ -2891,6 +2909,24 @@ function boot(){
   });
   const ovConfirm=document.getElementById('ovConfirm');
   if(ovConfirm) ovConfirm.addEventListener('click', openVaultFlow);
+  const wbMaxBtn=document.getElementById('wbMaxBtn');
+  if(wbMaxBtn) wbMaxBtn.addEventListener('click', ()=>{ const i=document.getElementById('wbAmount'); if(i) i.value='5000000000000000'; });
+  // Проверка накопленных комиссий / резерва
+  async function checkAccrued(sig, tokenElId, outElId){
+    const L=LANG[State.lang||'ru'];
+    const tok=document.getElementById(tokenElId).value.trim();
+    const out=document.getElementById(outElId);
+    if(!isAddress(tok)){ if(out) out.textContent=L.msgInvalidAddr||'Неверный адрес'; return; }
+    try{
+      const r=await ethCall(VAULT_ADDR, ABI.call(sig,['address'],[tok]));
+      const val=ABI.decodeUint(r);
+      if(out) out.textContent='= '+val.toString()+' wei ('+fmtNum(Number(val)/1e18)+')';
+    }catch(e){ if(out) out.textContent='—'; }
+  }
+  const cwCheck=document.getElementById('cwCheck');
+  if(cwCheck) cwCheck.addEventListener('click', ()=>checkAccrued('creatorFees(address)','cwToken','cwBalance'));
+  const rwCheck=document.getElementById('rwCheck');
+  if(rwCheck) rwCheck.addEventListener('click', ()=>checkAccrued('strategicReserve(address)','rwToken','rwBalance'));
 
   // copy address
   const ac=document.getElementById('addrCopy');

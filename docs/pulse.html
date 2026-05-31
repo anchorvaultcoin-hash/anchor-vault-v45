@@ -376,7 +376,7 @@
         {"@type":"Question","name":"Is AnchorVault audited?","acceptedAnswer":{"@type":"Answer","text":"V45 has passed 787 Foundry tests, Slither 0.11.5 clean, and DeepSeek AI review. External audit gates mainnet deployment."}},
         {"@type":"Question","name":"Which wallets are supported?","acceptedAnswer":{"@type":"Answer","text":"Any EIP-1193 wallet via EIP-6963: MetaMask, Coinbase Wallet, Rabby, OKX, Trust, Binance Web3 Wallet, Frame, Brave Wallet, Bitget. Legacy window.ethereum as fallback."}},
         {"@type":"Question","name":"Что такое AnchorVault?","inLanguage":"ru","acceptedAnswer":{"@type":"Answer","inLanguage":"ru","text":"AnchorVault V45 — некастодиальное крипто-хранилище с двухфакторной защитой на EIP-712 подписях. Операции с сейфом подписываются отдельными ключами авторизации (mainAuthKey / recoveryAuthKey), а не приватным ключом владельца кошелька."}},
-        {"@type":"Question","name":"Что делать если потерял ключ?","inLanguage":"ru","acceptedAnswer":{"@type":"Answer","inLanguage":"ru","text":"Резервный ключ recoveryAuthKey умеет заменить оба ключа через RotateAuthKeys. Если потеряны оба — владелец может вызвать panicWithdraw на резервный адрес globalEmergency (штраф 20%, подпись не нужна)."}},
+        {"@type":"Question","name":"Что делать если потерял ключ?","inLanguage":"ru","acceptedAnswer":{"@type":"Answer","inLanguage":"ru","text":"Резервный ключ recoveryAuthKey умеет заменить оба ключа через RotateAuthKeys. Если потеряны оба — владелец может вызвать panicWithdraw на резервный адрес globalEmergency (комиссия сервиса 20%, подпись не нужна)."}},
         {"@type":"Question","name":"AnchorVault 与多重签名钱包有何不同？","inLanguage":"zh","acceptedAnswer":{"@type":"Answer","inLanguage":"zh","text":"AnchorVault 将钱包所有权与保险库授权分离。保险库操作通过 EIP-712 由独立的密钥签名。即使盗取钱包私钥，攻击者也无法转移保险库内的资产。"}}
       ]
     }
@@ -772,6 +772,7 @@
           <input id="lookupVaultId" placeholder="1" inputmode="numeric"/>
         </div>
         <button class="btn" id="loadVaultBtn" data-i18n="loadVault">Загрузить</button>
+        <button class="btn ghost" id="openVaultBtn" data-i18n="openVaultBtn">➕ Открыть новый сейф</button>
       </div>
       <div id="vaultInfo" class="grid grid-3" style="margin-top:12px"></div>
     </div>
@@ -809,80 +810,83 @@
   <!-- ━━━ ОПЕРАЦИИ ━━━ -->
   <section class="panel" id="panel-ops">
     <h2><span class="gold" data-i18n="signLeadTitle">Операции</span></h2>
-    <p class="lead" data-i18n="signLead">Каждая операция подписывается отдельным ключом сейфа. Получившуюся подпись потом отправляет в сеть любая транзакция (например, ваш кошелёк или сервер).</p>
+    <p class="lead" data-i18n="signLead">Операции с сейфом подписываются ключом сейфа. Сначала загрузите сейф во вкладке «Мой сейф» — оттуда подтянутся номер и счётчик.</p>
+
+    <!-- ПРОСТОЙ ПЕРЕВОД ERC-20 (работает всегда) -->
+    <div class="card gold-border" style="margin-bottom:14px">
+      <h3>📤 <span data-i18n="opSimpleSend">Простой перевод токенов</span></h3>
+      <p class="desc" data-i18n="opSimpleSendDesc">Обычный перевод ERC-20 со своего кошелька. Без сейфа, без подписи ключом — обычная транзакция кошелька.</p>
+      <div class="field-row">
+        <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="ssToken" placeholder="0x…"/></div>
+        <div class="field addr"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input id="ssTo" placeholder="0x…"/></div>
+      </div>
+      <div class="field medium"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="В наименьших единицах (wei).">?</span></label><input id="ssAmount" placeholder=""/></div>
+      <button class="btn" id="ssSend">📤 <span data-i18n="btnSend">Перевести</span></button>
+    </div>
 
     <div class="grid grid-2">
       <!-- WITHDRAW -->
       <div class="card">
         <h3><span class="num">A</span> <span data-i18n="opWithdraw">Вывод средств</span></h3>
-        <p class="desc" data-i18n="opWithdrawDesc">Обычный вывод токенов из сейфа. Подписывается основным ключом.</p>
+        <p class="desc" data-i18n="opWithdrawDesc">Вывод токенов из сейфа на адрес. Подписывает основной ключ.</p>
         <div class="field-row">
-          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipVaultId" data-tip="Уникальный номер вашего сейфа.">?</span></label><input data-op="withdraw" data-f="vaultId" placeholder=""/></div>
-          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNonce" data-tip="Защита от повторов. Увеличивается на 1 после каждой подписи. Текущее значение видно в карточке сейфа.">?</span></label><input data-op="withdraw" data-f="nonce" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipVaultId" data-tip="Номер вашего сейфа.">?</span></label><input data-op="withdraw" data-f="vaultId" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNonce" data-tip="Текущее значение счётчика сейфа. Берётся из карточки сейфа.">?</span></label><input data-op="withdraw" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToken" data-tip="Адрес ERC-20 контракта токена в сети Sepolia.">?</span></label><div class="input-eye"><input type="password" data-op="withdraw" data-f="token" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
-        <div class="field addr"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipTo" data-tip="Адрес получателя. Проверяйте внимательно — отмена невозможна.">?</span></label><div class="input-eye"><input type="password" data-op="withdraw" data-f="to" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
-        <div class="field-row">
-          <div class="field medium"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="Сумма в наименьших единицах (wei). Для токена с 18 знаками 1.0 = 1000000000000000000.">?</span></label><input data-op="withdraw" data-f="amount" placeholder=""/></div>
-          <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipDeadline" data-tip="Unix-время, после которого подпись становится недействительной. Кнопка ⏰ ставит +1 час.">?</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="withdraw" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="withdraw" title="+1ч">⏰</button></div></div>
-        </div>
+        <div class="field medium"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="В наименьших единицах (wei).">?</span></label><input data-op="withdraw" data-f="amount" placeholder=""/></div>
+        <div class="field addr"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipTo" data-tip="Адрес получателя.">?</span></label><input data-op="withdraw" data-f="to" placeholder="0x…"/></div>
+        <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipDeadline" data-tip="До какого времени подпись действительна. Кнопка ⏰ ставит +1 час.">?</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="withdraw" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="withdraw" title="+1ч">⏰</button></div></div>
         <button class="btn" data-sign="withdraw">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
       <!-- TRANSFER -->
       <div class="card">
-        <h3><span class="num">B</span> <span data-i18n="opTransfer">Перевод между сейфами</span></h3>
-        <p class="desc" data-i18n="opTransferDesc">Перевод токенов из вашего сейфа в чужой сейф (с задержкой по уровню). Основной ключ.</p>
+        <h3><span class="num">B</span> <span data-i18n="opTransfer">Передача сейфа</span></h3>
+        <p class="desc" data-i18n="opTransferDesc">Передать весь сейф другому владельцу с новыми ключами. Подписывает основной ключ.</p>
         <div class="field-row">
-          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipVaultId" data-tip="Ваш номер сейфа — откуда переводим.">?</span></label><input data-op="transfer" data-f="vaultId" placeholder=""/></div>
-          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNonce" data-tip="Защита от повторов.">?</span></label><input data-op="transfer" data-f="nonce" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="transfer" data-f="vaultId" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="transfer" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToken" data-tip="ERC-20 адрес токена.">?</span></label><div class="input-eye"><input type="password" data-op="transfer" data-f="token" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
-        <div class="field addr"><label><span data-i18n="lblToOwner">Владелец сейфа-получателя</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToOwner" data-tip="Адрес владельца чужого сейфа, куда переводим.">?</span></label><div class="input-eye"><input type="password" data-op="transfer" data-f="toVaultOwner" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
-        <div class="field-row">
-          <div class="field short"><label><span data-i18n="lblToVid">Номер сейфа-получателя</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToVid" data-tip="Номер чужого сейфа, куда переводим.">?</span></label><input data-op="transfer" data-f="toVaultId" placeholder=""/></div>
-          <div class="field medium"><label><span data-i18n="lblAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="В наименьших единицах (wei).">?</span></label><input data-op="transfer" data-f="amount" placeholder=""/></div>
-        </div>
-        <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipDeadline" data-tip="Unix-время окончания подписи.">?</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="transfer" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="transfer" title="+1ч">⏰</button></div></div>
+        <div class="field addr"><label><span data-i18n="lblToOwner">Новый владелец</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToOwner" data-tip="Адрес кошелька нового владельца сейфа.">?</span></label><input data-op="transfer" data-f="to" placeholder="0x…"/></div>
+        <div class="field addr"><label><span data-i18n="lblNewMain">Новый основной ключ</span> <span class="req">*</span></label><input data-op="transfer" data-f="newMainKey" placeholder="0x…"/></div>
+        <div class="field addr"><label><span data-i18n="lblNewRecov">Новый резервный ключ</span> <span class="req">*</span></label><input data-op="transfer" data-f="newRecoveryKey" placeholder="0x…"/></div>
+        <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="transfer" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="transfer" title="+1ч">⏰</button></div></div>
         <button class="btn" data-sign="transfer">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
       <!-- EARLY CLOSE -->
       <div class="card">
-        <h3><span class="num">C</span> <span data-i18n="opEarlyClose">Досрочное закрытие (штраф 5%)</span></h3>
-        <p class="desc" data-i18n="opEarlyCloseDesc">Закрыть сейф досрочно со штрафом 5%. Подписывает резервный ключ. Средства идут владельцу.</p>
+        <h3><span class="num">C</span> <span data-i18n="opEarlyClose">Досрочное закрытие</span></h3>
+        <p class="desc" data-i18n="opEarlyCloseDesc">Закрыть сейф досрочно. Комиссия сервиса 5%. Подписывает резервный ключ. Средства идут владельцу.</p>
         <div class="field-row">
           <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="earlyClose" data-f="vaultId" placeholder=""/></div>
           <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="earlyClose" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><div class="input-eye"><input type="password" data-op="earlyClose" data-f="token" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
         <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="earlyClose" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="earlyClose" title="+1ч">⏰</button></div></div>
         <button class="btn warn" data-sign="earlyClose">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
       <!-- RECOVER TO SAFE -->
       <div class="card">
-        <h3><span class="num">D</span> <span data-i18n="opRecoverToSafe">Эвакуация на холодный адрес (штраф 10%)</span></h3>
-        <p class="desc" data-i18n="opRecoverToSafeDesc">Вывод на заранее зафиксированный безопасный адрес. Подписывает резервный ключ.</p>
+        <h3><span class="num">D</span> <span data-i18n="opRecoverToSafe">Эвакуация на резервный адрес</span></h3>
+        <p class="desc" data-i18n="opRecoverToSafeDesc">Вывод на заранее зафиксированный резервный адрес. Комиссия сервиса 10%. Подписывает резервный ключ.</p>
         <div class="field-row">
           <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="recoverToSafe" data-f="vaultId" placeholder=""/></div>
           <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="recoverToSafe" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><div class="input-eye"><input type="password" data-op="recoverToSafe" data-f="token" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
         <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="recoverToSafe" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="recoverToSafe" title="+1ч">⏰</button></div></div>
         <button class="btn warn" data-sign="recoverToSafe">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
 
       <!-- EMERGENCY ANY -->
       <div class="card">
-        <h3><span class="num">E</span> <span data-i18n="opEmergencyAny">Аварийный вывод на любой адрес (штраф 15%)</span></h3>
-        <p class="desc" data-i18n="opEmergencyAnyDesc">Вывод средств на произвольный адрес. Резервный ключ.</p>
+        <h3><span class="num">E</span> <span data-i18n="opEmergencyAny">Аварийный вывод на любой адрес</span></h3>
+        <p class="desc" data-i18n="opEmergencyAnyDesc">Вывод на произвольный адрес. Комиссия сервиса 15%. Подписывает резервный ключ.</p>
         <div class="field-row">
           <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="vaultId" placeholder=""/></div>
           <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field addr"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><div class="input-eye"><input type="password" data-op="emergencyAny" data-f="token" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
-        <div class="field addr"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><div class="input-eye"><input type="password" data-op="emergencyAny" data-f="to" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
+        <div class="field addr"><label><span data-i18n="lblTo">Куда отправить</span> <span class="req">*</span></label><input data-op="emergencyAny" data-f="to" placeholder="0x…"/></div>
         <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="emergencyAny" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="emergencyAny" title="+1ч">⏰</button></div></div>
         <button class="btn danger" data-sign="emergencyAny">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
@@ -890,13 +894,13 @@
       <!-- ROTATE -->
       <div class="card">
         <h3><span class="num">F</span> <span data-i18n="opRotate">Смена ключей сейфа</span></h3>
-        <p class="desc" data-i18n="opRotateDesc">Замена обоих ключей авторизации сейфа. Подписывает резервный ключ.</p>
+        <p class="desc" data-i18n="opRotateDesc">Заменить оба ключа сейфа. Подписывает резервный ключ.</p>
         <div class="field-row">
           <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="rotate" data-f="vaultId" placeholder=""/></div>
           <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="rotate" data-f="nonce" placeholder=""/></div>
         </div>
-        <div class="field addr"><label><span data-i18n="lblNewMain">Новый основной ключ</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNewKey" data-tip="Адрес нового основного ключа сейфа.">?</span></label><div class="input-eye"><input type="password" data-op="rotate" data-f="newMainKey" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
-        <div class="field addr"><label><span data-i18n="lblNewRecov">Новый резервный ключ</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipNewKey" data-tip="Адрес нового резервного ключа сейфа.">?</span></label><div class="input-eye"><input type="password" data-op="rotate" data-f="newRecoveryKey" placeholder=""/><button type="button" class="eye" data-toggle-eye title="Показать/скрыть">👁</button></div></div>
+        <div class="field addr"><label><span data-i18n="lblNewMain">Новый основной ключ</span> <span class="req">*</span></label><input data-op="rotate" data-f="newMainKey" placeholder="0x…"/></div>
+        <div class="field addr"><label><span data-i18n="lblNewRecov">Новый резервный ключ</span> <span class="req">*</span></label><input data-op="rotate" data-f="newRecoveryKey" placeholder="0x…"/></div>
         <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="rotate" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="rotate" title="+1ч">⏰</button></div></div>
         <button class="btn warn" data-sign="rotate">⚓ <span data-i18n="signOp">Подписать</span></button>
       </div>
@@ -904,13 +908,13 @@
       <!-- SET TIMELOCK -->
       <div class="card">
         <h3><span class="num">G</span> <span data-i18n="opTimelock">Изменить задержку</span></h3>
-        <p class="desc" data-i18n="opTimelockDesc">Установить задержку при выводе (зависит от уровня сейфа). Основной ключ.</p>
+        <p class="desc" data-i18n="opTimelockDesc">Задержка вывода в часах (зависит от уровня: SAFE 0, VAULT до 72, FORTRESS до 168). Основной ключ.</p>
         <div class="field-row">
           <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="timelock" data-f="vaultId" placeholder=""/></div>
           <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="timelock" data-f="nonce" placeholder=""/></div>
         </div>
         <div class="field-row">
-          <div class="field short"><label><span data-i18n="lblTimelock">Задержка (секунды)</span><span class="tip" data-tip-i18n="tipTimelock" data-tip="Время в секундах. 1 час = 3600, 1 сутки = 86400, 1 неделя = 604800.">?</span></label><input data-op="timelock" data-f="newTimelock" placeholder=""/></div>
+          <div class="field short"><label><span data-i18n="lblTimelockH">Задержка (часы)</span><span class="tip" data-tip-i18n="tipTimelockH" data-tip="Количество часов задержки на вывод.">?</span></label><input data-op="timelock" data-f="hoursVal" placeholder="72"/></div>
           <div class="field short"><label><span data-i18n="lblDeadline">Срок действия</span> <span class="req">*</span></label><div style="display:flex;gap:6px;align-items:stretch"><input data-op="timelock" data-f="deadline" placeholder=""/><button class="btn ghost xs" data-deadline-set="timelock" title="+1ч">⏰</button></div></div>
         </div>
         <button class="btn" data-sign="timelock">⚓ <span data-i18n="signOp">Подписать</span></button>
@@ -919,7 +923,7 @@
       <!-- VOLUNTARY -->
       <div class="card">
         <h3><span class="num">H</span> <span data-i18n="opVoluntary">Добровольная блокировка</span></h3>
-        <p class="desc" data-i18n="opVoluntaryDesc">Заблокировать вывод до определённой даты (нельзя отменить досрочно). Основной ключ.</p>
+        <p class="desc" data-i18n="opVoluntaryDesc">Заблокировать вывод до даты (нельзя отменить досрочно). Основной ключ.</p>
         <div class="field-row">
           <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input data-op="voluntary" data-f="vaultId" placeholder=""/></div>
           <div class="field short"><label><span data-i18n="lblNonce">Счётчик</span> <span class="req">*</span></label><input data-op="voluntary" data-f="nonce" placeholder=""/></div>
@@ -933,19 +937,15 @@
     </div>
 
     <details style="margin-top:14px">
-      <summary data-i18n="opPanicTitle">🆘 Сверхсрочный вывод (штраф 20%, без подписи)</summary>
-      <div class="card" style="margin-top:8px;border-color:rgba(214,85,85,.4)">
-        <p class="desc" data-i18n="opPanicDesc">Мгновенный вывод 80% средств на ранее зафиксированный резервный адрес владельца. Подпись не нужна, но вызвать может только владелец сейфа. Используйте только если потеряны оба ключа.</p>
-        <div class="field-row">
-          <div class="field"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input id="panicVaultId" placeholder=""/></div>
-          <div class="field"><label><span data-i18n="lblToken">Адрес токена</span> <span class="req">*</span></label><input id="panicToken" placeholder=""/></div>
-        </div>
+      <summary data-i18n="opPanicTitle">🆘 Сверхсрочный вывод (комиссия сервиса 20%, без подписи)</summary>
+      <div class="card" style="margin-top:8px;border-color:rgba(232,112,112,.4)">
+        <p class="desc" data-i18n="opPanicDesc">Мгновенный вывод средств на ваш резервный адрес. Комиссия сервиса 20%. Подпись не нужна, но вызвать может только владелец сейфа. Используйте только если потеряны оба ключа.</p>
+        <div class="field short"><label><span data-i18n="lblVaultId">Номер сейфа</span> <span class="req">*</span></label><input id="panicVaultId" placeholder=""/></div>
         <button class="btn danger" id="execPanicBtn">🆘 <span data-i18n="execPanic">Выполнить сверхсрочный вывод</span></button>
       </div>
     </details>
   </section>
 
-  <!-- ━━━ CREATOR ━━━ -->
   <section class="panel" id="panel-creator">
     <h2><span class="gold" data-i18n="creatorTitle">Панель Creator</span></h2>
     <div id="creatorGuard" class="card" style="display:none">
@@ -1084,6 +1084,51 @@
   <div class="floatcon-body" id="fcBody"></div>
 </div>
 
+<!-- ━━━ OPEN VAULT MODAL ━━━ -->
+<div class="overlay" id="openVaultModal">
+  <div class="modal" style="max-width:600px">
+    <h3 data-i18n="ovTitle">Открыть новый сейф</h3>
+
+    <div style="background:rgba(232,112,112,.1);border:1px solid rgba(232,112,112,.4);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+      <div style="color:var(--err);font-weight:600;font-size:13px;margin-bottom:6px">⚠️ <span data-i18n="ovWarnTitle">Важно — прочитайте перед открытием</span></div>
+      <ul style="margin:0 0 0 18px;padding:0;color:var(--text);font-size:12.5px;line-height:1.7">
+        <li data-i18n="ovWarn1">Резервный адрес задаётся ОДИН РАЗ и его нельзя поменять мгновенно (только через 7-дневную процедуру). Указывайте адрес, к которому у вас точно есть доступ.</li>
+        <li data-i18n="ovWarn2">Резервный адрес НЕ может совпадать с адресом вашего кошелька — это и есть защита: при краже кошелька деньги уйдут на резервный адрес, а не вору.</li>
+        <li data-i18n="ovWarn3">Основной и резервный ключи — это ОТДЕЛЬНЫЕ адреса, не ваш кошелёк. Не теряйте их: восстановление возможно только через резервный адрес.</li>
+        <li data-i18n="ovWarn4">При открытии берётся комиссия сервиса 0.2%.</li>
+      </ul>
+    </div>
+
+    <div class="field-row">
+      <div class="field addr"><label><span data-i18n="ovToken">Токен</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipToken" data-tip="Адрес токена, который кладёте в сейф.">?</span></label><input id="ovTokenInput" placeholder="0x…"/></div>
+      <div class="field"><label><span data-i18n="ovLevel">Уровень защиты</span> <span class="req">*</span></label>
+        <select id="ovLevelInput">
+          <option value="0">SAFE — 0.5%, без задержки</option>
+          <option value="1">VAULT — 1.5%, до 72ч</option>
+          <option value="2">FORTRESS — 2%, до 168ч</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field medium"><label><span data-i18n="ovAmount">Сумма</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipAmount" data-tip="В наименьших единицах (wei). Минимум 0.01 токена.">?</span></label><input id="ovAmountInput" placeholder=""/></div>
+      <div class="field"><label><span data-i18n="ovName">Название сейфа</span><span class="tip" data-tip-i18n="tipName" data-tip="Произвольное название для удобства.">?</span></label><input id="ovNameInput" placeholder="Мои сбережения" maxlength="32"/></div>
+    </div>
+    <div class="field addr"><label><span data-i18n="ovMainKey">Основной ключ</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipMainKey" data-tip="Отдельный адрес для повседневных операций. НЕ ваш кошелёк.">?</span></label><input id="ovMainKeyInput" placeholder="0x…"/></div>
+    <div class="field addr"><label><span data-i18n="ovRecovKey">Резервный ключ</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipRecovKey" data-tip="Отдельный адрес для аварийных операций. НЕ ваш кошелёк и НЕ равен основному ключу.">?</span></label><input id="ovRecovKeyInput" placeholder="0x…"/></div>
+    <div class="field addr"><label><span data-i18n="ovEmergency">Резервный адрес (куда эвакуировать)</span> <span class="req">*</span><span class="tip" data-tip-i18n="tipEmergency" data-tip="Безопасный адрес, на который уйдут средства при эвакуации. НЕ ваш кошелёк. Меняется только через 7 дней.">?</span></label><input id="ovEmergencyInput" placeholder="0x…"/></div>
+
+    <label style="display:flex;align-items:flex-start;gap:9px;margin:14px 0;cursor:pointer;font-size:12.5px;color:var(--text);line-height:1.5">
+      <input type="checkbox" id="ovAgree" style="width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--gold)"/>
+      <span data-i18n="ovAgreeText">Я понимаю, что резервный адрес нельзя изменить мгновенно и он не принадлежит моему кошельку. Я не потеряю основной и резервный ключи.</span>
+    </label>
+
+    <div class="actions">
+      <button class="btn ghost" data-close-modal data-i18n="cancel">Отмена</button>
+      <button class="btn" id="ovConfirm" data-i18n="ovConfirmBtn">⚓ Открыть сейф</button>
+    </div>
+  </div>
+</div>
+
 <!-- ━━━ WALLET MODAL ━━━ -->
 <div class="overlay" id="walletModal">
   <div class="modal">
@@ -1132,7 +1177,7 @@
 <script>
 (function(){
 "use strict";
-const LOGO_DATA = "data:image/jpeg;base64,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";
+const LOGO_DATA = "data:image/png;base64,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";
 
 
 /* ═══════════════════════════════════════════
@@ -1765,46 +1810,57 @@ async function readUint(sig, types, args){
    Структуры собраны под HANDOFF_CONTEXT раздел 8. Если в реальном контракте
    порядок полей отличается — это единственное место для правки.
 ═════════════════════════════════════════════════════════════════════════════ */
+// ВНИМАНИЕ: структуры взяты ТОЧНО из контракта AnchorVaultV45.sol (строки 210-227).
+// Первое поле везде owner = адрес кошелька-владельца сейфа. nonce = uint64.
+// owner подставляется автоматически из подключённого кошелька.
 const OpTypes = {
   withdraw: {
-    typeStr: 'Withdraw(uint256 vaultId,address token,address to,uint256 amount,uint256 nonce,uint256 deadline)',
-    fields: ['vaultId','token','to','amount','nonce','deadline'],
-    abiTypes: ['uint256','address','address','uint256','uint256','uint256']
+    typeStr: 'Withdraw(address owner,uint256 vaultId,uint256 amount,address to,uint64 nonce,uint256 deadline)',
+    fields: ['owner','vaultId','amount','to','nonce','deadline'],
+    abiTypes: ['address','uint256','uint256','address','uint64','uint256'],
+    sig: 'mainAuthKey'
   },
   transfer: {
-    typeStr: 'Transfer(uint256 vaultId,address token,address toVaultOwner,uint256 toVaultId,uint256 amount,uint256 nonce,uint256 deadline)',
-    fields: ['vaultId','token','toVaultOwner','toVaultId','amount','nonce','deadline'],
-    abiTypes: ['uint256','address','address','uint256','uint256','uint256','uint256']
+    typeStr: 'TransferVault(address owner,uint256 vaultId,address to,address newMainKey,address newRecoveryKey,uint64 nonce,uint256 deadline)',
+    fields: ['owner','vaultId','to','newMainKey','newRecoveryKey','nonce','deadline'],
+    abiTypes: ['address','uint256','address','address','address','uint64','uint256'],
+    sig: 'mainAuthKey'
   },
   earlyClose: {
-    typeStr: 'EarlyClose(uint256 vaultId,address token,uint256 nonce,uint256 deadline)',
-    fields: ['vaultId','token','nonce','deadline'],
-    abiTypes: ['uint256','address','uint256','uint256']
+    typeStr: 'EarlyClose(address owner,uint256 vaultId,uint64 nonce,uint256 deadline)',
+    fields: ['owner','vaultId','nonce','deadline'],
+    abiTypes: ['address','uint256','uint64','uint256'],
+    sig: 'recoveryAuthKey'
   },
   recoverToSafe: {
-    typeStr: 'RecoverToSafe(uint256 vaultId,address token,uint256 nonce,uint256 deadline)',
-    fields: ['vaultId','token','nonce','deadline'],
-    abiTypes: ['uint256','address','uint256','uint256']
+    typeStr: 'RecoverToSafe(address owner,uint256 vaultId,uint64 nonce,uint256 deadline)',
+    fields: ['owner','vaultId','nonce','deadline'],
+    abiTypes: ['address','uint256','uint64','uint256'],
+    sig: 'recoveryAuthKey'
   },
   emergencyAny: {
-    typeStr: 'EmergencyWithdrawToAny(uint256 vaultId,address token,address to,uint256 nonce,uint256 deadline)',
-    fields: ['vaultId','token','to','nonce','deadline'],
-    abiTypes: ['uint256','address','address','uint256','uint256']
+    typeStr: 'EmergencyWithdraw(address owner,uint256 vaultId,address to,uint64 nonce,uint256 deadline)',
+    fields: ['owner','vaultId','to','nonce','deadline'],
+    abiTypes: ['address','uint256','address','uint64','uint256'],
+    sig: 'recoveryAuthKey'
   },
   rotate: {
-    typeStr: 'RotateAuthKeys(uint256 vaultId,address newMainKey,address newRecoveryKey,uint256 nonce,uint256 deadline)',
-    fields: ['vaultId','newMainKey','newRecoveryKey','nonce','deadline'],
-    abiTypes: ['uint256','address','address','uint256','uint256']
+    typeStr: 'RotateAuthKeys(address owner,uint256 vaultId,address newMainKey,address newRecoveryKey,uint64 nonce,uint256 deadline)',
+    fields: ['owner','vaultId','newMainKey','newRecoveryKey','nonce','deadline'],
+    abiTypes: ['address','uint256','address','address','uint64','uint256'],
+    sig: 'recoveryAuthKey'
   },
   timelock: {
-    typeStr: 'SetTimelock(uint256 vaultId,uint256 newTimelock,uint256 nonce,uint256 deadline)',
-    fields: ['vaultId','newTimelock','nonce','deadline'],
-    abiTypes: ['uint256','uint256','uint256','uint256']
+    typeStr: 'SetTimelock(address owner,uint256 vaultId,uint256 hoursVal,uint64 nonce,uint256 deadline)',
+    fields: ['owner','vaultId','hoursVal','nonce','deadline'],
+    abiTypes: ['address','uint256','uint256','uint64','uint256'],
+    sig: 'mainAuthKey'
   },
   voluntary: {
-    typeStr: 'SetVoluntaryLock(uint256 vaultId,uint256 lockUntil,uint256 nonce,uint256 deadline)',
-    fields: ['vaultId','lockUntil','nonce','deadline'],
-    abiTypes: ['uint256','uint256','uint256','uint256']
+    typeStr: 'SetVoluntaryLock(address owner,uint256 vaultId,uint256 lockUntil,uint64 nonce,uint256 deadline)',
+    fields: ['owner','vaultId','lockUntil','nonce','deadline'],
+    abiTypes: ['address','uint256','uint256','uint64','uint256'],
+    sig: 'mainAuthKey'
   }
 };
 
@@ -1930,11 +1986,16 @@ function getOpParams(opName){
   inputs.forEach(inp => {
     params[inp.dataset.f] = inp.value.trim();
   });
+  // owner = подключённый кошелёк (не вводится вручную)
+  if(op.fields.includes('owner')){
+    if(!State.account) throw new Error(LANG[State.lang||'ru'].msgConnectFirst||'Подключите кошелёк');
+    params.owner = State.account;
+  }
   // Validate all required filled
   for(let i=0;i<op.fields.length;i++){
     const f = op.fields[i];
-    if(!params[f]) throw new Error('Поле '+f+' обязательно');
-    // Validate cast
+    if(f==='owner') continue; // уже подставлен
+    if(!params[f]) throw new Error('Заполните поле: '+f);
     castValue(op.abiTypes[i], params[f]);
   }
   return params;
@@ -2090,10 +2151,11 @@ function gatherCall(name){
   return { sig: cleanSig, data, display, role: cfg.role };
 }
 
-function renderCallPreview(info){
+function renderCallPreview(info, toAddr){
   const el = document.getElementById('callPreview');
+  const target = toAddr || info.to || VAULT_ADDR;
   let h = '<span class="sec">'+info.sig+'</span>';
-  h += '<span class="k">to:</span> <span class="v">'+VAULT_ADDR+'</span>\n';
+  h += '<span class="k">to:</span> <span class="v">'+target+'</span>\n';
   h += '<span class="k">from:</span> <span class="v">'+State.account+'</span>\n';
   h += '<span class="k">chainId:</span> <span class="v">'+CHAIN_ID+'</span>\n';
   if(info.display.length){
@@ -2134,7 +2196,7 @@ function bindAdminButtons(){
       {const L=LANG[State.lang||'ru']; log('i',(L.msgTxSending||'Транзакция отправляется')+' ['+info.sig+']');}
       const tx = await State.provider.request({
         method:'eth_sendTransaction',
-        params:[{ from: State.account, to: VAULT_ADDR, data: info.data }]
+        params:[{ from: State.account, to: (info.to || VAULT_ADDR), data: info.data }]
       });
       {const L=LANG[State.lang||'ru']; log('ok',(L.msgTxSent||'Транзакция отправлена')+': ', '<span class="log-tx"><a href="https://sepolia.etherscan.io/tx/'+tx+'" target="_blank" rel="noopener noreferrer">'+tx.slice(0,10)+'…'+tx.slice(-8)+'</a></span>');
       notif('ok',(LANG[State.lang||'ru'].msgTxSent||'Транзакция отправлена'));}
@@ -2152,13 +2214,30 @@ function bindAdminButtons(){
     if(!State.provider){ notif('err',LANG[State.lang||'ru'].msgConnectFirst||'Подключите кошелёк'); return; }
     if(State.chainId!==CHAIN_ID){ notif('err',LANG[State.lang||'ru'].msgWrongNet||'Не та сеть'); return; }
     const vid = document.getElementById('panicVaultId').value.trim();
-    const tok = document.getElementById('panicToken').value.trim();
-    if(!vid || !tok){ notif('err',LANG[State.lang||'ru'].msgFieldRequired||'Заполните все поля'); return; }
-    if(!isAddress(tok)){ notif('err',LANG[State.lang||'ru'].msgInvalidAddr||'Неверный адрес'); return; }
+    if(!vid){ notif('err',LANG[State.lang||'ru'].msgFieldRequired||'Заполните все поля'); return; }
     try{
-      const data = ABI.call('panicWithdraw(uint256,address)', ['uint256','address'], [BigInt(vid), tok]);
-      State.pendingCall = { sig:'panicWithdraw(uint256,address)', data, display:[{name:'vaultId',type:'uint256',value:vid},{name:'token',type:'address',value:tok}], role: State.role };
+      const data = ABI.call('panicWithdraw(uint256)', ['uint256'], [BigInt(vid)]);
+      State.pendingCall = { sig:'panicWithdraw(uint256)', data, display:[{name:'Номер сейфа',type:'uint256',value:vid}], role: State.role };
       renderCallPreview(State.pendingCall);
+      openModal('callModal');
+    }catch(e){ notif('err', e.message); }
+  });
+
+  // Простой перевод ERC-20
+  const ssBtn = document.getElementById('ssSend');
+  if(ssBtn) ssBtn.addEventListener('click', async ()=>{
+    const L=LANG[State.lang||'ru'];
+    if(!State.provider){ notif('err',L.msgConnectFirst||'Подключите кошелёк'); return; }
+    if(State.chainId!==CHAIN_ID){ notif('err',L.msgWrongNet||'Не та сеть'); return; }
+    const token=document.getElementById('ssToken').value.trim();
+    const to=document.getElementById('ssTo').value.trim();
+    const amount=document.getElementById('ssAmount').value.trim();
+    if(!token||!to||!amount){ notif('err',L.msgFieldRequired||'Заполните все поля'); return; }
+    if(!isAddress(token)||!isAddress(to)){ notif('err',L.msgInvalidAddr||'Неверный адрес'); return; }
+    try{
+      const data = ABI.call('transfer(address,uint256)', ['address','uint256'], [to, BigInt(amount)]);
+      State.pendingCall = { sig:'ERC-20 transfer', data, to: token, display:[{name:'Токен',type:'address',value:token},{name:'Получатель',type:'address',value:to},{name:'Сумма',type:'uint256',value:amount}], role: State.role };
+      renderCallPreview(State.pendingCall, token);
       openModal('callModal');
     }catch(e){ notif('err', e.message); }
   });
@@ -2317,6 +2396,21 @@ const LANG = {
   ru:{
     connect:'Подключить кошелёк', disconnect:'Выйти',
     brandSub:'Панель управления',
+    openVaultBtn:'➕ Открыть новый сейф', loadVault:'Загрузить',
+    opSimpleSend:'Простой перевод токенов', opSimpleSendDesc:'Обычный перевод ERC-20 со своего кошелька. Без сейфа, без подписи ключом — обычная транзакция кошелька.',
+    btnSend:'Перевести', lblTimelockH:'Задержка (часы)',
+    ovTitle:'Открыть новый сейф', ovWarnTitle:'Важно — прочитайте перед открытием',
+    ovWarn1:'Резервный адрес задаётся ОДИН РАЗ и его нельзя поменять мгновенно (только через 7-дневную процедуру). Указывайте адрес, к которому у вас точно есть доступ.',
+    ovWarn2:'Резервный адрес НЕ может совпадать с адресом вашего кошелька — это и есть защита: при краже кошелька деньги уйдут на резервный адрес, а не вору.',
+    ovWarn3:'Основной и резервный ключи — это ОТДЕЛЬНЫЕ адреса, не ваш кошелёк. Не теряйте их: восстановление возможно только через резервный адрес.',
+    ovWarn4:'При открытии берётся комиссия сервиса 0.2%.',
+    ovToken:'Токен', ovLevel:'Уровень защиты', ovAmount:'Сумма', ovName:'Название сейфа', ovMainKey:'Основной ключ', ovRecovKey:'Резервный ключ', ovEmergency:'Резервный адрес (куда эвакуировать)',
+    ovAgreeText:'Я понимаю, что резервный адрес нельзя изменить мгновенно и он не принадлежит моему кошельку. Я не потеряю основной и резервный ключи.',
+    ovConfirmBtn:'⚓ Открыть сейф', ovMustAgree:'Поставьте галочку согласия', ovBadToken:'Неверный адрес токена',
+    ovKeyIsWallet:'Ключи не могут быть равны вашему кошельку', ovKeysSame:'Основной и резервный ключи должны различаться', ovEmergIsWallet:'Резервный адрес не может быть вашим кошельком',
+    ovStep1:'Шаг 1/3: задаю резервный адрес…', ovStep1ok:'Резервный адрес задан', ovEmergExists:'Резервный адрес уже задан ранее (смена — через 7 дней).',
+    ovStep2:'Шаг 2/3: разрешаю контракту принять токены…', ovStep2ok:'Разрешение выдано',
+    ovStep3:'Шаг 3/3: открываю сейф…', ovDone:'Сейф открывается!', ovFail:'Не удалось открыть сейф',
     ibNet:'Сеть', ibRole:'Роль', ibStatus:'Статус', ibBlock:'Блок', ibVault:'Сейф', ibAddr:'Адрес', ibWrongNet:'Не та сеть',
     statusActive:'Активен', statusPaused:'Приостановлен',
     roleCreator:'Creator', roleGuardian:'Guardian', roleUser:'Пользователь',
@@ -2328,13 +2422,13 @@ const LANG = {
     signLeadTitle:'Операции', signLead:'Каждая операция подписывается отдельным ключом сейфа. Получившуюся подпись потом отправляет в сеть любая транзакция.',
     opWithdraw:'Вывод средств', opWithdrawDesc:'Обычный вывод токенов из сейфа. Подписывается основным ключом.',
     opTransfer:'Перевод между сейфами', opTransferDesc:'Перевод токенов из вашего сейфа в чужой сейф (с задержкой по уровню). Основной ключ.',
-    opEarlyClose:'Досрочное закрытие (штраф 5%)', opEarlyCloseDesc:'Закрыть сейф досрочно со штрафом 5%. Подписывает резервный ключ. Средства идут владельцу.',
-    opRecoverToSafe:'Эвакуация на холодный адрес (штраф 10%)', opRecoverToSafeDesc:'Вывод на заранее зафиксированный безопасный адрес. Подписывает резервный ключ.',
-    opEmergencyAny:'Аварийный вывод на любой адрес (штраф 15%)', opEmergencyAnyDesc:'Вывод средств на произвольный адрес. Резервный ключ.',
+    opEarlyClose:'Досрочное закрытие (комиссия сервиса 5%)', opEarlyCloseDesc:'Закрыть сейф досрочно со комиссия сервисаом 5%. Подписывает резервный ключ. Средства идут владельцу.',
+    opRecoverToSafe:'Эвакуация на холодный адрес (комиссия сервиса 10%)', opRecoverToSafeDesc:'Вывод на заранее зафиксированный безопасный адрес. Подписывает резервный ключ.',
+    opEmergencyAny:'Аварийный вывод на любой адрес (комиссия сервиса 15%)', opEmergencyAnyDesc:'Вывод средств на произвольный адрес. Резервный ключ.',
     opRotate:'Смена ключей сейфа', opRotateDesc:'Замена обоих ключей авторизации сейфа. Подписывает резервный ключ.',
     opTimelock:'Изменить задержку', opTimelockDesc:'Установить задержку при выводе (зависит от уровня сейфа). Основной ключ.',
     opVoluntary:'Добровольная блокировка', opVoluntaryDesc:'Заблокировать вывод до определённой даты (нельзя отменить досрочно). Основной ключ.',
-    opPanicTitle:'🆘 Сверхсрочный вывод (штраф 20%, без подписи)', opPanicDesc:'Мгновенный вывод 80% средств на ранее зафиксированный резервный адрес владельца. Подпись не нужна, но вызвать может только владелец сейфа. Используйте только если потеряны оба ключа.',
+    opPanicTitle:'🆘 Сверхсрочный вывод (комиссия сервиса 20%, без подписи)', opPanicDesc:'Мгновенный вывод 80% средств на ранее зафиксированный резервный адрес владельца. Подпись не нужна, но вызвать может только владелец сейфа. Используйте только если потеряны оба ключа.',
     signOp:'Подписать', execPanic:'Выполнить сверхсрочный вывод',
     lblVaultId:'Номер сейфа', lblNonce:'Счётчик', lblToken:'Адрес токена', lblTo:'Куда отправить', lblAmount:'Сумма', lblDeadline:'Срок действия',
     lblToOwner:'Владелец сейфа-получателя', lblToVid:'Номер сейфа-получателя', lblNewMain:'Новый основной ключ', lblNewRecov:'Новый резервный ключ',
@@ -2370,6 +2464,21 @@ const LANG = {
   en:{
     connect:'Connect Wallet', disconnect:'Disconnect',
     brandSub:'Control Panel',
+    openVaultBtn:'➕ Open new vault', loadVault:'Load',
+    opSimpleSend:'Simple token transfer', opSimpleSendDesc:'Regular ERC-20 transfer from your wallet. No vault, no key signature — a plain wallet transaction.',
+    btnSend:'Send', lblTimelockH:'Delay (hours)',
+    ovTitle:'Open a new vault', ovWarnTitle:'Important — read before opening',
+    ovWarn1:'The recovery address is set ONCE and cannot be changed instantly (only via a 7-day procedure). Use an address you definitely control.',
+    ovWarn2:'The recovery address CANNOT equal your wallet address — that is the protection: if your wallet is stolen, funds go to the recovery address, not the thief.',
+    ovWarn3:'Main and recovery keys are SEPARATE addresses, not your wallet. Do not lose them: recovery is only possible via the recovery address.',
+    ovWarn4:'A 0.2% service fee applies on opening.',
+    ovToken:'Token', ovLevel:'Protection level', ovAmount:'Amount', ovName:'Vault name', ovMainKey:'Main key', ovRecovKey:'Recovery key', ovEmergency:'Recovery address (evacuation target)',
+    ovAgreeText:'I understand the recovery address cannot be changed instantly and does not belong to my wallet. I will not lose the main and recovery keys.',
+    ovConfirmBtn:'⚓ Open vault', ovMustAgree:'Please check the consent box', ovBadToken:'Invalid token address',
+    ovKeyIsWallet:'Keys cannot equal your wallet', ovKeysSame:'Main and recovery keys must differ', ovEmergIsWallet:'Recovery address cannot be your wallet',
+    ovStep1:'Step 1/3: setting recovery address…', ovStep1ok:'Recovery address set', ovEmergExists:'Recovery address already set (change takes 7 days).',
+    ovStep2:'Step 2/3: approving tokens…', ovStep2ok:'Approval granted',
+    ovStep3:'Step 3/3: opening vault…', ovDone:'Vault is being opened!', ovFail:'Failed to open vault',
     ibNet:'Network', ibRole:'Role', ibStatus:'Status', ibBlock:'Block', ibVault:'Vault', ibAddr:'Address', ibWrongNet:'Wrong network',
     statusActive:'Active', statusPaused:'Paused',
     roleCreator:'Creator', roleGuardian:'Guardian', roleUser:'User',
@@ -2423,6 +2532,21 @@ const LANG = {
   zh:{
     connect:'连接钱包', disconnect:'断开连接',
     brandSub:'控制面板',
+    openVaultBtn:'➕ 开设新保险库', loadVault:'加载',
+    opSimpleSend:'普通代币转账', opSimpleSendDesc:'从您的钱包进行常规 ERC-20 转账。无需保险库，无需密钥签名 — 普通钱包交易。',
+    btnSend:'转账', lblTimelockH:'延迟（小时）',
+    ovTitle:'开设新保险库', ovWarnTitle:'重要 — 开设前请阅读',
+    ovWarn1:'恢复地址只设置一次，不能立即更改（仅通过 7 天程序）。请使用您确定能访问的地址。',
+    ovWarn2:'恢复地址不能等于您的钱包地址 — 这就是保护：如果钱包被盗，资金将转到恢复地址，而非窃贼。',
+    ovWarn3:'主密钥和恢复密钥是独立的地址，不是您的钱包。请勿丢失：只能通过恢复地址恢复。',
+    ovWarn4:'开设时收取 0.2% 服务费。',
+    ovToken:'代币', ovLevel:'保护等级', ovAmount:'数量', ovName:'保险库名称', ovMainKey:'主密钥', ovRecovKey:'恢复密钥', ovEmergency:'恢复地址（撤离目标）',
+    ovAgreeText:'我理解恢复地址不能立即更改且不属于我的钱包。我不会丢失主密钥和恢复密钥。',
+    ovConfirmBtn:'⚓ 开设保险库', ovMustAgree:'请勾选同意框', ovBadToken:'代币地址无效',
+    ovKeyIsWallet:'密钥不能等于您的钱包', ovKeysSame:'主密钥和恢复密钥必须不同', ovEmergIsWallet:'恢复地址不能是您的钱包',
+    ovStep1:'步骤 1/3：设置恢复地址…', ovStep1ok:'恢复地址已设置', ovEmergExists:'恢复地址已设置（更改需 7 天）。',
+    ovStep2:'步骤 2/3：授权代币…', ovStep2ok:'授权已批准',
+    ovStep3:'步骤 3/3：开设保险库…', ovDone:'保险库正在开设！', ovFail:'开设保险库失败',
     ibNet:'网络', ibRole:'角色', ibStatus:'状态', ibBlock:'区块', ibVault:'保险库', ibAddr:'地址', ibWrongNet:'错误网络',
     statusActive:'运行中', statusPaused:'已暂停',
     roleCreator:'Creator', roleGuardian:'Guardian', roleUser:'用户',
@@ -2545,6 +2669,105 @@ function applyLang(code){
 }
 
 /* ═══════════════════════════════════════════ BOOT ═══════════════════════════ */
+/* ═══════════════ ОТКРЫТИЕ СЕЙФА (многошаговая цепочка) ═══════════════ */
+async function openVaultFlow(){
+  const L = LANG[State.lang||'ru'];
+  if(!State.provider || !State.account){ notif('err', L.msgConnectFirst||'Подключите кошелёк'); return; }
+  if(State.chainId!==CHAIN_ID){ notif('err', L.msgWrongNet||'Не та сеть'); return; }
+
+  const token = document.getElementById('ovTokenInput').value.trim();
+  const level = document.getElementById('ovLevelInput').value;
+  const amount = document.getElementById('ovAmountInput').value.trim();
+  const name = document.getElementById('ovNameInput').value.trim() || 'Vault';
+  const mainKey = document.getElementById('ovMainKeyInput').value.trim();
+  const recovKey = document.getElementById('ovRecovKeyInput').value.trim();
+  const emergency = document.getElementById('ovEmergencyInput').value.trim();
+  const agree = document.getElementById('ovAgree').checked;
+
+  // Валидация
+  if(!agree){ notif('err', L.ovMustAgree||'Поставьте галочку согласия'); return; }
+  if(!isAddress(token)){ notif('err', L.ovBadToken||'Неверный адрес токена'); return; }
+  if(!amount || BigInt(amount)<=0n){ notif('err', L.msgInvalidNum||'Неверная сумма'); return; }
+  if(!isAddress(mainKey)||!isAddress(recovKey)||!isAddress(emergency)){ notif('err', L.msgInvalidAddr||'Неверный адрес'); return; }
+  const me = State.account.toLowerCase();
+  if(mainKey.toLowerCase()===me || recovKey.toLowerCase()===me){ notif('err', L.ovKeyIsWallet||'Ключи не могут быть равны вашему кошельку'); return; }
+  if(mainKey.toLowerCase()===recovKey.toLowerCase()){ notif('err', L.ovKeysSame||'Основной и резервный ключи должны различаться'); return; }
+  if(emergency.toLowerCase()===me){ notif('err', L.ovEmergIsWallet||'Резервный адрес не может быть вашим кошельком'); return; }
+
+  closeAllModals();
+  try{
+    // 1. Проверяем globalEmergency
+    let curEmergency = null;
+    try{
+      const r = await ethCall(VAULT_ADDR, ABI.call('globalEmergency(address)', ['address'], [State.account]));
+      curEmergency = ABI.decodeAddress(r);
+    }catch(e){}
+    if(!curEmergency || curEmergency === '0x0000000000000000000000000000000000000000'){
+      log('i', L.ovStep1||'Шаг 1/3: задаю резервный адрес…');
+      const d1 = ABI.call('setGlobalEmergency(address)', ['address'], [emergency]);
+      const tx1 = await State.provider.request({method:'eth_sendTransaction', params:[{from:State.account, to:VAULT_ADDR, data:d1}]});
+      log('ok', (L.ovStep1ok||'Резервный адрес задан')+': '+tx1.slice(0,10)+'…');
+      await waitReceipt(tx1);
+    } else if(curEmergency.toLowerCase() !== emergency.toLowerCase()){
+      log('warn', L.ovEmergExists||'Резервный адрес уже задан ранее, новое значение проигнорировано (смена — через 7 дней).');
+    }
+
+    // 2. Approve токена
+    log('i', L.ovStep2||'Шаг 2/3: разрешаю контракту принять токены…');
+    const dA = ABI.call('approve(address,uint256)', ['address','uint256'], [VAULT_ADDR, BigInt(amount)]);
+    const txA = await State.provider.request({method:'eth_sendTransaction', params:[{from:State.account, to:token, data:dA}]});
+    log('ok', (L.ovStep2ok||'Разрешение выдано')+': '+txA.slice(0,10)+'…');
+    await waitReceipt(txA);
+
+    // 3. openVault(token, VaultParams{name,mainAuthKey,recoveryAuthKey,amount}, level)
+    log('i', L.ovStep3||'Шаг 3/3: открываю сейф…');
+    // ABI encode: openVault(address,(string,address,address,uint256),uint8)
+    const dO = encodeOpenVault(token, name, mainKey, recovKey, BigInt(amount), parseInt(level));
+    const txO = await State.provider.request({method:'eth_sendTransaction', params:[{from:State.account, to:VAULT_ADDR, data:dO}]});
+    log('ok', (L.ovDone||'Сейф открывается!')+' '+txO.slice(0,10)+'…');
+    notif('ok', L.ovDone||'Сейф открывается!');
+    watchTx(txO);
+  }catch(e){
+    log('err', (L.ovFail||'Не удалось открыть сейф')+': '+(e.message||e));
+    notif('err', L.ovFail||'Не удалось открыть сейф');
+  }
+}
+
+// ABI-кодирование openVault(address token, (string name,address mainAuthKey,address recoveryAuthKey,uint256 amount) p, uint8 level)
+function encodeOpenVault(token, name, mainKey, recovKey, amount, level){
+  const selector = ABI.selector('openVault(address,(string,address,address,uint256),uint8)');
+  // Голова: token(32) | offset_to_tuple(32) | level(32)
+  // tuple — динамический (содержит string), поэтому передаётся по offset
+  const head = [];
+  head.push(ABI.encWord('address', token));
+  // offset к tuple: 3 слова головы = 96 байт
+  head.push(ABI.encWord('uint256', 96n));
+  head.push(ABI.encWord('uint256', BigInt(level)));
+  // tuple-блок: (string name, address main, address recov, uint256 amount)
+  // внутри tuple: offset_to_string(32) | main(32) | recov(32) | amount(32) | [string len + data]
+  const nameBytes = utf8Bytes(name);
+  const tupleHead = [];
+  tupleHead.push(ABI.encWord('uint256', 128n)); // offset к string внутри tuple (4 слова)
+  tupleHead.push(ABI.encWord('address', mainKey));
+  tupleHead.push(ABI.encWord('address', recovKey));
+  tupleHead.push(ABI.encWord('uint256', amount));
+  // string: len + data (паддинг до 32)
+  let strBlock = ABI.encWord('uint256', BigInt(nameBytes.length));
+  let hex = bytesToHex(nameBytes);
+  const padLen = Math.ceil(nameBytes.length/32)*32;
+  if(hex.length < padLen*2) hex += '0'.repeat(padLen*2 - hex.length);
+  strBlock += hex;
+  return selector + head.join('') + tupleHead.join('') + strBlock;
+}
+
+async function waitReceipt(hash){
+  for(let i=0;i<30;i++){
+    await new Promise(r=>setTimeout(r,3000));
+    try{ const r=await ethGetTransactionReceipt(hash); if(r) return r; }catch(e){}
+  }
+  return null;
+}
+
 function boot(){
   // logo
   const lg = document.getElementById('logo'); if(lg) lg.src = LOGO_DATA;
@@ -2601,6 +2824,14 @@ function boot(){
   });
 
   document.getElementById('loadVaultBtn').addEventListener('click', loadVaultInfo);
+  const ovBtn=document.getElementById('openVaultBtn');
+  if(ovBtn) ovBtn.addEventListener('click', ()=>{
+    if(!State.provider){ notif('err',LANG[State.lang||'ru'].msgConnectFirst||'Подключите кошелёк'); return; }
+    const ag=document.getElementById('ovAgree'); if(ag) ag.checked=false;
+    openModal('openVaultModal');
+  });
+  const ovConfirm=document.getElementById('ovConfirm');
+  if(ovConfirm) ovConfirm.addEventListener('click', openVaultFlow);
 
   // copy address
   const ac=document.getElementById('addrCopy');

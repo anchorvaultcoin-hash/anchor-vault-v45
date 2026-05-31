@@ -5,30 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="referrer" content="no-referrer-when-downgrade">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
-<title>AnchorVaultCoin V45 — Защищённое крипто-хранилище</title>
-<meta name="description" content="AnchorVaultCoin V45 — защищённое крипто-хранилище с EIP-712 двухфакторной авторизацией. Мгновенные операции, холодный резерв, Panic-кнопка. 787 тестов, аудит пройден.">
-<meta property="og:title" content="AnchorVaultCoin V45 — Защищённое крипто-хранилище">
-<meta property="og:description" content="Двухфакторная авторизация EIP-712. Мгновенные операции. Холодный резерв. Panic-кнопка. 787 тестов.">
+<title>AnchorVaultCoin V45 — Защищённое крипто-хранилище от кражи, фишинга и взлома</title>
+<meta name="description" content="AnchorVaultCoin V45 — некастодиальное крипто-хранилище с двухфакторной EIP-712 авторизацией. Защита от кражи приватного ключа, фишинга, мошенничества. Мгновенные операции, холодный резерв, сверхсрочный вывод. 787 тестов.">
+<meta name="keywords" content="AnchorVault, AnchorVaultCoin, ANCR, EIP-712 vault, dual-key vault, phishing-resistant wallet, non-custodial vault, Web3 vault, ERC-20 vault, panic withdraw, крипто-сейф, двухфакторная подпись, холодный резерв, 加密保险库, 冷钱包, DeFi 安全, как защитить крипту от кражи, как обезопасить криптовалюту от взлома, как сохранить криптовалюту, лучший способ защитить криптовалюту, защита от фишинга криптовалюта, защита от мошенников, не потерять крипту, крипто-бункер, защита приватного ключа, двухфакторная защита криптовалюты, как избежать кражи крипты, как спрятать криптовалюту, надёжное хранение крипты, EIP-712, recoveryAuthKey, сверхсрочный вывод, защита от перехвата ключа, защита от вредоносных расширений, безопасность DeFi, как защититься от скама, как не дать украсть крипту">
+<meta property="og:title" content="AnchorVaultCoin V45 — Защищённое крипто-хранилище от кражи и фишинга">
+<meta property="og:description" content="AnchorVaultCoin V45 — двухфакторная EIP-712 защита. Некастодиальный крипто-сейф. Холодный резерв, сверхсрочный вывод. 787 тестов.">
 <meta property="og:image" content="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/icon.svg">
 <meta property="og:url" content="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/landing.html">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="AnchorVaultCoin V45">
-<meta name="twitter:description" content="Двухфакторная защита EIP-712. Мгновенные операции. Холодный резерв. 787 тестов.">
+<meta name="twitter:description" content="Двухфакторная защита криптовалюты EIP-712. Мгновенные операции. Холодный резерв. 787 тестов.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230f0f0f' stroke='%23D4AF37' stroke-width='2'/%3E%3Ccircle cx='32' cy='20' r='4' fill='none' stroke='%23D4AF37' stroke-width='2'/%3E%3Crect x='30' y='24' width='4' height='24' rx='1' fill='%23D4AF37'/%3E%3Crect x='20' y='30' width='24' height='3' rx='1' fill='%23D4AF37'/%3E%3Cpath d='M14 44 Q14 56 32 56 Q50 56 50 44' fill='none' stroke='%23D4AF37' stroke-width='4'/%3E%3Cpath d='M14 44 L9 40 L18 42 Z' fill='%23D4AF37'/%3E%3Cpath d='M50 44 L55 40 L46 42 Z' fill='%23D4AF37'/%3E%3C/svg%3E">
 <style>
-:root{
-  --bg:#0f0f0f;--bg2:#1a1a1a;--gold:#D4AF37;--gold2:#b8941e;--text:#e8e8e8;--text2:#a0a0a0;
-  --border:#2a2a2a;--maxw:1100px;
-}
+:root{--bg:#0f0f0f;--bg2:#1a1a1a;--gold:#D4AF37;--gold2:#b8941e;--text:#e8e8e8;--text2:#a0a0a0;--border:#2a2a2a;--maxw:1100px;}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.6;overflow-x:hidden;position:relative}
 a{color:var(--gold);text-decoration:none}
 .container{max-width:var(--maxw);margin:0 auto;padding:0 20px;position:relative;z-index:2}
-
-/* Coin rain canvas */
 #coinRain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;opacity:.55}
-
-/* Header */
 header{border-bottom:1px solid var(--border);padding:15px 0;position:sticky;top:0;background:rgba(15,15,15,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:50}
 header .container{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .logo{display:flex;align-items:center;gap:10px}
@@ -39,8 +33,6 @@ header nav{display:flex;align-items:center;gap:15px}
 header nav a{padding:8px 18px;border:1px solid var(--gold);border-radius:6px;font-size:.85rem;font-weight:600;transition:.2s}
 header nav a:hover{background:var(--gold);color:var(--bg)}
 .lang-select{padding:8px 12px;border-radius:6px;background:var(--bg2);color:var(--text);border:1px solid var(--border);cursor:pointer;font-size:.85rem}
-
-/* Hero */
 .hero{min-height:90vh;display:flex;align-items:center;text-align:center;padding:60px 0;position:relative}
 .hero::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(212,175,55,.18),transparent 70%);pointer-events:none;z-index:0}
 .coin-container{width:220px;height:220px;margin:0 auto 30px;position:relative;z-index:2}
@@ -52,8 +44,6 @@ header nav a:hover{background:var(--gold);color:var(--bg)}
 .hero .btn{padding:14px 32px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--bg);border-radius:8px;font-weight:700;font-size:1rem;border:0;cursor:pointer;transition:.2s;display:inline-block;box-shadow:0 6px 20px rgba(212,175,55,.25)}
 .hero .btn:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 10px 28px rgba(212,175,55,.4)}
 .hero .compat{font-size:.8rem;color:var(--text2);margin-top:12px}
-
-/* Sections */
 section{padding:70px 0;position:relative;z-index:2}
 section h2{text-align:center;font-size:2rem;margin-bottom:50px}
 section h2 .gold{color:var(--gold)}
@@ -69,80 +59,18 @@ section h2 .gold{color:var(--gold)}
 .stat{text-align:center;padding:25px}
 .stat .num{font-size:2.5rem;font-weight:800;color:var(--gold)}
 .stat .label{color:var(--text2);font-size:.85rem;margin-top:5px}
-
-/* CTA */
 .cta{background:linear-gradient(180deg,transparent,rgba(212,175,55,.08),transparent);text-align:center}
 .cta .btn{padding:16px 36px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--bg);border-radius:8px;font-weight:700;font-size:1.1rem;border:0;cursor:pointer;display:inline-block;margin-top:20px;box-shadow:0 6px 20px rgba(212,175,55,.3)}
 .cta .btn:hover{filter:brightness(1.1);transform:translateY(-2px)}
 .cta .footnote{font-size:.8rem;color:var(--text2);margin-top:15px}
-
-/* Footer */
 footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color:var(--text2);font-size:.8rem;position:relative;z-index:2;background:rgba(15,15,15,.85)}
-
-/* Animations */
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
-
-/* Reduced motion */
-@media(prefers-reduced-motion:reduce){
-  .logo img,.coin-container .coin{animation:none}
-  #coinRain{display:none}
-}
-
-/* Mobile */
-@media(max-width:768px){
-  header .container{flex-direction:column}
-  .hero{min-height:70vh;padding:40px 0}
-  .coin-container{width:160px;height:160px}
-  section{padding:40px 0}
-  section h2{font-size:1.5rem;margin-bottom:30px}
-  #coinRain{opacity:.35}
-}
+@media(prefers-reduced-motion:reduce){.logo img,.coin-container .coin{animation:none}#coinRain{display:none}}
+@media(max-width:768px){header .container{flex-direction:column}.hero{min-height:70vh;padding:40px 0}.coin-container{width:160px;height:160px}section{padding:40px 0}section h2{font-size:1.5rem;margin-bottom:30px}#coinRain{opacity:.35}}
 </style>
-  <meta name="keywords" content="AnchorVault, AnchorVaultCoin, ANCR, EIP-712 vault, dual-key vault, phishing-resistant wallet, non-custodial vault, Web3 vault, ERC-20 vault, panic withdraw, крипто-сейф, двухфакторная подпись, холодный резерв, 加密保险库, 冷钱包, DeFi 安全" />
-  <link rel="alternate" hreflang="x-default" href="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/landing.html" />
-  <link rel="alternate" hreflang="ru" href="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/landing.html?lang=ru" />
-  <link rel="alternate" hreflang="en" href="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/landing.html?lang=en" />
-  <link rel="alternate" hreflang="zh" href="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/landing.html?lang=zh" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="AnchorVault V45" />
-  <meta property="og:title" content="AnchorVault V45 — EIP-712 Vault Protocol · Phishing-Resistant Web3 Crypto Vault" />
-  <meta property="og:description" content="Non-custodial Web3 vault with dual-key EIP-712 authorization. Vault operations signed by dedicated keys — wallet theft cannot drain the vault. Multi-asset, three protection levels, panic recovery." />
-  <meta property="og:url" content="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/landing.html" />
-  <meta property="og:image" content="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/icon.svg" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:locale" content="ru_RU" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:site" content="@anchorvault" />
-  <meta name="twitter:title" content="AnchorVault V45 — EIP-712 Vault Protocol" />
-  <meta name="twitter:description" content="Phishing-resistant Web3 vault. Vault operations signed by dedicated keys, not wallet keys." />
-  <meta name="twitter:image" content="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/icon.svg" />
-  <meta property="vk:title" content="AnchorVault V45 — Защищённое крипто-хранилище с EIP-712 авторизацией" />
-  <meta property="vk:description" content="Некастодиальный сейф с двухфакторной EIP-712 защитой. Кража кошелька не даёт доступа к средствам." />
-  <meta property="vk:image" content="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/icon.svg" />
-  <meta name="telegram:channel" content="@anchorvault" />
-  <meta property="telegram:image" content="https://anchorvaultcoin-hash.github.io/anchor-vault-v45/icon.svg" />
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "AnchorVault V45",
-    "applicationCategory": "FinanceApplication",
-    "operatingSystem": "Ethereum Virtual Machine (Sepolia)",
-    "description": "Multi-asset non-custodial vault with EIP-712 dual-key authorization. Phishing-resistant.",
-    "url": "https://anchorvaultcoin-hash.github.io/anchor-vault-v45/landing.html",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    }
-  }
-  </script>
 </head>
 <body>
-
 <canvas id="coinRain" aria-hidden="true"></canvas>
-
 <header>
   <div class="container">
     <div class="logo">
@@ -237,47 +165,46 @@ footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color
 <script>
 "use strict";
 (function(){
-  // ===== I18N (статичный словарь, никаких внешних данных) =====
   const LANG = {
     ru: {
       heroTitle1:"Твой приватный ключ уже могли украсть.", heroTitle2:"Ты просто ещё не знаешь об этом.",
-      heroDesc:"Даже если злоумышленник перехватил твой приватный ключ — он уйдёт ни с чем. Без второй независимой подписи ни цента не уйдёт. Panic-кнопка эвакуирует 80% баланса мгновенно, без единой подписи.",
+      heroDesc:"Даже если злоумышленник перехватил твой приватный ключ — он уйдёт ни с чем. Без второй независимой подписи ни цента не уйдёт. Сверхсрочный вывод эвакуирует 80% баланса мгновенно, без единой подписи. Защита криптовалюты от кражи, фишинга, мошенничества и взлома. Безопасное хранение крипты в холодном резерве.",
       heroBtn:"Открыть сейф за 2 минуты",
       howTitle1:"Защита капитала в ", howTitle2:"3 простых шага",
-      step1Title:"Привяжи резервный адрес", step1Desc:"Это займёт 30 секунд и делается один раз для экстренной эвакуации средств.",
-      step2Title:"Создай два ключа авторизации", step2Desc:"Система разделит доступ на главный и восстанавливающий ключи. Вору понадобятся оба фактора сразу.",
-      step3Title:"Спи спокойно", step3Desc:"Твои токены ANCR, USDT, USDC теперь заперты в изолированных ячейках под двухфакторной защитой.",
+      step1Title:"Привяжи резервный адрес", step1Desc:"Это займёт 30 секунд и делается один раз для экстренной эвакуации средств. Твой холодный кошелёк всегда под рукой.",
+      step2Title:"Создай два ключа авторизации", step2Desc:"Система разделит доступ на главный и восстанавливающий ключи. Вору понадобятся оба фактора сразу. Защита приватного ключа.",
+      step3Title:"Спи спокойно", step3Desc:"Твои токены ANCR, USDT, USDC теперь заперты в изолированных ячейках под двухфакторной защитой. Не бойся фишинга и вредоносных расширений.",
       featuresTitle:"Возможности",
-      feat1Title:"Двухфакторная защита", feat1Desc:"Главный и восстанавливающий ключи. Вору нужны оба.",
-      feat2Title:"Мгновенные операции", feat2Desc:"Вывод, перевод, пополнение — без ожидания.",
-      feat3Title:"Холодный резерв", feat3Desc:"Неизменяемый адрес для экстренной эвакуации.",
-      feat4Title:"Panic-кнопка", feat4Desc:"Мгновенный вывод 80% на резерв. Без подписей.",
+      feat1Title:"Двухфакторная защита", feat1Desc:"Главный и восстанавливающий ключи. Вору нужны оба. Защита от кражи криптовалюты.",
+      feat2Title:"Мгновенные операции", feat2Desc:"Вывод, перевод, пополнение — без ожидания. Всё быстро и надёжно.",
+      feat3Title:"Холодный резерв", feat3Desc:"Неизменяемый адрес для экстренной эвакуации. Защита от перехвата ключа.",
+      feat4Title:"Сверхсрочный вывод", feat4Desc:"Мгновенный вывод 80% на резерв. Без подписей. Когда каждая секунда на счету.",
       whoTitle1:"Для тех, кто хранит ", whoTitle2:"серьёзные суммы",
-      whoDesc:"AnchorVault V45 создан для защиты портфелей от $10,000. Оставлять крупные суммы в обычном кошельке — глупый риск.",
-      who1:"Киты", who1desc:"Защити крупные балансы от единой точки отказа.",
-      who2:"Инвесторы", who2desc:"Храни долгосрочные позиции с ледяным спокойствием.",
-      who3:"Хранители", who3desc:"Два ключа + холодный резерв = защита уровня банка.",
+      whoDesc:"AnchorVault V45 создан для защиты портфелей от $10,000. Оставлять крупные суммы в обычном кошельке — глупый риск. Не дай украсть свою крипту.",
+      who1:"Киты", who1desc:"Защити крупные балансы от единой точки отказа. Лучший способ защитить криптовалюту.",
+      who2:"Инвесторы", who2desc:"Храни долгосрочные позиции с ледяным спокойствием. Как обезопасить крипту от взлома.",
+      who3:"Хранители", who3desc:"Два ключа + холодный резерв = защита уровня банка. Шифрование и безопасность DeFi.",
       secTitle1:"Безопасность ", secTitle2:"в цифрах",
       sec1:"цифровых атак отражено", sec2:"уязвимостей найдено",
       sec3:"три независимых аудита", sec4:"код открыт — смотри сам",
       ctaTitle:"Твоя финансовая свобода заслуживает швейцарской надёжности",
-      ctaDesc:"Защити сбережения сегодня, чтобы завтра не смотреть на пустой баланс.",
+      ctaDesc:"Защити сбережения сегодня, чтобы завтра не смотреть на пустой баланс. Надёжное хранение крипты.",
       ctaBtn:"Открыть сейф за 2 минуты",
       ctaFootnote:"Sepolia Testnet. Бесплатно. Mainnet скоро."
     },
     en: {
       heroTitle1:"Your private key may already be stolen.", heroTitle2:"You just don't know it yet.",
-      heroDesc:"Even if an attacker intercepts your private key, they leave empty-handed. Without the second independent signature — not a cent. Panic button evacuates 80% instantly.",
+      heroDesc:"Even if an attacker intercepts your private key, they leave empty-handed. Without the second independent signature — not a cent. Super-urgent withdrawal evacuates 80% instantly. Protect your crypto from theft, phishing, scams and hacking. Secure cold storage.",
       heroBtn:"Open vault in 2 minutes",
       howTitle1:"Capital protection in ", howTitle2:"3 simple steps",
       step1Title:"Set backup address", step1Desc:"Takes 30 seconds, done once for emergency evacuation.",
-      step2Title:"Create two authorization keys", step2Desc:"System splits access into main and recovery keys. Attacker needs both.",
-      step3Title:"Sleep peacefully", step3Desc:"Your ANCR, USDT, USDC tokens are locked in isolated cells under two-factor protection.",
+      step2Title:"Create two authorization keys", step2Desc:"System splits access into main and recovery keys. Attacker needs both. Private key protection.",
+      step3Title:"Sleep peacefully", step3Desc:"Your ANCR, USDT, USDC tokens are locked in isolated cells under two-factor protection. Don't fear phishing.",
       featuresTitle:"Features",
       feat1Title:"Two-factor protection", feat1Desc:"Main and recovery keys. Attacker needs both.",
       feat2Title:"Instant operations", feat2Desc:"Withdraw, transfer, deposit — no waiting.",
       feat3Title:"Cold reserve", feat3Desc:"Immutable address for emergency evacuation.",
-      feat4Title:"Panic button", feat4Desc:"Instant 80% withdrawal to reserve. No signatures.",
+      feat4Title:"Super-urgent withdrawal", feat4Desc:"Instant 80% withdrawal to reserve. No signatures.",
       whoTitle1:"For those holding ", whoTitle2:"serious amounts",
       whoDesc:"AnchorVault V45 is built for portfolios from $10,000. Keeping large sums in a regular wallet is a foolish risk.",
       who1:"Whales", who1desc:"Protect large balances from single point of failure.",
@@ -293,7 +220,7 @@ footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color
     },
     zh: {
       heroTitle1:"你的私钥可能已经被盗。", heroTitle2:"你只是还不知道。",
-      heroDesc:"即使攻击者截获了你的私钥，他们也会空手而归。没有第二个独立签名——一分钱也拿不走。紧急按钮可立即撤离80%资金。",
+      heroDesc:"即使攻击者截获了你的私钥，他们也会空手而归。没有第二个独立签名——一分钱也拿不走。紧急提款可立即撤出80%资金。保护您的加密货币免受盗窃、网络钓鱼、诈骗和黑客攻击。安全冷存储。",
       heroBtn:"2分钟开设保险库",
       howTitle1:"资金保护的", howTitle2:"3个简单步骤",
       step1Title:"设置备份地址", step1Desc:"只需30秒，完成一次即可用于紧急撤离。",
@@ -303,7 +230,7 @@ footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color
       feat1Title:"双因素保护", feat1Desc:"主密钥和恢复密钥。攻击者需要两者。",
       feat2Title:"即时操作", feat2Desc:"提现、转账、存款——无需等待。",
       feat3Title:"冷储备", feat3Desc:"不可更改的紧急撤离地址。",
-      feat4Title:"紧急按钮", feat4Desc:"即时提现80%至储备地址。无需签名。",
+      feat4Title:"紧急提款", feat4Desc:"即时提现80%至储备地址。无需签名。",
       whoTitle1:"为持有", whoTitle2:"大量资产的人士打造",
       whoDesc:"AnchorVault V45 专为 $10,000 以上的投资组合打造。将大额资产存放在普通钱包中是愚蠢的风险。",
       who1:"巨鲸", who1desc:"保护大额余额免受单点故障影响。",
@@ -319,7 +246,6 @@ footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color
     }
   };
 
-  // Безопасная установка текста с золотым акцентом — без innerHTML
   function setGoldHeading(id, plain, accent){
     const el = document.getElementById(id);
     if(!el) return;
@@ -377,15 +303,13 @@ footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color
     if(Object.prototype.hasOwnProperty.call(LANG, v)) applyLang(v);
   });
 
-  // Стартовый язык — определяем по браузеру, fallback ru
   const navLang = (navigator.language || 'ru').toLowerCase().slice(0,2);
   const startLang = Object.prototype.hasOwnProperty.call(LANG, navLang) ? navLang : 'ru';
   langSelect.value = startLang;
   applyLang(startLang);
 
-  // ===== Падающие монеты на canvas =====
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduced) return; // не запускаем анимацию
+  if(reduced) return;
 
   const canvas = document.getElementById('coinRain');
   if(!canvas || !canvas.getContext) return;
@@ -393,7 +317,6 @@ footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color
 
   const coinImg = new Image();
   coinImg.decoding = 'async';
-  // Маленькая монета встроена тем же base64
   coinImg.src = document.querySelector('.logo img').src;
 
   let W = 0, H = 0, dpr = 1, coins = [];
@@ -413,15 +336,15 @@ footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color
   }
 
   function spawnCoin(initial){
-    const size = 18 + Math.random() * 26; // 18..44 px
+    const size = 18 + Math.random() * 26;
     return {
       x: Math.random() * W,
       y: initial ? Math.random() * H : -size - Math.random() * 200,
       size: size,
-      vy: 25 + Math.random() * 55,       // px/sec
+      vy: 25 + Math.random() * 55,
       vx: (Math.random() - 0.5) * 20,
       rot: Math.random() * Math.PI * 2,
-      vr: (Math.random() - 0.5) * 1.2,    // rad/sec
+      vr: (Math.random() - 0.5) * 1.2,
       alpha: 0.35 + Math.random() * 0.35
     };
   }
@@ -437,7 +360,7 @@ footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color
     if(!lastT) lastT = t;
     let dt = (t - lastT) / 1000;
     lastT = t;
-    if(dt > 0.1) dt = 0.1; // защита от больших скачков (фон/lag)
+    if(dt > 0.1) dt = 0.1;
 
     ctx.clearRect(0, 0, W, H);
 
@@ -474,7 +397,6 @@ footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color
     if(raf){ cancelAnimationFrame(raf); raf = 0; }
   }
 
-  // Resize с throttle
   let resizeTm = 0;
   window.addEventListener('resize', function(){
     clearTimeout(resizeTm);
@@ -484,7 +406,6 @@ footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color
     }, 150);
   }, { passive: true });
 
-  // Пауза при скрытии вкладки
   document.addEventListener('visibilitychange', function(){
     if(document.hidden) stop(); else start();
   });
@@ -499,7 +420,7 @@ footer{border-top:1px solid var(--border);padding:25px 0;text-align:center;color
     launch();
   } else {
     coinImg.addEventListener('load', launch, { once: true });
-    coinImg.addEventListener('error', function(){ /* тихо игнорим — лендинг работает без анимации */ }, { once: true });
+    coinImg.addEventListener('error', function(){ }, { once: true });
   }
 })();
 </script>

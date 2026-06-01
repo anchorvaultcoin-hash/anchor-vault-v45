@@ -47,7 +47,7 @@ AnchorVault decouples vault authorization from the EOA:
 ## Sepolia testnet (live)
 
 ```
-AnchorVaultV45  0xfDa8F11d80D17bbBBFBBF778D4fDa9f275B48f17
+AnchorVaultV45  0xFd74CB71E0feff1EE961cEB1F6e19350371e0dF9
 MockANCR        0x490Dd216A9aaD4fA389deca73a7cA4Ca01B24BDD
 Creator         0x6226828cc3d1B9c5fc1c4d9BE3dF7b03A4A70479
 Guardian        0xe0DACa428Abc3F1D5BD333C2D1Ca12dd1a36964D
@@ -55,7 +55,7 @@ Chain ID        11155111
 ```
 
 Block explorer:
-[sepolia.etherscan.io/address/0xfDa8F11d80D17bbBBFBBF778D4fDa9f275B48f17](https://sepolia.etherscan.io/address/0xfDa8F11d80D17bbBBFBBF778D4fDa9f275B48f17)
+[sepolia.etherscan.io/address/0xFd74CB71E0feff1EE961cEB1F6e19350371e0dF9](https://sepolia.etherscan.io/address/0xFd74CB71E0feff1EE961cEB1F6e19350371e0dF9)
 
 The `TESTNET_CHECKLIST.md` (sections A–G) has been completed at 100% on
 this deployment. See `broadcast/Deploy.s.sol/11155111/` for transaction

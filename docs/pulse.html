@@ -958,8 +958,6 @@ window.dWd=async function(vid){
   const v=await ldV();if(w>v.amount){toast("Сумма больше баланса сейфа","warning");return;}
   const deadline=BigInt(dl);
   if(deadline<=Math.floor(Date.now()/1000)){toast("Deadline должен быть в будущем","warning");return;}
-  if(deadline<=Math.floor(Date.now()/1000)){toast("Deadline должен быть в будущем","warning");return;}
-  if(deadline<=Math.floor(Date.now()/1000)){toast("Deadline должен быть в будущем","warning");return;}
   const ok=await cdlg("Подтвердить вывод",`Сумма: <b>${tr(fu(w))} ANCR</b> → <code>${sh(to,8,6)}</code><br>Комиссия 0.5%.`);
   if(!ok)return;
   const rc=await txc("Вывод из сейфа",S.vlt.withdrawFromVault(BigInt(vid),w,to,deadline,sig));

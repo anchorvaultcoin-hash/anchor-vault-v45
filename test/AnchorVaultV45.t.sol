@@ -16,6 +16,7 @@ contract AnchorVaultV45Test is Test {
 
     address creator = address(0xC0);
     address guardian = address(0x6A);
+    address payoutWallet = address(0xBEEF01);
     address alice;
     address aliceEmergency = address(0xE1);
 
@@ -39,7 +40,7 @@ contract AnchorVaultV45Test is Test {
         ancr = new MockANCR(10_000_000 ether);
 
         vm.prank(creator);
-        vault = new AnchorVaultV45(address(ancr), guardian);
+        vault = new AnchorVaultV45(address(ancr), guardian, payoutWallet);
 
         // раздать Алисе токены
         vm.prank(creator);
@@ -228,6 +229,24 @@ contract AnchorVaultV45Test is Test {
         vault.initializeDistribution();
     }
 
+    function test_Rescue_OnlyNonSupportedByCreator() public {
+        MockANCR stray = new MockANCR(1_000_000 ether);
+        stray.transfer(address(vault), 500 ether);
+        // поддерживаемый ANCR спасать нельзя
+        vm.prank(creator);
+        vm.expectRevert(AnchorVaultV45.TokenNotSupported.selector);
+        vault.rescueERC20(address(ancr), creator, 1 ether);
+        // не-creator нельзя
+        vm.prank(alice);
+        vm.expectRevert(AnchorVaultV45.NotCreator.selector);
+        vault.rescueERC20(address(stray), alice, 1 ether);
+        // чужой токен — creator спасает
+        uint256 before = stray.balanceOf(creator);
+        vm.prank(creator);
+        vault.rescueERC20(address(stray), creator, 500 ether);
+        assertEq(stray.balanceOf(creator) - before, 500 ether);
+    }
+
     function test_Distribution_RevertIfNotCreator() public {
         vm.prank(alice);
         vm.expectRevert(AnchorVaultV45.NotCreator.selector);
@@ -239,14 +258,14 @@ contract AnchorVaultV45Test is Test {
         vm.prank(creator);
         ancr.transfer(address(vault), 1_000_000 ether);
 
-        uint256 creatorBefore = ancr.balanceOf(creator);
+        uint256 payoutBefore = ancr.balanceOf(payoutWallet);
         vm.prank(creator);
         vault.initializeDistribution();
 
-        assertEq(ancr.balanceOf(creator) - creatorBefore, 150_000 ether);
+        assertEq(ancr.balanceOf(payoutWallet) - payoutBefore, 200_000 ether);
         assertEq(vault.rewardPool(address(ancr)), 500_000 ether);
         assertEq(vault.strategicReserve(address(ancr)), 300_000 ether);
-        assertEq(ancr.balanceOf(address(vault)), 850_000 ether);
+        assertEq(ancr.balanceOf(address(vault)), 800_000 ether);
         assertTrue(vault.distributionInitialized());
 
         // повторно — отбой

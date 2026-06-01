@@ -119,6 +119,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     event WelcomeBonusPaid(address indexed user, uint256 amount);
     event WelcomeBonusChanged(uint256 newAmount, uint256 maxClaims);
     event RewardPoolDonated(address indexed from, address indexed token, uint256 amount);
+    event ERC20Rescued(address indexed token, address indexed to, uint256 amount);
     event TokenSupported(address indexed token);
     event TokenUnsupported(address indexed token);
     event PauseRequested(address indexed guardian, uint256 effectiveAt);
@@ -140,6 +141,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     event SecureTransferInitiated(uint256 indexed transferId, address indexed from, address indexed to, uint256 vaultId, uint48 expiresAt);
     event SecureTransferConfirmed(uint256 indexed transferId, address indexed from, address indexed to);
     event SecureTransferCancelled(uint256 indexed transferId);
+    event SecureTransferAutoCancelled(uint256 indexed transferId); // отмена из-за race (у получателя появился сейф)
     event SecureTransferExpired(uint256 indexed transferId);
 
     // ─── ENUMS / STRUCTS ────────────────────────────────────
@@ -246,6 +248,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     // ─── IMMUTABLES ─────────────────────────────────────────
     // slither-disable-next-line naming-convention
     address public immutable ANCR_TOKEN;
+    address public immutable payoutWallet; // куда уходит доля при initializeDistribution (на аудит/нужды)
 
     // ─── STORAGE ────────────────────────────────────────────
     mapping(address => bool) public supportedTokens;
@@ -289,15 +292,18 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     mapping(address => uint256) public reserveWithdrawalUnlock;
 
     // ─── CONSTRUCTOR ────────────────────────────────────────
-    constructor(address _ancrToken, address _guardian) EIP712("AnchorVault", "45") {
+    constructor(address _ancrToken, address _guardian, address _payoutWallet) EIP712("AnchorVault", "45") {
         if (_ancrToken == address(0)) revert ZeroAddress();
         if (_guardian == address(0)) revert ZeroAddress();
+        if (_payoutWallet == address(0)) revert ZeroAddress();
         if (_guardian == msg.sender) revert InvalidAddress();
         if (_ancrToken == msg.sender || _ancrToken == _guardian) revert InvalidAddress();
+        if (_payoutWallet == address(this)) revert InvalidAddress();
 
         ANCR_TOKEN = _ancrToken;
         creator = msg.sender;
         guardian = _guardian;
+        payoutWallet = _payoutWallet;
         supportedTokens[_ancrToken] = true;
         nextSecureTransferId = 1;
         emit TokenSupported(_ancrToken);
@@ -722,7 +728,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
             st.status = 2;
             v.status = 0;
             pendingIncomingTransfer[to][token] = 0;
-            emit SecureTransferCancelled(transferId);
+            emit SecureTransferAutoCancelled(transferId);
             return;
         }
 
@@ -915,13 +921,13 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     function initializeDistribution() external onlyCreator nonReentrant {
         if (distributionInitialized) revert AlreadyInitialized();
 
-        uint256 creatorShare = 150_000 ether;
-        uint256 rewardShare  = 500_000 ether;
+        uint256 total        = 1_000_000 ether;
+        uint256 payoutShare  = 200_000 ether;   // → payoutWallet (на аудит/нужды)
         uint256 reserveShare = 300_000 ether;
-        uint256 total = 1_000_000 ether; // включая ~50k свободного резерва
+        // Остаток в rewardPool, чтобы НИ ОДИН токен не остался незакреплённым.
+        uint256 rewardShare  = total - payoutShare - reserveShare; // 500_000 ether
 
-        // Контракт обязан реально держать весь 1 млн ДО распределения,
-        // иначе учётные пулы покажут деньги, которых нет.
+        // Контракт обязан реально держать весь 1 млн ДО распределения.
         if (IERC20(ANCR_TOKEN).balanceOf(address(this)) < total) revert InsufficientBalanceForDistribution();
 
         distributionInitialized = true; // эффект до внешнего вызова (анти-реентери)
@@ -930,7 +936,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         strategicReserve[ANCR_TOKEN] += reserveShare;
         emit RewardPoolDonated(address(this), ANCR_TOKEN, rewardShare);
 
-        IERC20(ANCR_TOKEN).safeTransfer(creator, creatorShare);
+        IERC20(ANCR_TOKEN).safeTransfer(payoutWallet, payoutShare);
     }
 
     function donateToRewardPool(address token, uint256 amount) external nonReentrant {
@@ -939,6 +945,20 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         uint256 received = _safeReceive(token, msg.sender, amount);
         rewardPool[token] += received;
         emit RewardPoolDonated(msg.sender, token, received);
+    }
+
+    /**
+     * @notice Изъятие токенов, по ошибке присланных напрямую на контракт.
+     *  ТОЛЬКО для НЕподдерживаемых токенов — поддерживаемые трогать нельзя,
+     *  там учётные пулы/принципал, и спасение сломало бы инвариант
+     *  платёжеспособности. Доступ — только creator.
+     */
+    function rescueERC20(address token, address to, uint256 amount) external onlyCreator nonReentrant {
+        if (supportedTokens[token]) revert TokenNotSupported(); // нельзя спасать учётные токены
+        if (to == address(0) || to == address(this)) revert InvalidAddress();
+        if (amount == 0) revert InvalidAmount();
+        IERC20(token).safeTransfer(to, amount);
+        emit ERC20Rescued(token, to, amount);
     }
 
     // ═══════════════════════════════════════════════════════

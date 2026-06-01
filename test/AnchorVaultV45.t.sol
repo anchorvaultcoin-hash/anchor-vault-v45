@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.26;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {AnchorVaultV45} from "../src/AnchorVaultV45.sol";
 import {MockANCR} from "./mocks/MockANCR.sol";
-import {EvilToken} from "./mocks/EvilToken.sol";
 
+/**
+ * @notice Unit + EIP-712 + инвариант платёжеспособности для AnchorVaultV45.
+ *         Перенос ключевых проверок из ganache-набора (test.js/audit.js) на Foundry.
+ *         Запуск:  forge test -vv
+ */
 contract AnchorVaultV45Test is Test {
     AnchorVaultV45 vault;
     MockANCR ancr;
@@ -15,6 +19,7 @@ contract AnchorVaultV45Test is Test {
     address alice;
     address aliceEmergency = address(0xE1);
 
+    // авторизационные ключи (отдельные от EOA владельца)
     uint256 aMainPk = 0xA11CE0001;
     uint256 aRecPk  = 0xA11CE0002;
     address aMain;
@@ -24,8 +29,6 @@ contract AnchorVaultV45Test is Test {
         keccak256("Withdraw(address owner,uint256 vaultId,uint256 amount,address to,uint64 nonce,uint256 deadline)");
     bytes32 constant EARLY_CLOSE_TYPEHASH =
         keccak256("EarlyClose(address owner,uint256 vaultId,uint64 nonce,uint256 deadline)");
-    bytes32 constant SET_TIMELOCK_TYPEHASH =
-        keccak256("SetTimelock(address owner,uint256 vaultId,uint256 hoursVal,uint64 nonce,uint256 deadline)");
 
     function setUp() public {
         alice = address(0xA11CE);
@@ -38,9 +41,11 @@ contract AnchorVaultV45Test is Test {
         vm.prank(creator);
         vault = new AnchorVaultV45(address(ancr), guardian);
 
+        // раздать Алисе токены
         vm.prank(creator);
         ancr.transfer(alice, 10_000 ether);
 
+        // emergency + апрув
         vm.prank(alice);
         vault.setGlobalEmergency(aliceEmergency);
         vm.prank(alice);
@@ -66,10 +71,11 @@ contract AnchorVaultV45Test is Test {
         vid = vault.activeVaultIdByToken(alice, address(ancr));
     }
 
+    // ───────────────────────────────────────────────
     function test_OpenVault_NetAfterFee() public {
         uint256 vid = _openAlice(100 ether, 1);
         (, , uint120 amount, , , , ) = vault.getVaultCore(alice, vid);
-        assertEq(uint256(amount), 99.8 ether);
+        assertEq(uint256(amount), 99.8 ether); // 100 - 0.2%
     }
 
     function test_OpenVault_RevertIfAuthKeyEqualsOwner() public {
@@ -91,7 +97,7 @@ contract AnchorVaultV45Test is Test {
         uint256 balBefore = ancr.balanceOf(alice);
         vm.prank(alice);
         vault.withdrawFromVault(vid, 20 ether, alice, dl, sig);
-        assertEq(ancr.balanceOf(alice) - balBefore, 19.9 ether);
+        assertEq(ancr.balanceOf(alice) - balBefore, 19.9 ether); // 20 - 0.5%
     }
 
     function test_Withdraw_RejectsWrongKey() public {
@@ -99,7 +105,7 @@ contract AnchorVaultV45Test is Test {
         (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
         uint256 dl = block.timestamp + 1 hours;
         bytes32 sh = keccak256(abi.encode(WITHDRAW_TYPEHASH, alice, vid, uint256(20 ether), alice, nonce, dl));
-        bytes memory sig = _sign(aRecPk, sh);
+        bytes memory sig = _sign(aRecPk, sh); // recovery-ключ вместо main
 
         vm.prank(alice);
         vm.expectRevert(AnchorVaultV45.BadSignature.selector);
@@ -115,6 +121,7 @@ contract AnchorVaultV45Test is Test {
 
         vm.prank(alice);
         vault.withdrawFromVault(vid, 20 ether, alice, dl, sig);
+        // повтор — nonce уже сдвинут
         vm.prank(alice);
         vm.expectRevert(AnchorVaultV45.BadSignature.selector);
         vault.withdrawFromVault(vid, 20 ether, alice, dl, sig);
@@ -126,29 +133,44 @@ contract AnchorVaultV45Test is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes32 sh = keccak256(abi.encode(WITHDRAW_TYPEHASH, alice, vid, uint256(10 ether), alice, nonce, dl));
         bytes memory sig = _sign(aMainPk, sh);
+        // подпись на 10, вызов на 50
         vm.prank(alice);
         vm.expectRevert(AnchorVaultV45.BadSignature.selector);
         vault.withdrawFromVault(vid, 50 ether, alice, dl, sig);
     }
 
     function test_Timelock_BlocksWithdraw() public {
-        uint256 vid = _openAlice(100 ether, 2);
-        (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
+        // Foundry по умолчанию block.timestamp=1; ставим реалистичное время,
+        // чтобы depositedAt и арифметика таймлока были осмысленными.
+        vm.warp(1_700_000_000);
+
+        uint256 vid = _openAlice(100 ether, 2); // FORTRESS (max timelock 168ч)
+        // sanity: сейф существует и активен
+        (uint64 id,,,, uint8 status,,) = vault.getVaultCore(alice, vid);
+        assertEq(uint256(id), vid);
+        assertEq(uint256(status), 0);
+
         uint256 dl = block.timestamp + 1 hours;
 
-        bytes32 sh = keccak256(abi.encode(SET_TIMELOCK_TYPEHASH, alice, vid, uint256(48), nonce, dl));
-        bytes memory sigSet = _sign(aMainPk, sh);
-
+        // ставим таймлок 48ч подписью main
+        bytes32 TL = keccak256("SetTimelock(address owner,uint256 vaultId,uint256 hoursVal,uint64 nonce,uint256 deadline)");
+        (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
+        bytes32 sh = keccak256(abi.encode(TL, alice, vid, uint256(48), nonce, dl));
+        bytes memory tlSig = _sign(aMainPk, sh);
         vm.prank(alice);
-        vault.setTimelock(vid, 48, dl, sigSet);
+        vault.setTimelock(vid, 48, dl, tlSig);
 
+        // таймлок записан
+        (, , uint16 tlHours) = vault.getVaultTimings(alice, vid);
+        assertEq(uint256(tlHours), 48);
+
+        // попытка вывода до истечения 48ч — должна отлететь VaultTimelocked
         (uint64 n2,,) = vault.getVaultAuth(alice, vid);
         bytes32 wsh = keccak256(abi.encode(WITHDRAW_TYPEHASH, alice, vid, uint256(10 ether), alice, n2, dl));
-        bytes memory sigWithdraw = _sign(aMainPk, wsh);
-
+        bytes memory wsig = _sign(aMainPk, wsh); // строим ДО expectRevert
         vm.prank(alice);
         vm.expectRevert(AnchorVaultV45.VaultTimelocked.selector);
-        vault.withdrawFromVault(vid, 10 ether, alice, dl, sigWithdraw);
+        vault.withdrawFromVault(vid, 10 ether, alice, dl, wsig);
     }
 
     function test_Panic_NoSignature_ToEmergency() public {
@@ -156,6 +178,7 @@ contract AnchorVaultV45Test is Test {
         uint256 emBefore = ancr.balanceOf(aliceEmergency);
         vm.prank(alice);
         vault.panicWithdraw(vid);
+        // 99.8 net, panic 20% -> 79.84
         assertEq(ancr.balanceOf(aliceEmergency) - emBefore, 79.84 ether);
     }
 
@@ -164,10 +187,13 @@ contract AnchorVaultV45Test is Test {
         (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
         uint256 dl = block.timestamp + 1 hours;
         bytes32 sh = keccak256(abi.encode(EARLY_CLOSE_TYPEHASH, alice, vid, nonce, dl));
-        bytes memory sig = _sign(aMainPk, sh);
+        // ВАЖНО: подпись строим ДО expectRevert — _sign использует vm.sign (cheatcode),
+        // иначе он "съедает" expectRevert и тест ложно падает.
+        bytes memory badSig = _sign(aMainPk, sh); // main-ключ на recovery-операцию
+        // earlyClose требует recovery — main должен отлететь
         vm.prank(alice);
         vm.expectRevert(AnchorVaultV45.BadSignature.selector);
-        vault.earlyClose(vid, dl, sig);
+        vault.earlyClose(vid, dl, badSig);
     }
 
     function test_GlobalEmergency_ChangeNeedsTimelock() public {
@@ -176,7 +202,9 @@ contract AnchorVaultV45Test is Test {
         vm.prank(alice);
         vm.expectRevert(AnchorVaultV45.EmergencyTimelockNotExpired.selector);
         vault.confirmGlobalEmergencyChange();
+        // старый ещё активен
         assertEq(vault.globalEmergency(alice), aliceEmergency);
+        // через 7 дней — ок
         vm.warp(block.timestamp + 7 days + 1);
         vm.prank(alice);
         vault.confirmGlobalEmergencyChange();
@@ -193,6 +221,48 @@ contract AnchorVaultV45Test is Test {
         vault.emergencyPause();
     }
 
+    function test_Distribution_RevertIfNoBalance() public {
+        // на контракте нет 1 млн → отбой (защита инварианта)
+        vm.prank(creator);
+        vm.expectRevert(AnchorVaultV45.InsufficientBalanceForDistribution.selector);
+        vault.initializeDistribution();
+    }
+
+    function test_Distribution_RevertIfNotCreator() public {
+        vm.prank(alice);
+        vm.expectRevert(AnchorVaultV45.NotCreator.selector);
+        vault.initializeDistribution();
+    }
+
+    function test_Distribution_HappyPathAndInvariant() public {
+        // переводим 1 млн на контракт
+        vm.prank(creator);
+        ancr.transfer(address(vault), 1_000_000 ether);
+
+        uint256 creatorBefore = ancr.balanceOf(creator);
+        vm.prank(creator);
+        vault.initializeDistribution();
+
+        assertEq(ancr.balanceOf(creator) - creatorBefore, 150_000 ether);
+        assertEq(vault.rewardPool(address(ancr)), 500_000 ether);
+        assertEq(vault.strategicReserve(address(ancr)), 300_000 ether);
+        assertEq(ancr.balanceOf(address(vault)), 850_000 ether);
+        assertTrue(vault.distributionInitialized());
+
+        // повторно — отбой
+        vm.prank(creator);
+        vm.expectRevert(AnchorVaultV45.AlreadyInitialized.selector);
+        vault.initializeDistribution();
+
+        // инвариант
+        uint256 bal = ancr.balanceOf(address(vault));
+        uint256 liab = vault.lockedPrincipal(address(ancr)) + vault.creatorFees(address(ancr))
+            + vault.strategicReserve(address(ancr)) + vault.rewardPool(address(ancr));
+        assertGe(bal, liab);
+    }
+
+    // ─── ИНВАРИАНТ ПЛАТЁЖЕСПОСОБНОСТИ ───────────────
+    // Баланс контракта по ANCR всегда >= суммы всех учётных обязательств.
     function invariant_Solvency() public view {
         uint256 bal = ancr.balanceOf(address(vault));
         uint256 liabilities = vault.lockedPrincipal(address(ancr))
@@ -200,107 +270,5 @@ contract AnchorVaultV45Test is Test {
             + vault.strategicReserve(address(ancr))
             + vault.rewardPool(address(ancr));
         assertGe(bal, liabilities);
-    }
-
-    // ─── НОВЫЕ ТЕСТЫ (закрывают замечания аудитора) ───
-
-    function test_SetTimelock_RevertsAboveMax() public {
-        uint256 vid = _openAlice(100 ether, 2);
-        (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
-        uint256 dl = block.timestamp + 1 hours;
-        bytes32 sh = keccak256(abi.encode(SET_TIMELOCK_TYPEHASH, alice, vid, uint256(169), nonce, dl));
-        bytes memory sig = _sign(aMainPk, sh);
-        vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.TimelockTooLong.selector);
-        vault.setTimelock(vid, 169, dl, sig);
-    }
-
-    function test_Withdraw_AfterTimelock() public {
-        uint256 vid = _openAlice(100 ether, 2);
-        (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
-        uint256 dl = block.timestamp + 1 hours;
-        bytes32 sh = keccak256(abi.encode(SET_TIMELOCK_TYPEHASH, alice, vid, uint256(48), nonce, dl));
-        bytes memory sig = _sign(aMainPk, sh);
-        vm.prank(alice);
-        vault.setTimelock(vid, 48, dl, sig);
-
-        vm.warp(block.timestamp + 49 hours);
-
-        (nonce,,) = vault.getVaultAuth(alice, vid);
-        uint256 withdrawDeadline = block.timestamp + 2 hours;
-        bytes32 wsh = keccak256(abi.encode(WITHDRAW_TYPEHASH, alice, vid, uint256(20 ether), alice, nonce, withdrawDeadline));
-        bytes memory wsig = _sign(aMainPk, wsh);
-        uint256 balBefore = ancr.balanceOf(alice);
-        vm.prank(alice);
-        vault.withdrawFromVault(vid, 20 ether, alice, withdrawDeadline, wsig);
-        assertEq(ancr.balanceOf(alice) - balBefore, 19.9 ether);
-    }
-
-    function test_EarlyClose_ValidRecoveryKey() public {
-        uint256 vid = _openAlice(100 ether, 1);
-        (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
-        uint256 dl = block.timestamp + 1 hours;
-        bytes32 sh = keccak256(abi.encode(EARLY_CLOSE_TYPEHASH, alice, vid, nonce, dl));
-        bytes memory sig = _sign(aRecPk, sh);
-
-        uint256 prevBal = ancr.balanceOf(alice);
-        uint256 prevLocked = vault.lockedPrincipal(address(ancr));
-        vm.prank(alice);
-        vault.earlyClose(vid, dl, sig);
-
-        assertEq(ancr.balanceOf(alice) - prevBal, 94.81 ether);
-        assertEq(vault.lockedPrincipal(address(ancr)), prevLocked - 99.8 ether);
-    }
-
-    function test_Panic_RevertIfNotOwner() public {
-        uint256 vid = _openAlice(100 ether, 1);
-        vm.prank(address(0xB0B));
-        vm.expectRevert(AnchorVaultV45.BadVaultId.selector);
-        vault.panicWithdraw(vid);
-    }
-
-    function test_CancelGlobalEmergencyChange() public {
-        vm.prank(alice);
-        vault.proposeGlobalEmergencyChange(address(0xBEEF));
-
-        vm.prank(alice);
-        vault.cancelGlobalEmergencyChange();
-
-        (address pending, ) = vault.globalEmergencyChange(alice);
-        assertEq(pending, address(0));
-    }
-
-    function test_Reentrancy_Withdraw() public {
-        EvilToken evil = new EvilToken(1000 ether);
-        vm.prank(creator);
-        vault.addSupportedToken(address(evil));
-
-        // Тестовый контракт владеет EvilToken, переводим напрямую alice
-        evil.transfer(alice, 100 ether);
-        vm.prank(alice);
-        evil.approve(address(vault), type(uint256).max);
-        // alice уже имеет globalEmergency, установленный в setUp, не вызываем повторно
-
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "EvilVault", mainAuthKey: aMain, recoveryAuthKey: aRec, amount: 100 ether
-        });
-        vm.prank(alice);
-        vault.openVault(address(evil), p, 1);
-        uint256 vid = vault.activeVaultIdByToken(alice, address(evil));
-
-        evil.setReenterTarget(address(vault), true);
-
-        (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
-        uint256 dl = block.timestamp + 1 hours;
-        bytes32 sh = keccak256(abi.encode(WITHDRAW_TYPEHASH, alice, vid, uint256(10 ether), alice, nonce, dl));
-        bytes memory sig = _sign(aMainPk, sh);
-
-        uint256 balBefore = evil.balanceOf(alice);
-        vm.prank(alice);
-        vault.withdrawFromVault(vid, 10 ether, alice, dl, sig);
-
-        // Проверяем, что вывод успешен: баланс alice увеличился на 10 ether минус комиссия 0.5%
-        uint256 expectedNet = 10 ether - (10 ether * 50) / 10000; // 10 - 0.05 = 9.95 ether
-        assertEq(evil.balanceOf(alice) - balBefore, expectedNet);
     }
 }

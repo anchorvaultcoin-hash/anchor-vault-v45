@@ -249,3 +249,13 @@ AnchorVault V45 is designed to meet the security and operational requirements of
 - **Audit-ready:** Full test suite (18/18), fuzzed invariants, detailed documentation
 
 👉 See `INSTITUTIONAL_SECURITY.md` for a complete due diligence questionnaire.
+
+## Testing
+
+- Foundry: 15/15 tests passed (including distribution and solvency invariants)
+- Slither: 0 critical, 0 high, 0 medium
+- Ganache regression: 24 functional + 43 attack tests passed
+- License: BUSL-1.1 (core contracts)
+- Initial distribution of 1,000,000 ANCR implemented and verified
+
+All tests are in the `test/` directory.

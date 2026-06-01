@@ -79,6 +79,8 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     error SignatureExpired();
     error BadSignature();
     error BadAuthKey();
+    error AlreadyInitialized();
+    error InsufficientBalanceForDistribution();
     error GlobalEmergencyChangePending();
     error NoGlobalEmergencyChange();
     error EmergencyTimelockNotExpired();
@@ -253,6 +255,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     mapping(address => uint256) public strategicReserve;
     mapping(address => uint256) public rewardPool;
     uint256 public totalBurnedANCR;
+    bool public distributionInitialized;
 
     address public creator;
     address public guardian;
@@ -438,7 +441,9 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
             reserveAmt = (penalty * PEN_RESERVE_BPS_OTHER) / 10000;
         }
         uint256 sum = burnAmt + creatorAmt + reserveAmt;
-        uint256 rewardsAmt = penalty - sum;          // остаток (включая dust) — в rewardPool
+        // sum <= penalty всегда (сумма bps < 10000, floor каждого ≤ точного).
+        // Тернарник — защитный, делает невозможность underflow явной для аудита.
+        uint256 rewardsAmt = penalty > sum ? penalty - sum : 0;  // остаток (включая dust) — в rewardPool
         creatorFees[token]      += creatorAmt;
         strategicReserve[token] += reserveAmt;
         rewardPool[token]       += rewardsAmt;
@@ -882,6 +887,35 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         welcomeBonus = amount;
         maxWelcomeBonusClaims = maxClaims;        // жёсткий потолок суммарной раздачи против Sybil
         emit WelcomeBonusChanged(amount, maxClaims);
+    }
+
+    /**
+     * @notice Однократное начальное распределение 1 000 000 ANCR.
+     *  150k → creator (перевод), 500k → rewardPool, 300k → strategicReserve (счётчики),
+     *  ~50k остаётся свободным резервом на контракте.
+     *  ВАЖНО: токены должны быть ПЕРЕВЕДЕНЫ на контракт ДО вызова. Функция проверяет
+     *  фактический баланс, чтобы пулы не учитывали несуществующие токены
+     *  (иначе ломается инвариант платёжеспособности).
+     */
+    function initializeDistribution() external onlyCreator nonReentrant {
+        if (distributionInitialized) revert AlreadyInitialized();
+
+        uint256 creatorShare = 150_000 ether;
+        uint256 rewardShare  = 500_000 ether;
+        uint256 reserveShare = 300_000 ether;
+        uint256 total = 1_000_000 ether; // включая ~50k свободного резерва
+
+        // Контракт обязан реально держать весь 1 млн ДО распределения,
+        // иначе учётные пулы покажут деньги, которых нет.
+        if (IERC20(ANCR_TOKEN).balanceOf(address(this)) < total) revert InsufficientBalanceForDistribution();
+
+        distributionInitialized = true; // эффект до внешнего вызова (анти-реентери)
+
+        rewardPool[ANCR_TOKEN]       += rewardShare;
+        strategicReserve[ANCR_TOKEN] += reserveShare;
+        emit RewardPoolDonated(address(this), ANCR_TOKEN, rewardShare);
+
+        IERC20(ANCR_TOKEN).safeTransfer(creator, creatorShare);
     }
 
     function donateToRewardPool(address token, uint256 amount) external nonReentrant {

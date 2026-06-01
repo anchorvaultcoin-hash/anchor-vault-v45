@@ -504,7 +504,7 @@
   .btn.xs{padding:4px 10px;font-size:11px;font-weight:500}
 
   /* MAIN */
-  main{padding:14px 0 20px}
+  main{padding:12px 0 16px}
   h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--text);letter-spacing:.3px}
   h2{font-size:18px;margin-bottom:4px}
   h2 .gold{color:var(--gold-bright)}
@@ -519,18 +519,18 @@
   .tab:not(.active):hover{color:var(--text)}
   .tab[data-role-gated]:not(.allowed){display:none}
 
-  .grid{display:grid;gap:10px}
+  .grid{display:grid;gap:8px}
   .grid-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
   .grid-3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
-  .grid-ops{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(285px,1fr))}
+  .grid-ops{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
 
-  .card{background:linear-gradient(180deg,var(--card),var(--card-2));border:1px solid var(--border);border-radius:12px;padding:13px;transition:.2s}
+  .card{background:linear-gradient(180deg,var(--card),var(--card-2));border:1px solid var(--border);border-radius:11px;padding:11px 13px;transition:.2s}
   .card:hover{border-color:rgba(212,175,55,.18)}
   .card.gold-border{border-color:var(--border-gold)}
-  .card h3{font-size:14px;color:var(--gold-bright);margin-bottom:8px;display:flex;align-items:center;gap:8px;font-family:var(--serif)}
+  .card h3{font-size:14px;color:var(--gold-bright);margin-bottom:6px;display:flex;align-items:center;gap:8px;font-family:var(--serif)}
   .card h3 .num{font-family:var(--mono);font-size:10px;color:var(--gold-dim);font-weight:500;letter-spacing:1.5px}
-  .card .desc{color:var(--text-dim);font-size:11.5px;margin-bottom:8px;line-height:1.4}
-  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:5px 0;border-bottom:1px dashed var(--border)}
+  .card .desc{color:var(--text-dim);font-size:11.5px;margin-bottom:6px;line-height:1.35}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:4px 0;border-bottom:1px dashed var(--border)}
   .row:last-child{border-bottom:0}
   .row .k{color:var(--muted);font-size:12px;flex-shrink:0}
   .row .v{font-family:var(--mono);font-size:12px;color:var(--text);word-break:break-all;text-align:right}
@@ -540,20 +540,45 @@
   .howto-summary{cursor:pointer;list-style:none;padding:12px 14px;font-size:13px;font-weight:600;color:var(--ok);user-select:none}
   .howto-summary::-webkit-details-marker{display:none}
   .howto-block[open] .howto-summary{border-bottom:1px solid rgba(109,212,154,.25)}
-  .howto-body{padding:12px 14px;color:var(--text);font-size:12.5px;line-height:1.6}
+  .howto-body{padding:12px 14px;color:var(--text);font-size:12.5px;line-height:1.6;max-width:760px}
   .howto-body p{margin:0 0 8px}
   .howto-body ol{margin:0 0 10px 18px;padding:0;line-height:1.65}
   .howto-body ol li{margin-bottom:5px}
+  .howto-body .row{max-width:420px}
+  .lvl-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .lvl-chip{background:var(--bg);border:1px solid var(--border-gold);border-radius:8px;padding:7px 11px;flex:0 0 auto;max-width:230px}
+  .lvl-chip .lvl-name{color:var(--gold-bright);font-weight:600;font-size:13px}
+  .lvl-chip .lvl-desc{color:var(--text-dim);font-size:11px;line-height:1.35;margin-top:2px}
   .howto-warn{background:rgba(240,184,90,.12);border:1px solid rgba(240,184,90,.4);border-radius:8px;padding:9px 11px;color:var(--warn);font-size:12px;line-height:1.5;margin:8px 0}
   .howto-wallets{font-size:11.5px;color:var(--text-dim);border-top:1px dashed var(--border);padding-top:8px;margin-top:4px}
 
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+  .stat-chip{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;max-width:340px}
+  .stat-chip .stat-k{color:var(--text-dim);font-size:11.5px}
+  .stat-chip .stat-v{color:var(--gold-bright);font-family:var(--mono);font-size:12.5px;font-weight:600;white-space:nowrap}
+
+  .lvl-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:760px}
+  @media(max-width:640px){.lvl-row{grid-template-columns:1fr}}
+  .lvl-card{position:relative;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 13px;overflow:hidden}
+  .lvl-card .lvl-badge{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-bottom:6px}
+  .lvl-card .lvl-name{color:var(--gold-bright);font-weight:700;font-size:14px;margin-bottom:3px}
+  .lvl-card .lvl-desc{color:var(--text-dim);font-size:11px;line-height:1.4}
+  /* подсветка по важности: SAFE спокойный, VAULT усиленный, FORTRESS максимум */
+  .lvl-safe{border-color:rgba(109,212,154,.45);box-shadow:inset 0 0 22px rgba(109,212,154,.06)}
+  .lvl-safe .lvl-badge{background:rgba(109,212,154,.16);color:var(--ok)}
+  .lvl-vault{border-color:rgba(230,192,85,.5);box-shadow:inset 0 0 22px rgba(230,192,85,.08)}
+  .lvl-vault .lvl-badge{background:rgba(230,192,85,.18);color:var(--gold-bright)}
+  .lvl-fortress{border-color:rgba(232,112,112,.55);box-shadow:inset 0 0 26px rgba(232,112,112,.1)}
+  .lvl-fortress .lvl-badge{background:rgba(232,112,112,.18);color:var(--err)}
+  .lvl-fortress .lvl-name{color:#f3c8a0}
+
   /* FORMS — компактные, не на всю ширину */
-  .field{display:block;margin-bottom:7px}
+  .field{display:block;margin-bottom:5px}
   .field label{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px;font-weight:600}
   .field label .req{color:var(--gold)}
   .field input,.field select,.field textarea{
     width:100%;max-width:100%;background:#15151a;color:var(--text);border:1px solid var(--border);
-    border-radius:7px;padding:6px 9px;font-family:var(--mono);font-size:12px;outline:0;transition:.15s;
+    border-radius:7px;padding:5px 9px;font-family:var(--mono);font-size:12px;outline:0;transition:.15s;
   }
   .field.short input{max-width:160px}
   .field.medium input{max-width:280px}
@@ -772,7 +797,35 @@
   <!-- ━━━ МОЙ СЕЙФ ━━━ -->
   <section class="panel active" id="panel-vault">
     <h2><span class="gold" data-i18n="vaultLookupTitle">Мой сейф</span></h2>
-    <p class="lead" data-i18n="vaultLookupLead">Введите номер сейфа, чтобы посмотреть содержимое и параметры защиты.</p>
+
+    <div class="card gold-border" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <h3 style="margin:0">ℹ️ <span data-i18n="archTitle">Уровни защиты</span></h3>
+        <span class="desc" style="margin:0;flex:1;min-width:240px" data-i18n="archDescShort">Сейф управляется отдельными ключами — даже при краже кошелька деньги в безопасности. Выберите уровень:</span>
+      </div>
+
+      <div class="lvl-row">
+        <div class="lvl-card lvl-safe">
+          <div class="lvl-badge" data-i18n="lvlBadgeBasic">Базовый</div>
+          <div class="lvl-name">SAFE · 0.5%</div>
+          <div class="lvl-desc" data-i18n="lvlSafe">Без задержек, для повседневных операций.</div>
+        </div>
+        <div class="lvl-card lvl-vault">
+          <div class="lvl-badge" data-i18n="lvlBadgeStrong">Усиленный</div>
+          <div class="lvl-name">VAULT · 1.5%</div>
+          <div class="lvl-desc" data-i18n="lvlVault">Задержка до 72 ч, защита крупных сумм.</div>
+        </div>
+        <div class="lvl-card lvl-fortress">
+          <div class="lvl-badge" data-i18n="lvlBadgeMax">Максимум</div>
+          <div class="lvl-name">FORTRESS · 2.0%</div>
+          <div class="lvl-desc" data-i18n="lvlFortress">Задержка до 168 ч, максимальная защита.</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn" id="openVaultBtn" style="min-width:240px" data-i18n="openVaultBtn">➕ Открыть новый сейф</button>
+      </div>
+    </div>
 
     <div class="card">
       <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
@@ -785,25 +838,14 @@
           <input id="lookupVaultId" placeholder="1" inputmode="numeric"/>
         </div>
         <button class="btn" id="loadVaultBtn" data-i18n="loadVault">Загрузить</button>
-        <button class="btn ghost" id="openVaultBtn" data-i18n="openVaultBtn">➕ Открыть новый сейф</button>
       </div>
       <div id="vaultInfo" class="grid grid-3" style="margin-top:12px"></div>
     </div>
 
-    <details class="howto-block" style="margin-top:10px">
-      <summary class="howto-summary">ℹ️ <span data-i18n="archTitle">Как работает защита и уровни</span></summary>
-      <div class="howto-body">
-        <p class="desc" data-i18n="archDesc">Операции с сейфом подписываются отдельными ключами (основной и резервный), а не приватником вашего кошелька. Даже если злоумышленник украдёт ключ кошелька — он не получит доступа к средствам.</p>
-        <div class="row"><span class="k" data-i18n="archMain">Повседневные операции</span><span class="v">Основной ключ</span></div>
-        <div class="row"><span class="k" data-i18n="archRecov">Аварийные операции</span><span class="v">Резервный ключ</span></div>
-        <div class="row"><span class="k" data-i18n="archPanic">Сверхсрочный вывод</span><span class="v" data-i18n="archPanicV">без подписи</span></div>
-        <div class="grid grid-3" style="margin-top:8px">
-          <div><div style="color:var(--gold-bright);font-weight:600;font-size:13px">SAFE · 0.5%</div><div style="color:var(--text-dim);font-size:11.5px" data-i18n="lvlSafe">Без задержек, для повседневных операций.</div></div>
-          <div><div style="color:var(--gold-bright);font-weight:600;font-size:13px">VAULT · 1.5%</div><div style="color:var(--text-dim);font-size:11.5px" data-i18n="lvlVault">Задержка до 72 ч, защита крупных сумм.</div></div>
-          <div><div style="color:var(--gold-bright);font-weight:600;font-size:13px">FORTRESS · 2.0%</div><div style="color:var(--text-dim);font-size:11.5px" data-i18n="lvlFortress">Задержка до 168 ч, максимальная защита.</div></div>
-        </div>
-      </div>
-    </details>
+    <div class="card" id="myVaultsCard" style="margin-top:10px;display:none">
+      <h3>📋 <span data-i18n="myVaultsTitle">Мои сейфы</span> <button class="btn ghost xs" id="refreshVaultsBtn" style="margin-left:auto" data-i18n="btnRefresh">Обновить</button></h3>
+      <div id="myVaultsBody" style="font-size:12.5px;color:var(--text-dim)"></div>
+    </div>
   </section>
 
   <!-- ━━━ ОПЕРАЦИИ ━━━ -->
@@ -952,6 +994,19 @@
       <p class="desc" data-i18n="creatorDeniedDesc">Подключитесь адресом Creator, чтобы получить доступ к админ-функциям.</p>
     </div>
     <div id="creatorPanel" style="display:none">
+      <div class="card gold-border" style="margin-bottom:10px">
+        <h3>📊 <span data-i18n="statsTitle">Статистика контракта (ANCR)</span> <button class="btn ghost xs" id="refreshStatsBtn" style="margin-left:auto" data-i18n="btnRefresh">Обновить</button></h3>
+        <div class="stats-grid" id="statsBody">
+          <div class="stat-chip"><span class="stat-k" data-i18n="statBalance">Всего на контракте</span><span class="stat-v" id="stBalance">…</span></div>
+          <div class="stat-chip"><span class="stat-k" data-i18n="statLocked">Заблокировано в сейфах</span><span class="stat-v" id="stLocked">…</span></div>
+          <div class="stat-chip"><span class="stat-k" data-i18n="statReward">Призовой фонд</span><span class="stat-v" id="stReward">…</span></div>
+          <div class="stat-chip"><span class="stat-k" data-i18n="statReserve">Стратегический резерв</span><span class="stat-v" id="stReserve">…</span></div>
+          <div class="stat-chip"><span class="stat-k" data-i18n="statFees">Накопленные комиссии</span><span class="stat-v" id="stFees">…</span></div>
+          <div class="stat-chip"><span class="stat-k" data-i18n="statBonus">Приветственный бонус</span><span class="stat-v" id="stBonus">…</span></div>
+          <div class="stat-chip"><span class="stat-k" data-i18n="statClaims">Выдано бонусов</span><span class="stat-v" id="stClaims">…</span></div>
+          <div class="stat-chip"><span class="stat-k" data-i18n="statFree">Свободный баланс</span><span class="stat-v" id="stFree">…</span></div>
+        </div>
+      </div>
       <div class="grid grid-2">
         <div class="card gold-border">
           <h3><span class="num">A</span> <span data-i18n="addToken">Поддерживаемые токены</span></h3>
@@ -1499,6 +1554,7 @@ window.__AV = {Keccak, ABI, EIP712, utf8Bytes, bytesToHex, hexToBytes, isAddress
 
 /* ═══════════════════════════════════════════ CONSTANTS ═════════════════════════ */
 const VAULT_ADDR     = '0xFd74CB71E0feff1EE961cEB1F6e19350371e0dF9';
+const ANCR_TOKEN_ADDR = '0x490Dd216A9aaD4fA389deca73a7cA4Ca01B24BDD';
 const ANCR_ADDR      = '0x490Dd216A9aaD4fA389deca73a7cA4Ca01B24BDD';
 const CHAIN_ID       = 11155111;
 const CHAIN_ID_HEX   = '0xaa36a7';
@@ -1715,6 +1771,8 @@ async function connectWallet(detail){
       determineRole();
       renderConnState();
       refreshInfobar();
+      loadMyVaults();
+      loadContractStats();
     });
     provider.on && provider.on('chainChanged', (cid)=>{
       State.chainId = parseInt(cid,16);
@@ -1723,6 +1781,8 @@ async function connectWallet(detail){
     });
     renderConnState();
     refreshInfobar();
+    loadMyVaults();
+    loadContractStats();
   }catch(e){
     log('err','Ошибка подключения: '+(e.message||e));
   }
@@ -2291,6 +2351,8 @@ async function watchTx(hash){
         {const L=LANG[State.lang||'ru']; log(ok?'ok':'err',(ok?(L.msgTxOk||'Транзакция подтверждена!'):(L.msgTxFail||'Транзакция откатилась'))+' (block '+parseInt(r.blockNumber,16)+')');}
         {const L=LANG[State.lang||'ru']; notif(ok?'ok':'err', ok?(L.msgTxOk||'Подтверждено'):(L.msgTxFail||'Откат'));}
         refreshInfobar();
+        loadMyVaults();
+        loadContractStats();
         return;
       }
     }catch(e){}
@@ -2455,6 +2517,11 @@ const LANG = {
     wbMaxHint:'⚠️ Максимум по контракту: 0.005 токена (5000000000000000 wei). Больше нельзя — транзакция отклонится.',
     wbOverLimit:'Бонус превышает максимум 5000000000000000 wei (0.005 токена)',
     btnCheckBalance:'Узнать накопленное',
+    openVaultHint:'Создайте защищённое хранилище для своих токенов за 3 шага.',
+    lvlBadgeBasic:'Базовый', lvlBadgeStrong:'Усиленный', lvlBadgeMax:'Максимум',
+    archDescShort:'Сейф управляется отдельными ключами — даже при краже кошелька деньги в безопасности. Выберите уровень:',
+    myVaultsTitle:'Мои сейфы', btnRefresh:'Обновить', noVaults:'У вас пока нет сейфов. Нажмите «Открыть новый сейф».', loading:'Загрузка…', loadFail:'Ошибка загрузки', totalIn:'Всего',
+    statsTitle:'Статистика контракта (ANCR)', statBalance:'Всего на контракте', statLocked:'Заблокировано в сейфах', statReward:'Призовой фонд', statReserve:'Стратегический резерв', statFees:'Накопленные комиссии', statBonus:'Приветственный бонус', statClaims:'Выдано бонусов', statFree:'Свободный баланс',
     ovToken:'Токен', ovLevel:'Уровень защиты', ovAmount:'Сумма', ovName:'Название сейфа', ovMainKey:'Основной ключ', ovRecovKey:'Резервный ключ', ovEmergency:'Резервный адрес (куда эвакуировать)',
     ovAgreeText:'Я понимаю, что резервный адрес нельзя изменить мгновенно и он не принадлежит моему кошельку. Я не потеряю основной и резервный ключи.',
     ovConfirmBtn:'⚓ Открыть сейф', ovMustAgree:'Поставьте галочку согласия', ovBadToken:'Неверный адрес токена',
@@ -2536,6 +2603,11 @@ const LANG = {
     wbMaxHint:'⚠️ Contract maximum: 0.005 token (5000000000000000 wei). More than that will be rejected.',
     wbOverLimit:'Bonus exceeds the maximum of 5000000000000000 wei (0.005 token)',
     btnCheckBalance:'Check accrued',
+    openVaultHint:'Create a protected vault for your tokens in 3 steps.',
+    lvlBadgeBasic:'Basic', lvlBadgeStrong:'Strong', lvlBadgeMax:'Maximum',
+    archDescShort:'A vault is controlled by separate keys — funds stay safe even if your wallet is stolen. Pick a level:',
+    myVaultsTitle:'My vaults', btnRefresh:'Refresh', noVaults:'You have no vaults yet. Click "Open new vault".', loading:'Loading…', loadFail:'Load error', totalIn:'Total',
+    statsTitle:'Contract stats (ANCR)', statBalance:'Total on contract', statLocked:'Locked in vaults', statReward:'Reward pool', statReserve:'Strategic reserve', statFees:'Accrued fees', statBonus:'Welcome bonus', statClaims:'Bonuses paid', statFree:'Free balance',
     ovToken:'Token', ovLevel:'Protection level', ovAmount:'Amount', ovName:'Vault name', ovMainKey:'Main key', ovRecovKey:'Recovery key', ovEmergency:'Recovery address (evacuation target)',
     ovAgreeText:'I understand the recovery address cannot be changed instantly and does not belong to my wallet. I will not lose the main and recovery keys.',
     ovConfirmBtn:'⚓ Open vault', ovMustAgree:'Please check the consent box', ovBadToken:'Invalid token address',
@@ -2617,6 +2689,11 @@ const LANG = {
     wbMaxHint:'⚠️ 合约上限：0.005 代币（5000000000000000 wei）。超过将被拒绝。',
     wbOverLimit:'奖金超过上限 5000000000000000 wei（0.005 代币）',
     btnCheckBalance:'查询累计',
+    openVaultHint:'3 步为您的代币创建受保护的保险库。',
+    lvlBadgeBasic:'基础', lvlBadgeStrong:'加强', lvlBadgeMax:'最高',
+    archDescShort:'保险库由独立密钥控制 — 即使钱包被盗资金也安全。请选择等级：',
+    myVaultsTitle:'我的保险库', btnRefresh:'刷新', noVaults:'您还没有保险库。点击"开设新保险库"。', loading:'加载中…', loadFail:'加载错误', totalIn:'共计',
+    statsTitle:'合约统计 (ANCR)', statBalance:'合约总额', statLocked:'保险库锁定', statReward:'奖励池', statReserve:'战略储备', statFees:'累计手续费', statBonus:'欢迎奖金', statClaims:'已发放奖金', statFree:'可用余额',
     ovToken:'代币', ovLevel:'保护等级', ovAmount:'数量', ovName:'保险库名称', ovMainKey:'主密钥', ovRecovKey:'恢复密钥', ovEmergency:'恢复地址（撤离目标）',
     ovAgreeText:'我理解恢复地址不能立即更改且不属于我的钱包。我不会丢失主密钥和恢复密钥。',
     ovConfirmBtn:'⚓ 开设保险库', ovMustAgree:'请勾选同意框', ovBadToken:'代币地址无效',
@@ -2845,6 +2922,77 @@ async function waitReceipt(hash){
   return null;
 }
 
+/* ═══════════════ МОИ СЕЙФЫ (список + балансы) ═══════════════ */
+const LEVEL_NAMES = ['SAFE','VAULT','FORTRESS'];
+const STATUS_NAMES = {ru:['—','Активен','Закрыт','Заморожен'], en:['—','Active','Closed','Frozen'], zh:['—','活跃','已关闭','已冻结']};
+async function loadMyVaults(){
+  const card=document.getElementById('myVaultsCard');
+  const body=document.getElementById('myVaultsBody');
+  if(!State.account || !card || !body){ if(card) card.style.display='none'; return; }
+  const L=LANG[State.lang||'ru'];
+  try{
+    const cntHex = await ethCall(VAULT_ADDR, ABI.call('userVaultCount(address)',['address'],[State.account]));
+    const cnt = Number(ABI.decodeUint(cntHex));
+    if(!cnt){ card.style.display='block'; body.innerHTML='<span style="color:var(--muted)">'+(L.noVaults||'У вас пока нет сейфов. Нажмите «Открыть новый сейф».')+'</span>'; return; }
+    card.style.display='block';
+    body.innerHTML='<span style="color:var(--muted)">'+(L.loading||'Загрузка…')+'</span>';
+    // Балансы по токенам
+    const byToken={};
+    let rows='';
+    for(let vid=1; vid<=cnt; vid++){
+      try{
+        const r=await ethCall(VAULT_ADDR, ABI.call('getVaultCore(address,uint256)',['address','uint256'],[State.account, BigInt(vid)]));
+        // returns (uint64 id, address token, uint120 amount, string name, uint8 status, uint8 level, address emergencyAddress)
+        const hex=r.startsWith('0x')?r.slice(2):r;
+        const id=BigInt('0x'+hex.slice(0,64));
+        const token='0x'+hex.slice(64+24,128);
+        const amount=BigInt('0x'+hex.slice(128,192));
+        const status=Number(BigInt('0x'+hex.slice(256,320)));
+        const level=Number(BigInt('0x'+hex.slice(320,384)));
+        const tShort=token.slice(0,6)+'…'+token.slice(-4);
+        const amt=fmtNum(Number(amount)/1e18);
+        const stArr=STATUS_NAMES[State.lang||'ru']||STATUS_NAMES.ru;
+        rows+='<div class="row" style="max-width:560px"><span class="k">#'+id.toString()+' · '+tShort+' · '+(LEVEL_NAMES[level]||'?')+'</span><span class="v">'+amt+' ('+(stArr[status]||'?')+')</span></div>';
+        byToken[token]=(byToken[token]||0n)+amount;
+      }catch(e){}
+    }
+    let summary='';
+    for(const [tok,sum] of Object.entries(byToken)){
+      const tShort=(tok.toLowerCase()===ANCR_TOKEN_ADDR.toLowerCase())?'ANCR':(tok.slice(0,6)+'…'+tok.slice(-4));
+      summary+='<div class="row" style="max-width:560px"><span class="k" style="color:var(--gold-dim)">'+(L.totalIn||'Всего')+' '+tShort+'</span><span class="v gold">'+fmtNum(Number(sum)/1e18)+'</span></div>';
+    }
+    body.innerHTML=summary+rows;
+  }catch(e){ card.style.display='block'; body.innerHTML='<span style="color:var(--err)">'+(L.loadFail||'Ошибка загрузки')+'</span>'; }
+}
+
+/* ═══════════════ СТАТИСТИКА КОНТРАКТА (Creator) ═══════════════ */
+async function loadContractStats(){
+  if(State.role!=='creator') return;
+  const token = ANCR_TOKEN_ADDR;
+  async function rd(sig, types, args){ try{ const r=await ethCall(VAULT_ADDR, ABI.call(sig,types,args)); return ABI.decodeUint(r);}catch(e){ return null; } }
+  const set=(id,val,raw)=>{ const el=document.getElementById(id); if(el) el.textContent = (val===null?'—':(raw?val.toString():fmtNum(Number(val)/1e18))); };
+  const totalBal = await (async()=>{ try{ const r=await ethCall(token, ABI.call('balanceOf(address)',['address'],[VAULT_ADDR])); return ABI.decodeUint(r);}catch(e){return null;} })();
+  const locked   = await rd('lockedPrincipal(address)',['address'],[token]);
+  const reward   = await rd('rewardPool(address)',['address'],[token]);
+  const reserve  = await rd('strategicReserve(address)',['address'],[token]);
+  const fees     = await rd('creatorFees(address)',['address'],[token]);
+  const bonus    = await rd('welcomeBonus()',[],[]);
+  const claims   = await rd('welcomeBonusClaims()',[],[]);
+  const maxClaims= await rd('maxWelcomeBonusClaims()',[],[]);
+  set('stBalance', totalBal); set('stLocked', locked); set('stReward', reward);
+  set('stReserve', reserve); set('stFees', fees); set('stBonus', bonus);
+  const cEl=document.getElementById('stClaims'); if(cEl) cEl.textContent = (claims===null?'—':(claims.toString()+(maxClaims!==null?(' / '+maxClaims.toString()):'')));
+  // Свободный баланс = total - locked - reward - reserve - fees
+  const fEl=document.getElementById('stFree');
+  if(fEl){
+    if(totalBal!==null && locked!==null && reward!==null && reserve!==null && fees!==null){
+      let free = totalBal - locked - reward - reserve - fees;
+      if(free<0n) free=0n;
+      fEl.textContent = fmtNum(Number(free)/1e18);
+    } else fEl.textContent='—';
+  }
+}
+
 function boot(){
   // logo
   const lg = document.getElementById('logo'); if(lg) lg.src = LOGO_DATA;
@@ -2927,6 +3075,10 @@ function boot(){
   if(cwCheck) cwCheck.addEventListener('click', ()=>checkAccrued('creatorFees(address)','cwToken','cwBalance'));
   const rwCheck=document.getElementById('rwCheck');
   if(rwCheck) rwCheck.addEventListener('click', ()=>checkAccrued('strategicReserve(address)','rwToken','rwBalance'));
+  const refreshVaultsBtn=document.getElementById('refreshVaultsBtn');
+  if(refreshVaultsBtn) refreshVaultsBtn.addEventListener('click', (e)=>{ e.preventDefault(); loadMyVaults(); });
+  const refreshStatsBtn=document.getElementById('refreshStatsBtn');
+  if(refreshStatsBtn) refreshStatsBtn.addEventListener('click', (e)=>{ e.preventDefault(); loadContractStats(); });
 
   // copy address
   const ac=document.getElementById('addrCopy');

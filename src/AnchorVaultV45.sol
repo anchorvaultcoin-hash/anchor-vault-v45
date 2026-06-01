@@ -762,6 +762,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         SecureTransfer storage st = secureTransfers[transferId];
         if (transferId == 0 || transferId >= nextSecureTransferId || st.from == address(0)) revert TransferNotFound();
         if (st.status != 0) revert TransferNotPending();
+        if (msg.sender != st.from && msg.sender != st.to) revert NotTransferSender(); // только участники
         if (block.timestamp < st.expiresAt) revert TransferStillValid();
         _closeTransfer(transferId, st, 3);
         emit SecureTransferExpired(transferId);
@@ -912,8 +913,8 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
 
     /**
      * @notice Однократное начальное распределение 1 000 000 ANCR.
-     *  150k → creator (перевод), 500k → rewardPool, 300k → strategicReserve (счётчики),
-     *  ~50k остаётся свободным резервом на контракте.
+     *  200k → payoutWallet (перевод, на аудит/нужды), 300k → strategicReserve,
+     *  500k → rewardPool (счётчики). Сумма = ровно 1 000 000, остатка НЕТ.
      *  ВАЖНО: токены должны быть ПЕРЕВЕДЕНЫ на контракт ДО вызова. Функция проверяет
      *  фактический баланс, чтобы пулы не учитывали несуществующие токены
      *  (иначе ломается инвариант платёжеспособности).

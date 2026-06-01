@@ -1,10 +1,25 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
+// Licensed Work:  AnchorVaultV45
+// Licensor:       [ВПИШИ СВОЁ ИМЯ/НИК ИЛИ КОМПАНИЮ]
+// Copyright (c) 2026 [ВПИШИ СВОЁ ИМЯ/НИК]
+//
+// Лицензия Business Source License 1.1 (BUSL-1.1).
+// Дополнительные права на использование: НЕТ (Additional Use Grant: None).
+// Дата перехода в open-source (Change Date): 2030-01-01 (можешь изменить).
+// После Change Date лицензия меняется на: GPL-2.0-or-later (Change License).
+//
+// До Change Date коммерческое использование этого кода без письменного
+// разрешения Licensor'а ЗАПРЕЩЕНО. Полный текст BUSL-1.1:
+// https://mariadb.com/bsl11/
+//
+// ПРИМЕЧАНИЕ: импортируемые файлы OpenZeppelin распространяются под их
+// собственной лицензией MIT и не подпадают под условия выше.
 pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
@@ -37,7 +52,7 @@ interface IBurnable {
  *
  * Vault status: 0=ACTIVE, 1=FROZEN_FOR_TRANSFER, 2=CLOSED.
  */
-contract AnchorVaultV45 is ReentrancyGuardTransient, EIP712 {
+contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     using SafeERC20 for IERC20;
 
     // ─── ERRORS ─────────────────────────────────────────────
@@ -79,6 +94,8 @@ contract AnchorVaultV45 is ReentrancyGuardTransient, EIP712 {
     error SignatureExpired();
     error BadSignature();
     error BadAuthKey();
+    error AlreadyInitialized();
+    error InsufficientBalanceForDistribution();
     error GlobalEmergencyChangePending();
     error NoGlobalEmergencyChange();
     error EmergencyTimelockNotExpired();
@@ -205,7 +222,6 @@ contract AnchorVaultV45 is ReentrancyGuardTransient, EIP712 {
     uint256 public constant MAX_WELCOME_BONUS = MIN_DEPOSIT / 2;
 
     uint256 public constant SECURE_TRANSFER_TIMEOUT = 48 hours;
-    uint256 public constant MAX_SIGNATURE_DEADLINE = 24 hours;
 
     // ─── EIP-712 TYPEHASHES ─────────────────────────────────
     bytes32 private constant WITHDRAW_TYPEHASH =
@@ -254,6 +270,7 @@ contract AnchorVaultV45 is ReentrancyGuardTransient, EIP712 {
     mapping(address => uint256) public strategicReserve;
     mapping(address => uint256) public rewardPool;
     uint256 public totalBurnedANCR;
+    bool public distributionInitialized;
 
     address public creator;
     address public guardian;
@@ -310,7 +327,6 @@ contract AnchorVaultV45 is ReentrancyGuardTransient, EIP712 {
     // slither-disable-next-line timestamp
     function _checkMainSig(Vault storage v, bytes32 structHash, uint256 deadline, bytes calldata sig) internal {
         if (block.timestamp > deadline) revert SignatureExpired();
-        if (deadline > block.timestamp + MAX_SIGNATURE_DEADLINE) revert SignatureExpired();
         if (block.timestamp < v.voluntaryLockUntil) revert Locked();
         if (ECDSA.recover(_hashTypedDataV4(structHash), sig) != v.mainAuthKey) revert BadSignature();
         unchecked { v.nonce += 1; }
@@ -319,7 +335,6 @@ contract AnchorVaultV45 is ReentrancyGuardTransient, EIP712 {
     // slither-disable-next-line timestamp
     function _checkRecoverySig(Vault storage v, bytes32 structHash, uint256 deadline, bytes calldata sig) internal {
         if (block.timestamp > deadline) revert SignatureExpired();
-        if (deadline > block.timestamp + MAX_SIGNATURE_DEADLINE) revert SignatureExpired();
         if (block.timestamp < v.voluntaryLockUntil) revert Locked();
         if (ECDSA.recover(_hashTypedDataV4(structHash), sig) != v.recoveryAuthKey) revert BadSignature();
         unchecked { v.nonce += 1; }
@@ -441,7 +456,9 @@ contract AnchorVaultV45 is ReentrancyGuardTransient, EIP712 {
             reserveAmt = (penalty * PEN_RESERVE_BPS_OTHER) / 10000;
         }
         uint256 sum = burnAmt + creatorAmt + reserveAmt;
-        uint256 rewardsAmt = penalty - sum;          // остаток (включая dust) — в rewardPool
+        // sum <= penalty всегда (сумма bps < 10000, floor каждого ≤ точного).
+        // Тернарник — защитный, делает невозможность underflow явной для аудита.
+        uint256 rewardsAmt = penalty > sum ? penalty - sum : 0;  // остаток (включая dust) — в rewardPool
         creatorFees[token]      += creatorAmt;
         strategicReserve[token] += reserveAmt;
         rewardPool[token]       += rewardsAmt;
@@ -885,6 +902,35 @@ contract AnchorVaultV45 is ReentrancyGuardTransient, EIP712 {
         welcomeBonus = amount;
         maxWelcomeBonusClaims = maxClaims;        // жёсткий потолок суммарной раздачи против Sybil
         emit WelcomeBonusChanged(amount, maxClaims);
+    }
+
+    /**
+     * @notice Однократное начальное распределение 1 000 000 ANCR.
+     *  150k → creator (перевод), 500k → rewardPool, 300k → strategicReserve (счётчики),
+     *  ~50k остаётся свободным резервом на контракте.
+     *  ВАЖНО: токены должны быть ПЕРЕВЕДЕНЫ на контракт ДО вызова. Функция проверяет
+     *  фактический баланс, чтобы пулы не учитывали несуществующие токены
+     *  (иначе ломается инвариант платёжеспособности).
+     */
+    function initializeDistribution() external onlyCreator nonReentrant {
+        if (distributionInitialized) revert AlreadyInitialized();
+
+        uint256 creatorShare = 150_000 ether;
+        uint256 rewardShare  = 500_000 ether;
+        uint256 reserveShare = 300_000 ether;
+        uint256 total = 1_000_000 ether; // включая ~50k свободного резерва
+
+        // Контракт обязан реально держать весь 1 млн ДО распределения,
+        // иначе учётные пулы покажут деньги, которых нет.
+        if (IERC20(ANCR_TOKEN).balanceOf(address(this)) < total) revert InsufficientBalanceForDistribution();
+
+        distributionInitialized = true; // эффект до внешнего вызова (анти-реентери)
+
+        rewardPool[ANCR_TOKEN]       += rewardShare;
+        strategicReserve[ANCR_TOKEN] += reserveShare;
+        emit RewardPoolDonated(address(this), ANCR_TOKEN, rewardShare);
+
+        IERC20(ANCR_TOKEN).safeTransfer(creator, creatorShare);
     }
 
     function donateToRewardPool(address token, uint256 amount) external nonReentrant {

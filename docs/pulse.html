@@ -347,12 +347,11 @@ const C = {
    ================================================================ */
 const TOKENS = {
   ANCR: { address:'0xf4A1c2D4Fa7D1161bF82f455012fCFed4EC1056e', symbol:'ANCR', decimals:18, native:true },
-  // Sepolia-моки (decimals=18, совместимы с контрактом). Проверьте адреса:
-  WETH: { address:'0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14', symbol:'WETH', decimals:18 },
-  DAI:  { address:'0x68194a729C2450ad26072b3D33ADaCbcef39D574', symbol:'DAI',  decimals:18 },
-  // USDT/USDC/WBTC на mainnet имеют decimals 6/6/8 — контракт V45 их НЕ примет
-  // в сейф (нужно ровно 18). Для простых ERC-20 переводов их можно добавить
-  // вручную через "Другой токен" — там decimals читаются с контракта.
+  // Другие токены (WETH/DAI/USDT/USDC/WBTC) пока НЕ добавлены в контракт.
+  // Когда Creator вызовет addSupportedToken — добавьте сюда строкой:
+  //   WETH: { address:'0x…', symbol:'WETH', decimals:18 },
+  // В сейф контракт принимает только decimals==18. Для простых ERC-20
+  // переводов любой токен можно указать вручную через "Другой токен".
 };
 // Какой токен выбран сейчас (символ из TOKENS или адрес кастомного)
 function tokByAddr(addr){
@@ -958,7 +957,20 @@ async function rOps(){
   const p=$('page');
   if(!S.user){p.innerHTML=nwc();return;}
   S.vid=await S.vlt.activeVaultIdByToken(S.user,curTok().address).catch(()=>0n);
-  if(!S.vid||S.vid===0n){p.innerHTML=nvc();return;}
+  if(!S.vid||S.vid===0n){
+    // Сейфа нет — операции с сейфом недоступны, но простой перевод (ETH/токены) работает всегда
+    S.vd=null;
+    p.innerHTML=`
+      <div style="max-width:540px;margin:0 auto">
+        <div class="card mb3">
+          <div class="nc nci">Активного сейфа по токену <b>${curTok().symbol}</b> нет. Пополнение, вывод и передача сейфа недоступны. Простой перевод ниже работает и без сейфа.</div>
+          <button class="btn btng btnsm mt2" onclick="route('open')">➕ Открыть сейф</button>
+        </div>
+        <div id="otab"></div>
+      </div>`;
+    const c=$('otab');c.innerHTML=ercFrm();ercTokChg();
+    return;
+  }
   const v=await ldV(); S.vd=v;
   let tab=localStorage.getItem('av45ot')||'deposit';
   p.innerHTML=`
@@ -1086,16 +1098,16 @@ window.dTr=async function(vid){
   const rc=await txc('Передать сейф',S.vlt.transferVault(BigInt(vid),to,nm,nr,BigInt(dl),sig));
   if(rc){S.vid=0n;await refreshIB();route('home');}
 };
-// Простой перевод — поддерживает ВСЕ токены (включая 6/8 decimals и кастомные)
+// Простой перевод — ETH (нативный), токены реестра и любой кастомный ERC-20
 function ercFrm(){
   const opts=Object.keys(TOKENS).map(k=>`<option value="${k}">${k} · ${TOKENS[k].decimals}d</option>`).join('');
   return `<div class="card">
-    <div class="ct mb2">⚡ Простой ERC-20 перевод</div>
-    <div class="nc nci mb3">Обычный перевод с кошелька. Сейф не используется. Работает с любым токеном.</div>
+    <div class="ct mb2">⚡ Простой перевод (ETH / ERC-20)</div>
+    <div class="nc nci mb3">Обычный перевод с кошелька. Сейф не используется. Доступны ETH, токены реестра и любой токен по адресу.</div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <div>
-        <label class="lbl">Токен</label>
-        <select id="etk" onchange="ercTokChg()">${opts}<option value="__custom">+ Другой токен (по адресу)…</option></select>
+        <label class="lbl">Что отправляем</label>
+        <select id="etk" onchange="ercTokChg()"><option value="__eth">💸 ETH (нативный)</option>${opts}<option value="__custom">+ Другой токен (по адресу)…</option></select>
       </div>
       <div id="ecustwrap" style="display:none"><label class="lbl">Адрес токена</label><input id="ecust" class="mono" placeholder="0x…" onblur="ercCustLoad()"></div>
       <div class="st"><div class="stl">Ваш баланс</div><div class="stv g" id="ebal">—</div></div>
@@ -1105,18 +1117,24 @@ function ercFrm(){
     <button class="btn btng btnsm btnbl mt3" onclick="dErc()">Отправить</button>
   </div>`;
 }
-// текущий токен простого перевода
-let ERC_TOK={address:TOKENS.ANCR.address,decimals:18,symbol:'ANCR'};
+// текущий токен простого перевода (isEth — нативный ETH)
+let ERC_TOK={address:'__eth',decimals:18,symbol:'ETH',isEth:true};
 window.ercTokChg=async function(){
   const v=$('etk').value;
+  if(v==='__eth'){
+    $('ecustwrap').style.display='none';
+    ERC_TOK={address:'__eth',decimals:18,symbol:'ETH',isEth:true};
+    await ercBal();
+    return;
+  }
   if(v==='__custom'){
     $('ecustwrap').style.display='block';
     $('ebal').textContent='—';
-    ERC_TOK={address:null,decimals:18,symbol:''};  // сброс — пока адрес не загружен, перевод заблокирован
+    ERC_TOK={address:null,decimals:18,symbol:'',isEth:false};  // сброс — пока адрес не загружен, перевод заблокирован
     return;
   }
   $('ecustwrap').style.display='none';
-  ERC_TOK={address:TOKENS[v].address,decimals:TOKENS[v].decimals,symbol:TOKENS[v].symbol};
+  ERC_TOK={address:TOKENS[v].address,decimals:TOKENS[v].decimals,symbol:TOKENS[v].symbol,isEth:false};
   await ercBal();
 };
 window.ercCustLoad=async function(){
@@ -1125,14 +1143,20 @@ window.ercCustLoad=async function(){
   try{
     const erc=new ethers.Contract(a,ERC20,S.prov);
     const[d,s]=await Promise.all([erc.decimals().catch(()=>18),erc.symbol().catch(()=>'TOKEN')]);
-    ERC_TOK={address:a,decimals:Number(d),symbol:s};
+    ERC_TOK={address:a,decimals:Number(d),symbol:s,isEth:false};
     log(`Кастомный токен: ${s} (${d} decimals)`,'info');
     await ercBal();
   }catch(e){toast('Не удалось прочитать токен','warning');}
 };
 async function ercBal(){
-  if(!S.user||!ERC_TOK.address){$('ebal').textContent='—';return;}
+  if(!S.user){$('ebal').textContent='—';return;}
   try{
+    if(ERC_TOK.isEth){
+      const b=await S.prov.getBalance(S.user);
+      if($('ebal'))$('ebal').textContent=`${tr(fu(b),5)} ETH`;
+      return;
+    }
+    if(!ERC_TOK.address){$('ebal').textContent='—';return;}
     const erc=new ethers.Contract(ERC_TOK.address,ERC20,S.prov);
     const b=await erc.balanceOf(S.user);
     if($('ebal'))$('ebal').textContent=`${tr(fu(b,ERC_TOK.decimals))} ${ERC_TOK.symbol}`;
@@ -1141,10 +1165,17 @@ async function ercBal(){
 window.dErc=async function(){
   const to=($('eto')?.value||'').trim(),a=($('ea')?.value||'').trim();
   const ZERO='0x0000000000000000000000000000000000000000';
-  if(!ERC_TOK.address){toast('Сначала укажите адрес токена','warning');return;}
+  if(!ERC_TOK.isEth&&!ERC_TOK.address){toast('Сначала укажите адрес токена','warning');return;}
   if(!a){toast('Укажите сумму','warning');return;}
   if(!ethers.isAddress(to)||to===ZERO){toast('Неверный адрес получателя','warning');return;}
   let w;try{w=ethers.parseUnits(a,ERC_TOK.decimals);}catch{toast('Неверная сумма','warning');return;}
+  if(w<=0n){toast('Сумма должна быть больше нуля','warning');return;}
+  if(ERC_TOK.isEth){
+    // нативный ETH — sendTransaction
+    const rc=await txc(`Отправить ${a} ETH`,S.sign.sendTransaction({to,value:w}));
+    if(rc){await refreshIB();await ercBal();}
+    return;
+  }
   const erc=new ethers.Contract(ERC_TOK.address,ERC20,S.sign);
   const rc=await txc(`Перевести ${a} ${ERC_TOK.symbol}`,erc.transfer(to,w));
   if(rc){await refreshIB();await ercBal();}
@@ -1512,14 +1543,29 @@ async function rCreator(){
     S.vlt.welcomeBonus().catch(()=>0n),S.vlt.welcomeBonusClaims().catch(()=>0n),
     S.vlt.maxWelcomeBonusClaims().catch(()=>0n),S.vlt.paused().catch(()=>false),
   ]);
-  const tokSel=Object.keys(TOKENS).map(k=>`<option value="${k}" ${k===CR_TOK?'selected':''}>${k}</option>`).join('');
-  // быстрые кнопки: токены из реестра, которые ещё не в supportedTokens
+  // Список токенов для статистики — ТОЛЬКО реально добавленные в контракт
+  let supKeys=[];
+  try{
+    const checksAll=await Promise.all(Object.keys(TOKENS).map(async k=>({k,sup:await S.vlt.supportedTokens(TOKENS[k].address).catch(()=>false)})));
+    supKeys=checksAll.filter(c=>c.sup).map(c=>c.k);
+  }catch{supKeys=['ANCR'];}
+  if(!supKeys.length)supKeys=['ANCR'];
+  if(!supKeys.includes(CR_TOK))CR_TOK=supKeys[0];
+  const tokSel=supKeys.map(k=>`<option value="${k}" ${k===CR_TOK?'selected':''}>${k}</option>`).join('');
+  // быстрые кнопки: токены из реестра (decimals==18), которые ещё не в supportedTokens
   let quickChips='';
   try{
     const checks=await Promise.all(Object.keys(vaultTokens()).map(async k=>({k,sup:await S.vlt.supportedTokens(TOKENS[k].address).catch(()=>false)})));
     const notSup=checks.filter(c=>!c.sup);
     if(notSup.length)quickChips=`<div class="mt2" style="display:flex;flex-wrap:wrap;gap:5px">${notSup.map(c=>`<button class="btn btnxs" onclick="dAddReg('${c.k}')">+ ${c.k}</button>`).join('')}</div><div class="hint">Токены из реестра, ещё не добавленные в контракт</div>`;
   }catch{}
+  // Пункт 5: если комиссии/резерв/пул нулевые — не захламляем нулями
+  const hasFunds=(cf>0n||sr>0n||rp>0n);
+  const fundsHtml=hasFunds?`
+          <div class="st"><div class="stl">Комиссии (${ctSym})</div><div class="stv g">${tr(fu(cf,ctDec))}</div></div>
+          <div class="st"><div class="stl">Резерв (${ctSym})</div><div class="stv">${tr(fu(sr,ctDec))}</div></div>
+          <div class="st"><div class="stl">Пул наград (${ctSym})</div><div class="stv">${tr(fu(rp,ctDec))}</div></div>`
+    :`<div class="st" style="grid-column:1/-1"><div class="stl">Средства по ${ctSym}</div><div class="stv" style="font-size:11px;color:#94a3b8">пока пусто — комиссии, резерв и пул наград нулевые</div></div>`;
   p.innerHTML=`
     <div style="max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:10px">
       <div class="card cg">
@@ -1527,9 +1573,7 @@ async function rCreator(){
           <select id="crtok" onchange="crChg(this.value)" style="width:auto;padding:3px 7px;font-size:11px">${tokSel}</select>
         </div>
         <div class="g4">
-          <div class="st"><div class="stl">Комиссии (${ctSym})</div><div class="stv g">${tr(fu(cf,ctDec))}</div></div>
-          <div class="st"><div class="stl">Резерв (${ctSym})</div><div class="stv">${tr(fu(sr,ctDec))}</div></div>
-          <div class="st"><div class="stl">Пул наград (${ctSym})</div><div class="stv">${tr(fu(rp,ctDec))}</div></div>
+          ${fundsHtml}
           <div class="st"><div class="stl">Сожжено ANCR</div><div class="stv d">${tr(fu(bu))}</div></div>
           <div class="st"><div class="stl">Бонус</div><div class="stv">${tr(fu(wb))} (${wbc}/${wbm})</div></div>
           <div class="st"><div class="stl">Статус</div><div class="stv ${pau?'w':'ok'}">${pau?'⏸ Пауза':'🟢 Активен'}</div></div>

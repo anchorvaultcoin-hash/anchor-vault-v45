@@ -4,3 +4,4 @@ cache/
 out/
 node_modules/
 *.log
+lib/

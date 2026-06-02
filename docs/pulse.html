@@ -289,7 +289,9 @@ pre.code{font-family:'JetBrains Mono',monospace;font-size:10px;white-space:pre-w
       <div class="ibs"></div>
       <div class="ib" id="ibs2"><span class="ibl">Статус</span><span class="ibv" id="ibv-s">—</span></div>
       <div class="ibs"></div>
-      <div class="ib gold"><span class="ibl">ANCR</span><span class="ibv" id="ibv-a">—</span></div>
+      <div class="ib gold"><span class="ibl">Токен</span><select id="tokSel" style="background:transparent;border:0;color:#d4a843;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;padding:0 2px;cursor:pointer;outline:none"></select></div>
+      <div class="ibs"></div>
+      <div class="ib gold"><span class="ibl">Баланс</span><span class="ibv" id="ibv-a">—</span></div>
       <div class="ibs"></div>
       <div class="ib"><span class="ibl">В сейфе</span><span class="ibv" id="ibv-l">—</span></div>
       <div class="ibs"></div>
@@ -324,8 +326,8 @@ pre.code{font-family:'JetBrains Mono',monospace;font-size:10px;white-space:pre-w
    CONFIG V45 — ОБНОВЛЁННЫЕ АДРЕСА
    ================================================================ */
 const C = {
-  CONTRACT: '0xa4BE56DFc599D0D443e1Ad6EC91763026c425967',
-  ANCR:     '0xD34D95de185aFd1781131BFc7946F89AC2A1040E',
+  CONTRACT: '0xAd228aFA6778166003deEBb3Aa8eF9A6Df01399F',
+  ANCR:     '0xf4A1c2D4Fa7D1161bF82f455012fCFed4EC1056e',
   CREATOR:  '0x6226828cc3d1B9c5fc1c4d9BE3dF7b03A4A70479',
   GUARDIAN: '0xe0DACa428Abc3F1D5BD333C2D1Ca12dd1a36964D',
   CHAIN:    11155111,
@@ -335,6 +337,29 @@ const C = {
   DOM_NAME: 'AnchorVault',
   DOM_VER:  '45',
 };
+
+/* ================================================================
+   TOKENS — реестр поддерживаемых ERC-20
+   ВАЖНО: контракт V45 принимает ТОЛЬКО токены с decimals==18.
+   ANCR — рабочий. Остальные — популярные Sepolia-моки, ПРОВЕРЬТЕ
+   адреса перед использованием (могут отличаться от ваших деплоев).
+   custom:true — токен можно добавить вручную через "Другой токен".
+   ================================================================ */
+const TOKENS = {
+  ANCR: { address:'0xf4A1c2D4Fa7D1161bF82f455012fCFed4EC1056e', symbol:'ANCR', decimals:18, native:true },
+  // Sepolia-моки (decimals=18, совместимы с контрактом). Проверьте адреса:
+  WETH: { address:'0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14', symbol:'WETH', decimals:18 },
+  DAI:  { address:'0x68194a729C2450ad26072b3D33ADaCbcef39D574', symbol:'DAI',  decimals:18 },
+  // USDT/USDC/WBTC на mainnet имеют decimals 6/6/8 — контракт V45 их НЕ примет
+  // в сейф (нужно ровно 18). Для простых ERC-20 переводов их можно добавить
+  // вручную через "Другой токен" — там decimals читаются с контракта.
+};
+// Какой токен выбран сейчас (символ из TOKENS или адрес кастомного)
+function tokByAddr(addr){
+  const a=(addr||'').toLowerCase();
+  for(const k in TOKENS){if(TOKENS[k].address.toLowerCase()===a)return TOKENS[k];}
+  return null;
+}
 
 /* EIP-712 TYPES — точно из AnchorVaultV45.sol */
 const T712 = {
@@ -462,8 +487,13 @@ const S={
   prov:null,sign:null,user:null,vlt:null,erc:null,
   isCr:false,isGd:false,netOK:false,paused:false,
   vid:0n,hasEm:false,vd:null,
+  selTok:'ANCR',  // символ выбранного токена сейфа (ключ из TOKENS)
   route:'home',lang:localStorage.getItem('av45l')||'ru',
 };
+// Текущий объект выбранного токена сейфа (для openVault/операций с сейфом)
+function curTok(){return TOKENS[S.selTok]||TOKENS.ANCR;}
+// Только токены с decimals==18 — контракт принимает в сейф только их
+function vaultTokens(){const o={};for(const k in TOKENS){if(TOKENS[k].decimals===18)o[k]=TOKENS[k];}return o;}
 
 /* ================================================================
    UTILS
@@ -625,14 +655,17 @@ async function loadRoles(){
 async function refreshIB(){
   if(!S.user)return;
   try{
-    const[ab,eb]=await Promise.all([S.erc.balanceOf(S.user),S.prov.getBalance(S.user)]);
-    $('ibv-a').textContent=tr(fu(ab))+' ANCR';
+    const tk=curTok();
+    const tErc=new ethers.Contract(tk.address,ERC20,S.prov);
+    const[ab,eb]=await Promise.all([tErc.balanceOf(S.user).catch(()=>0n),S.prov.getBalance(S.user)]);
+    $('ibv-a').textContent=tr(fu(ab,tk.decimals))+' '+tk.symbol;
     $('ibv-e').textContent=tr(fu(eb),5)+' ETH';
-    try{S.vid=await S.vlt.activeVaultIdByToken(S.user,C.ANCR);}catch{S.vid=0n;}
+    try{S.vid=await S.vlt.activeVaultIdByToken(S.user,tk.address);}catch{S.vid=0n;}
     if(S.vid&&S.vid!==0n){
       const co=await S.vlt.getVaultCore(S.user,S.vid);
-      $('ibv-v').textContent=`#${co[0]} · ${tr(fu(co[2]))} ANCR`;
-      $('ibv-l').textContent=tr(fu(co[2]))+' ANCR';
+      const m=tokByAddr(co[1])||tk;
+      $('ibv-v').textContent=`#${co[0]} · ${tr(fu(co[2],m.decimals))} ${m.symbol}`;
+      $('ibv-l').textContent=tr(fu(co[2],m.decimals))+' '+m.symbol;
     }else{$('ibv-v').textContent='нет';$('ibv-l').textContent='0';}
     const pau=await S.vlt.paused().catch(()=>false);
     S.paused=pau;
@@ -716,22 +749,52 @@ async function rHome(){
     </div>`;
     return;
   }
-  let v=null;
+  // Сканируем ВСЕ токены сейфов (decimals==18) и балансы кошелька по всем токенам реестра
+  const vt=vaultTokens();
+  const allT=TOKENS;
+  let vaultRows=[];   // активные сейфы по токенам
+  let balRows=[];     // балансы кошелька по всем токенам
   try{
-    S.vid=await S.vlt.activeVaultIdByToken(S.user,C.ANCR);
-    if(S.vid&&S.vid!==0n){
-      const[co,ti,au]=await Promise.all([
-        S.vlt.getVaultCore(S.user,S.vid),
-        S.vlt.getVaultTimings(S.user,S.vid),
-        S.vlt.getVaultAuth(S.user,S.vid),
-      ]);
-      S.vd=v={id:co[0],token:co[1],amount:co[2],name:co[3],status:Number(co[4]),level:Number(co[5]),emergencyAddress:co[6],depositedAt:ti[0],voluntaryLockUntil:ti[1],timelockHours:Number(ti[2]),nonce:au[0],mainAuthKey:au[1],recoveryAuthKey:au[2]};
-    }
-  }catch(e){log('home: '+perr(e),'warning');}
+    // активные сейфы
+    const vEntries=await Promise.all(Object.keys(vt).map(async k=>{
+      const t=vt[k];
+      let vid=0n;try{vid=await S.vlt.activeVaultIdByToken(S.user,t.address);}catch{}
+      if(vid&&vid!==0n){
+        const co=await S.vlt.getVaultCore(S.user,vid);
+        return{sym:t.symbol,key:k,vid:co[0],amount:co[2],name:co[3],level:Number(co[5]),dec:t.decimals};
+      }
+      return null;
+    }));
+    vaultRows=vEntries.filter(Boolean);
+    // балансы по всем токенам реестра
+    const bEntries=await Promise.all(Object.keys(allT).map(async k=>{
+      const t=allT[k];
+      try{const e=new ethers.Contract(t.address,ERC20,S.prov);const b=await e.balanceOf(S.user);return{sym:t.symbol,bal:b,dec:t.decimals,vault:t.decimals===18};}catch{return{sym:t.symbol,bal:0n,dec:t.decimals,vault:t.decimals===18};}
+    }));
+    balRows=bEntries;
+  }catch(e){log('home scan: '+perr(e),'warning');}
   const[wc,wa]=await Promise.all([S.vlt.welcomeBonusClaimed(S.user).catch(()=>false),S.vlt.welcomeBonus().catch(()=>0n)]);
   const LN=['SAFE','VAULT','FORTRESS'],LB=['bdg-ok','bdg-g','bdg-w'];
+  const vaultsHtml=vaultRows.length
+    ? vaultRows.map(r=>`
+        <div class="st" style="display:flex;align-items:center;gap:8px">
+          <span class="bdg bdg-g" style="min-width:46px;text-align:center">${r.sym}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:700">#${r.vid} · ${tr(fu(r.amount,r.dec))} ${r.sym}</div>
+            <div style="font-size:9.5px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${E(r.name)}</div>
+          </div>
+          <span class="bdg ${LB[r.level]}" style="font-size:8px">${LN[r.level]}</span>
+          <button class="btn btnxs" onclick="goVault('${r.key}')">Открыть →</button>
+        </div>`).join('')
+    : `<div style="text-align:center;padding:18px;color:#94a3b8;font-size:12px">Нет активных сейфов<br>
+        <button class="btn btng btnsm mt2" onclick="route('open')">➕ Открыть сейф</button></div>`;
+  const balHtml=balRows.map(b=>`
+    <div class="st" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+      <span style="font-size:11px;font-weight:700">${b.sym}${b.vault?'':' <span style="font-size:8px;color:#374151">(только перевод)</span>'}</span>
+      <span class="stv" style="font-size:11px">${tr(fu(b.bal,b.dec))}</span>
+    </div>`).join('');
   p.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
       <div class="card">
         <div class="ch"><div class="ct">💼 Кошелёк</div></div>
         <div class="g2">
@@ -743,31 +806,23 @@ async function rHome(){
         ${!S.hasEm?`<button class="btn btnw btnsm btnbl mt2" onclick="showGEM()">🚨 Задать резервный адрес</button>`:''}
       </div>
       <div class="card">
-        <div class="ch"><div class="ct">🔐 Активный сейф</div>${v?`<span class="bdg ${LB[v.level]}">${LN[v.level]}</span>`:''}</div>
-        ${!v?`<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px">Нет активного сейфа<br>
-          <button class="btn btng btnsm mt2" onclick="route('open')">➕ Открыть сейф</button></div>`
-        :`<div style="display:flex;flex-direction:column;gap:7px">
-          <div class="g2">
-            <div class="st"><div class="stl">Сейф №</div><div class="stv">#${v.id}</div></div>
-            <div class="st"><div class="stl">Баланс</div><div class="stv g">${tr(fu(v.amount))} ANCR</div></div>
-          </div>
-          <div class="st"><div class="stl">Название</div><div class="stv text-sm">${E(v.name)}</div></div>
-          <div class="st"><div class="stl">Main key</div><div class="stv" style="font-size:10px">${sh(v.mainAuthKey,10,8)}</div></div>
-          <div class="st"><div class="stl">Recovery key</div><div class="stv" style="font-size:10px">${sh(v.recoveryAuthKey,10,8)}</div></div>
-          <div class="g3">
-            <div class="st"><div class="stl">Nonce</div><div class="stv">${v.nonce}</div></div>
-            <div class="st"><div class="stl">Timelock</div><div class="stv">${v.timelockHours}ч</div></div>
-            <div class="st"><div class="stl">Открыт</div><div class="stv" style="font-size:9.5px">${fd(v.depositedAt)}</div></div>
-          </div>
-          <div class="g3 mt1">
-            <button class="btn btnsm" onclick="route('ops')">💱 Операции</button>
-            <button class="btn btnsm" onclick="route('em')">🆘 Аварийный</button>
-            <button class="btn btnsm" onclick="route('set')">⚙️ Настройки</button>
-          </div>
-        </div>`}
+        <div class="ch"><div class="ct">🔐 Мои сейфы</div>${vaultRows.length?`<span class="bdg bdg-m">${vaultRows.length}</span>`:''}</div>
+        <div style="display:flex;flex-direction:column;gap:6px">${vaultsHtml}</div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">🪙 Балансы токенов</div></div>
+        <div style="display:flex;flex-direction:column;gap:5px">${balHtml}</div>
+        <div class="hint mt2">Токены добавляются в реестр в коде пульта. В сейф можно класть только токены с 18 знаками.</div>
       </div>
     </div>`;
 }
+// Выбрать токен сейфа и перейти к операциям
+window.goVault=async function(key){
+  S.selTok=key;
+  const ts=$('tokSel');if(ts)ts.value=key;
+  if(S.user)await refreshIB();
+  route('ops');
+};
 
 /* ================================================================
    OPEN VAULT
@@ -776,13 +831,21 @@ async function rOpen(){
   const p=$('page');
   if(!S.user){p.innerHTML=nwc();return;}
   if(!S.hasEm){p.innerHTML=`<div class="card" style="max-width:480px;margin:0 auto"><div class="nc ncw mb2">Задайте резервный адрес перед открытием сейфа.</div><button class="btn btnw btnsm" onclick="showGEM()">🚨 Задать</button></div>`;return;}
-  S.vid=await S.vlt.activeVaultIdByToken(S.user,C.ANCR).catch(()=>0n);
-  if(S.vid&&S.vid!==0n){p.innerHTML=`<div class="card" style="max-width:480px;margin:0 auto"><div class="nc ncw">У вас уже есть ANCR-сейф №${S.vid}. Закройте его перед открытием нового.</div><button class="btn btnsm mt2" onclick="route('home')">← Назад</button></div>`;return;}
+  const tk=curTok();
+  S.vid=await S.vlt.activeVaultIdByToken(S.user,tk.address).catch(()=>0n);
+  if(S.vid&&S.vid!==0n){p.innerHTML=`<div class="card" style="max-width:480px;margin:0 auto"><div class="nc ncw">У вас уже есть ${tk.symbol}-сейф №${S.vid}. Закройте его перед открытием нового, или выберите другой токен в шапке.</div><button class="btn btnsm mt2" onclick="route('home')">← Назад</button></div>`;return;}
+  const vt=vaultTokens();
+  const tokOpts=Object.keys(vt).map(k=>`<option value="${k}" ${k===S.selTok?'selected':''}>${k} · ${sh(vt[k].address,6,4)}</option>`).join('');
   p.innerHTML=`
     <div class="card cg" style="max-width:540px;margin:0 auto">
-      <div class="ch"><div class="ct">➕ Открыть новый сейф</div></div>
+      <div class="ch"><div class="ct">➕ Открыть новый сейф</div><span class="bdg bdg-g">${tk.symbol}</span></div>
       <div class="nc ncw mb3">
         <b>⚠ Про защиту:</b> Сейф V45 использует <b>3 разных адреса</b>: резервный (его вы уже задали — куда уйдут средства при панике) + два ключа сейфа ниже — <b>основной</b> (обычные операции) и <b>резервный ключ</b> (аварийные). Ключи — это адреса <b>отдельных кошельков</b>, не тот что подключён сейчас. Ими вы подписываете операции в разделе «Подписи EIP-712».
+      </div>
+      <div class="mb3">
+        <label class="lbl">Токен сейфа</label>
+        <select id="optok">${tokOpts}</select>
+        <div class="hint">Контракт принимает в сейф только токены с 18 знаками. Выбор дублирует селектор в шапке.</div>
       </div>
       <div class="mb3">
         <label class="lbl">Уровень защиты</label>
@@ -806,9 +869,9 @@ async function rOpen(){
           <div class="hint">Другой кошелёк. Только для аварийных операций.</div>
         </div>
         <div>
-          <label class="lbl">Сумма (ANCR)</label>
+          <label class="lbl">Сумма (<span id="opsym">${tk.symbol}</span>)</label>
           <input id="opa" type="text" inputmode="decimal" placeholder="0.01">
-          <div class="hint">Минимум 0.01 ANCR. Из суммы удержится комиссия открытия 0.2%.</div>
+          <div class="hint">Минимум 0.01. Из суммы удержится комиссия открытия 0.2%.</div>
         </div>
         <div id="oppv" class="st" style="display:none"><div class="stl">В сейф получите</div><div class="stv g" id="oppvv">—</div></div>
       </div>
@@ -820,14 +883,17 @@ async function rOpen(){
         <button class="btn btng btnsm flex-1" id="opob" onclick="doOpen()" disabled>2. Открыть сейф</button>
       </div>
     </div>`;
+  // смена токена в форме = смена глобального выбора
+  $('optok').onchange=e=>{S.selTok=e.target.value;const t2=$('tokSel');if(t2)t2.value=e.target.value;route('open');};
   $('opa').addEventListener('input',()=>{
     const a=$('opa').value.trim();
+    const t2=curTok();
     if(!a){$('oppv').style.display='none';return;}
     try{
-      const w=ethers.parseUnits(a,18);
+      const w=ethers.parseUnits(a,t2.decimals);
       const f=(w*20n)/10000n;
       $('oppv').style.display='block';
-      $('oppvv').textContent=`${tr(fu(w-f))} ANCR (open fee ${tr(fu(f))})`;
+      $('oppvv').textContent=`${tr(fu(w-f,t2.decimals))} ${t2.symbol} (open fee ${tr(fu(f,t2.decimals))})`;
     }catch{$('oppv').style.display='none';}
   });
 }
@@ -836,14 +902,16 @@ window.sl=function(l){document.querySelectorAll('.lvc').forEach(e=>{const el=par
 window.doApr=async function(){
   const a=($('opa')?.value||'').trim();
   if(!a){toast('Укажите сумму','warning');return;}
-  let w;try{w=ethers.parseUnits(a,18);}catch{toast('Неверная сумма','warning');return;}
-  const erc=new ethers.Contract(C.ANCR,ERC20,S.sign);
-  const rc=await txc('Approve ANCR',erc.approve(C.CONTRACT,w));
+  const tk=curTok();
+  let w;try{w=ethers.parseUnits(a,tk.decimals);}catch{toast('Неверная сумма','warning');return;}
+  const erc=new ethers.Contract(tk.address,ERC20,S.sign);
+  const rc=await txc(`Approve ${tk.symbol}`,erc.approve(C.CONTRACT,w));
   if(rc){$('opob').disabled=false;toast('Approve выдан — теперь открывайте','success');}
 };
 window.doOpen=async function(){
   if(!S.user){toast('Подключите кошелёк','warning');return;}
   if(!$('opag')?.checked){toast('Подтвердите согласие','warning');return;}
+  const tk=curTok();
   const name=($('opn')?.value||'').trim();
   const mk=($('opm')?.value||'').trim();
   const rk=($('opr')?.value||'').trim();
@@ -855,25 +923,31 @@ window.doOpen=async function(){
   if(!ethers.isAddress(rk)||rk===ZERO){toast('Неверный Recovery Key','warning');return;}
   if(mk.toLowerCase()===rk.toLowerCase()){toast('Ключи должны различаться','warning');return;}
   if(mk.toLowerCase()===S.user.toLowerCase()||rk.toLowerCase()===S.user.toLowerCase()){toast('Ключи ≠ ваш кошелёк — иначе нет двухфакторности','warning');return;}
-  let w;try{w=ethers.parseUnits(amt,18);}catch{toast('Неверная сумма','warning');return;}
-  if(w<ethers.parseUnits('0.01',18)){toast('Минимум 0.01 ANCR','warning');return;}
-  // проверка баланса и allowance перед транзакцией — чтобы не жечь газ зря
+  let w;try{w=ethers.parseUnits(amt,tk.decimals);}catch{toast('Неверная сумма','warning');return;}
+  if(w<ethers.parseUnits('0.01',tk.decimals)){toast('Минимум 0.01 '+tk.symbol,'warning');return;}
+  // проверка поддержки токена контрактом + баланс + allowance
   try{
-    const[bal,alw]=await Promise.all([S.erc.balanceOf(S.user),S.erc.allowance(S.user,C.CONTRACT)]);
-    if(w>bal){toast(`Недостаточно ANCR. Баланс: ${tr(fu(bal))}`,'warning');return;}
+    const sup=await S.vlt.supportedTokens(tk.address);
+    if(!sup){toast(`${tk.symbol} не добавлен в контракт. Creator должен вызвать addSupportedToken.`,'warning',7000);return;}
+  }catch(e){log('supportedTokens: '+perr(e),'warning');}
+  const erc=new ethers.Contract(tk.address,ERC20,S.prov);
+  try{
+    const[bal,alw]=await Promise.all([erc.balanceOf(S.user),erc.allowance(S.user,C.CONTRACT)]);
+    if(w>bal){toast(`Недостаточно ${tk.symbol}. Баланс: ${tr(fu(bal,tk.decimals))}`,'warning');return;}
     if(alw<w){toast('Сначала нажмите «Approve токены»','warning');return;}
   }catch(e){log('Проверка баланса: '+perr(e),'warning');}
   const ok=await cdlg('Открыть сейф',`
     <div style="display:flex;flex-direction:column;gap:4px;font-size:11.5px">
+      <div>Токен: <b>${tk.symbol}</b></div>
       <div>Название: <b>${E(name)}</b></div>
       <div>Уровень: <b>${['SAFE','VAULT','FORTRESS'][lvl]}</b></div>
-      <div>Сумма: <b>${tr(fu(w))} ANCR</b></div>
+      <div>Сумма: <b>${tr(fu(w,tk.decimals))} ${tk.symbol}</b></div>
       <div>Main key: <code style="font-size:10px">${sh(mk,10,8)}</code></div>
       <div>Recovery key: <code style="font-size:10px">${sh(rk,10,8)}</code></div>
       <div class="nc ncw mt2">Сохраните ключи! Без них операции невозможны.</div>
     </div>`);
   if(!ok)return;
-  const rc=await txc('Открыть сейф',S.vlt.openVault(C.ANCR,{name,mainAuthKey:mk,recoveryAuthKey:rk,amount:w},lvl));
+  const rc=await txc('Открыть сейф',S.vlt.openVault(tk.address,{name,mainAuthKey:mk,recoveryAuthKey:rk,amount:w},lvl));
   if(rc){await refreshIB();toast('Сейф открыт!','success');route('home');}
 };
 
@@ -883,7 +957,7 @@ window.doOpen=async function(){
 async function rOps(){
   const p=$('page');
   if(!S.user){p.innerHTML=nwc();return;}
-  S.vid=await S.vlt.activeVaultIdByToken(S.user,C.ANCR).catch(()=>0n);
+  S.vid=await S.vlt.activeVaultIdByToken(S.user,curTok().address).catch(()=>0n);
   if(!S.vid||S.vid===0n){p.innerHTML=nvc();return;}
   const v=await ldV(); S.vd=v;
   let tab=localStorage.getItem('av45ot')||'deposit';
@@ -895,7 +969,7 @@ async function rOps(){
           <span class="bdg ${['bdg-ok','bdg-g','bdg-w'][v.level]}">${['SAFE','VAULT','FORTRESS'][v.level]}</span>
         </div>
         <div class="g3">
-          <div class="st"><div class="stl">Баланс</div><div class="stv g">${tr(fu(v.amount))}</div></div>
+          <div class="st"><div class="stl">Баланс</div><div class="stv g">${tr(fu(v.amount,v.dec))} ${v.sym}</div></div>
           <div class="st"><div class="stl">Nonce</div><div class="stv">${v.nonce}</div></div>
           <div class="st"><div class="stl">Timelock</div><div class="stv">${v.timelockHours}ч</div></div>
         </div>
@@ -916,14 +990,14 @@ function rOpsTab(t,v){
   if(t==='deposit')c.innerHTML=depFrm(v);
   else if(t==='withdraw')c.innerHTML=wdFrm(v);
   else if(t==='transfer')c.innerHTML=trFrm(v);
-  else c.innerHTML=ercFrm();
+  else {c.innerHTML=ercFrm();ercTokChg();}
 }
 function depFrm(v){
   return `<div class="card">
-    <div class="ct mb2">📥 Пополнить</div>
+    <div class="ct mb2">📥 Пополнить · ${v.sym}</div>
     <div class="nc nci mb3">Пополнение своего сейфа не требует подписи ключа.</div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <div><label class="lbl">Сумма ANCR</label><input id="da" type="text" inputmode="decimal" placeholder="0.01"><div class="hint">Комиссия уровня ${['0.5%','1.5%','2.0%'][v.level]}.</div></div>
+      <div><label class="lbl">Сумма ${v.sym}</label><input id="da" type="text" inputmode="decimal" placeholder="0.01"><div class="hint">Комиссия уровня ${['0.5%','1.5%','2.0%'][v.level]}.</div></div>
     </div>
     <div class="flex gap2 mt3">
       <button class="btn btnsm flex-1" onclick="dDA()">Approve</button>
@@ -933,23 +1007,25 @@ function depFrm(v){
 }
 window.dDA=async function(){
   const a=($('da')?.value||'').trim();if(!a){toast('Укажите сумму','warning');return;}
-  let w;try{w=ethers.parseUnits(a,18);}catch{toast('Неверная сумма','warning');return;}
-  const erc=new ethers.Contract(C.ANCR,ERC20,S.sign);
-  await txc('Approve',erc.approve(C.CONTRACT,w));
+  const tk=S.vd?{address:S.vd.token,decimals:S.vd.dec,symbol:S.vd.sym}:curTok();
+  let w;try{w=ethers.parseUnits(a,tk.decimals);}catch{toast('Неверная сумма','warning');return;}
+  const erc=new ethers.Contract(tk.address,ERC20,S.sign);
+  await txc('Approve '+tk.symbol,erc.approve(C.CONTRACT,w));
 };
 window.dDep=async function(vid){
   const a=($('da')?.value||'').trim();if(!a){toast('Укажите сумму','warning');return;}
-  let w;try{w=ethers.parseUnits(a,18);}catch{toast('Неверная сумма','warning');return;}
+  const tk=S.vd?{decimals:S.vd.dec}:curTok();
+  let w;try{w=ethers.parseUnits(a,tk.decimals);}catch{toast('Неверная сумма','warning');return;}
   const rc=await txc('Пополнить',S.vlt.depositToVault(BigInt(vid),w));
   if(rc){await refreshIB();route('ops');}
 };
 function wdFrm(v){
   const dl=Math.floor(Date.now()/1000)+3600;
   return `<div class="card">
-    <div class="ct mb2">📤 Вывести</div>
+    <div class="ct mb2">📤 Вывести · ${v.sym}</div>
     <div class="nc nci mb3">Нужна подпись <b>mainAuthKey</b>: <code style="font-size:10px">${sh(v.mainAuthKey,10,8)}</code>.<br>Сделайте подпись в разделе «Подписи EIP-712» → Withdraw.</div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <div><label class="lbl">Сумма ANCR</label><input id="wa" type="text" inputmode="decimal" placeholder="0.01"></div>
+      <div><label class="lbl">Сумма ${v.sym}</label><input id="wa" type="text" inputmode="decimal" placeholder="0.01"></div>
       <div><label class="lbl">Получатель</label><input id="wto" class="mono" placeholder="0x…" value="${S.user}"></div>
       <div><label class="lbl">Deadline</label><input id="wdl" type="number" value="${dl}"><div class="hint">Unix-timestamp. По умолчанию +1 час от сейчас.</div></div>
       <div><label class="lbl">Подпись (bytes hex)</label><input id="wsg" class="mono" placeholder="0x…"><div class="hint">Withdraw(owner,${v.id},amount,to,${v.nonce},deadline) — подпись mainAuthKey</div></div>
@@ -960,13 +1036,14 @@ function wdFrm(v){
 window.dWd=async function(vid){
   const amt=($('wa')?.value||'').trim(),to=($('wto')?.value||'').trim(),dl=$('wdl')?.value,sig=($('wsg')?.value||'').trim();
   const ZERO='0x0000000000000000000000000000000000000000';
+  const dec=S.vd?S.vd.dec:18,sym=S.vd?S.vd.sym:'';
   if(!amt||!to||!dl||!sig){toast('Заполните все поля','warning');return;}
   if(!ethers.isAddress(to)||to===ZERO){toast('Неверный адрес получателя','warning');return;}
   if(Number(dl)<=Math.floor(Date.now()/1000)){toast('Deadline должен быть в будущем','warning');return;}
-  let w;try{w=ethers.parseUnits(amt,18);}catch{toast('Неверная сумма','warning');return;}
+  let w;try{w=ethers.parseUnits(amt,dec);}catch{toast('Неверная сумма','warning');return;}
   if(w<=0n){toast('Сумма должна быть больше нуля','warning');return;}
-  if(S.vd&&w>S.vd.amount){toast(`Сумма больше баланса сейфа (${tr(fu(S.vd.amount))} ANCR)`,'warning');return;}
-  const ok=await cdlg('Подтвердить вывод',`Сумма: <b>${tr(fu(w))} ANCR</b> → <code>${sh(to,8,6)}</code><br>Комиссия 0.5%.`);
+  if(S.vd&&w>S.vd.amount){toast(`Сумма больше баланса сейфа (${tr(fu(S.vd.amount,dec))} ${sym})`,'warning');return;}
+  const ok=await cdlg('Подтвердить вывод',`Сумма: <b>${tr(fu(w,dec))} ${sym}</b> → <code>${sh(to,8,6)}</code><br>Комиссия 0.5%.`);
   if(!ok)return;
   const rc=await txc('Вывод из сейфа',S.vlt.withdrawFromVault(BigInt(vid),w,to,BigInt(dl),sig));
   if(rc){await refreshIB();route('ops');}
@@ -974,7 +1051,7 @@ window.dWd=async function(vid){
 function trFrm(v){
   const dl=Math.floor(Date.now()/1000)+3600;
   return `<div class="card">
-    <div class="ct mb2">➡ Передать сейф</div>
+    <div class="ct mb2">➡ Передать сейф · ${v.sym}</div>
     <div class="nc ncw mb3">Нужна подпись mainAuthKey. Получатель должен иметь задан globalEmergency.</div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <div><label class="lbl">Получатель</label><input id="tto" class="mono" placeholder="0x…"></div>
@@ -989,6 +1066,7 @@ function trFrm(v){
 window.dTr=async function(vid){
   const to=($('tto')?.value||'').trim(),nm=($('tnm')?.value||'').trim(),nr=($('tnr')?.value||'').trim(),dl=$('tdl')?.value,sig=($('tsg')?.value||'').trim();
   const ZERO='0x0000000000000000000000000000000000000000';
+  const tokAddr=S.vd?S.vd.token:curTok().address;
   if(!to||!nm||!nr||!dl||!sig){toast('Заполните все поля','warning');return;}
   if(!ethers.isAddress(to)||to===ZERO){toast('Неверный адрес получателя','warning');return;}
   if(!ethers.isAddress(nm)||nm===ZERO){toast('Неверный новый mainAuthKey','warning');return;}
@@ -996,36 +1074,80 @@ window.dTr=async function(vid){
   if(nm.toLowerCase()===nr.toLowerCase()){toast('Новые ключи должны различаться','warning');return;}
   if(to.toLowerCase()===S.user.toLowerCase()){toast('Нельзя передать самому себе','warning');return;}
   if(Number(dl)<=Math.floor(Date.now()/1000)){toast('Deadline должен быть в будущем','warning');return;}
-  // контракт требует, чтобы у получателя был задан globalEmergency и не было своего сейфа
+  // контракт требует, чтобы у получателя был задан globalEmergency и не было своего сейфа этого токена
   try{
     const emTo=await S.vlt.globalEmergency(to);
     if(!emTo||emTo===ZERO){toast('У получателя не задан резервный адрес — он должен сначала его установить','warning',7000);return;}
-    const vidTo=await S.vlt.activeVaultIdByToken(to,C.ANCR);
-    if(vidTo&&vidTo!==0n){toast('У получателя уже есть активный ANCR-сейф','warning');return;}
+    const vidTo=await S.vlt.activeVaultIdByToken(to,tokAddr);
+    if(vidTo&&vidTo!==0n){toast('У получателя уже есть активный сейф этого токена','warning');return;}
   }catch(e){log('Проверка получателя: '+perr(e),'warning');}
   const ok=await cdlg('Передать сейф',`Получатель: <code>${sh(to,8,6)}</code><br><br>Сейф со всем балансом перейдёт к нему. Отменить нельзя.`);
   if(!ok)return;
   const rc=await txc('Передать сейф',S.vlt.transferVault(BigInt(vid),to,nm,nr,BigInt(dl),sig));
   if(rc){S.vid=0n;await refreshIB();route('home');}
 };
+// Простой перевод — поддерживает ВСЕ токены (включая 6/8 decimals и кастомные)
 function ercFrm(){
+  const opts=Object.keys(TOKENS).map(k=>`<option value="${k}">${k} · ${TOKENS[k].decimals}d</option>`).join('');
   return `<div class="card">
     <div class="ct mb2">⚡ Простой ERC-20 перевод</div>
-    <div class="nc nci mb3">Обычный перевод с кошелька. Сейф не используется.</div>
+    <div class="nc nci mb3">Обычный перевод с кошелька. Сейф не используется. Работает с любым токеном.</div>
     <div style="display:flex;flex-direction:column;gap:8px">
+      <div>
+        <label class="lbl">Токен</label>
+        <select id="etk" onchange="ercTokChg()">${opts}<option value="__custom">+ Другой токен (по адресу)…</option></select>
+      </div>
+      <div id="ecustwrap" style="display:none"><label class="lbl">Адрес токена</label><input id="ecust" class="mono" placeholder="0x…" onblur="ercCustLoad()"></div>
+      <div class="st"><div class="stl">Ваш баланс</div><div class="stv g" id="ebal">—</div></div>
       <div><label class="lbl">Получатель</label><input id="eto" class="mono" placeholder="0x…"></div>
-      <div><label class="lbl">Сумма ANCR</label><input id="ea" type="text" inputmode="decimal" placeholder="0.0"></div>
+      <div><label class="lbl">Сумма</label><input id="ea" type="text" inputmode="decimal" placeholder="0.0"></div>
     </div>
     <button class="btn btng btnsm btnbl mt3" onclick="dErc()">Отправить</button>
   </div>`;
 }
+// текущий токен простого перевода
+let ERC_TOK={address:TOKENS.ANCR.address,decimals:18,symbol:'ANCR'};
+window.ercTokChg=async function(){
+  const v=$('etk').value;
+  if(v==='__custom'){
+    $('ecustwrap').style.display='block';
+    $('ebal').textContent='—';
+    ERC_TOK={address:null,decimals:18,symbol:''};  // сброс — пока адрес не загружен, перевод заблокирован
+    return;
+  }
+  $('ecustwrap').style.display='none';
+  ERC_TOK={address:TOKENS[v].address,decimals:TOKENS[v].decimals,symbol:TOKENS[v].symbol};
+  await ercBal();
+};
+window.ercCustLoad=async function(){
+  const a=($('ecust')?.value||'').trim();
+  if(!ethers.isAddress(a)){return;}
+  try{
+    const erc=new ethers.Contract(a,ERC20,S.prov);
+    const[d,s]=await Promise.all([erc.decimals().catch(()=>18),erc.symbol().catch(()=>'TOKEN')]);
+    ERC_TOK={address:a,decimals:Number(d),symbol:s};
+    log(`Кастомный токен: ${s} (${d} decimals)`,'info');
+    await ercBal();
+  }catch(e){toast('Не удалось прочитать токен','warning');}
+};
+async function ercBal(){
+  if(!S.user||!ERC_TOK.address){$('ebal').textContent='—';return;}
+  try{
+    const erc=new ethers.Contract(ERC_TOK.address,ERC20,S.prov);
+    const b=await erc.balanceOf(S.user);
+    if($('ebal'))$('ebal').textContent=`${tr(fu(b,ERC_TOK.decimals))} ${ERC_TOK.symbol}`;
+  }catch{if($('ebal'))$('ebal').textContent='—';}
+}
 window.dErc=async function(){
   const to=($('eto')?.value||'').trim(),a=($('ea')?.value||'').trim();
-  if(!ethers.isAddress(to)||!a){toast('Заполните поля','warning');return;}
-  let w;try{w=ethers.parseUnits(a,18);}catch{toast('Неверная сумма','warning');return;}
-  const erc=new ethers.Contract(C.ANCR,ERC20,S.sign);
-  const rc=await txc(`Перевести ${a} ANCR`,erc.transfer(to,w));
-  if(rc){await refreshIB();}
+  const ZERO='0x0000000000000000000000000000000000000000';
+  if(!ERC_TOK.address){toast('Сначала укажите адрес токена','warning');return;}
+  if(!a){toast('Укажите сумму','warning');return;}
+  if(!ethers.isAddress(to)||to===ZERO){toast('Неверный адрес получателя','warning');return;}
+  let w;try{w=ethers.parseUnits(a,ERC_TOK.decimals);}catch{toast('Неверная сумма','warning');return;}
+  const erc=new ethers.Contract(ERC_TOK.address,ERC20,S.sign);
+  const rc=await txc(`Перевести ${a} ${ERC_TOK.symbol}`,erc.transfer(to,w));
+  if(rc){await refreshIB();await ercBal();}
 };
 
 /* ================================================================
@@ -1034,7 +1156,7 @@ window.dErc=async function(){
 async function rSign(){
   const p=$('page');
   if(!S.user){p.innerHTML=nwc();return;}
-  S.vid=await S.vlt.activeVaultIdByToken(S.user,C.ANCR).catch(()=>0n);
+  S.vid=await S.vlt.activeVaultIdByToken(S.user,curTok().address).catch(()=>0n);
   if(!S.vid||S.vid===0n){p.innerHTML=nvc();return;}
   const au=await S.vlt.getVaultAuth(S.user,S.vid);
   const nonce=au[0]; const dl=Math.floor(Date.now()/1000)+3600;
@@ -1079,7 +1201,7 @@ async function rSign(){
 window.ssOp=function(op){localStorage.setItem('av45so',op);rSFlds(op);$('sr').style.display='none';};
 function gSFC(op){
   const F={
-    Withdraw:[{id:'sf-a',lb:'amount (wei)',h:'Сумма в wei'},{id:'sf-t',lb:'to',h:'Адрес получателя'}],
+    Withdraw:[{id:'sf-a',lb:'amount (в токенах)',h:'Сумма в обычных единицах, напр. 1.5'},{id:'sf-t',lb:'to',h:'Адрес получателя'}],
     TransferVault:[{id:'sf-t',lb:'to',h:'Адрес получателя'},{id:'sf-nm',lb:'newMainKey',h:''},{id:'sf-nr',lb:'newRecoveryKey',h:''}],
     InitSecureTransfer:[{id:'sf-t',lb:'to',h:''},{id:'sf-nm',lb:'newMainKey',h:''},{id:'sf-nr',lb:'newRecoveryKey',h:''}],
     SetTimelock:[{id:'sf-h',lb:'hoursVal',h:'Часов (0-168)'}],
@@ -1102,7 +1224,14 @@ window.doSign=async function(){
   const nonce=au[0]; const owner=S.user; const vaultId=S.vid.toString();
   const gf=id=>{const e=document.getElementById(id);return e?e.value.trim():'';};
   let msg={owner,vaultId,nonce:nonce.toString(),deadline:dl.toString()};
-  if(op==='Withdraw'){msg.amount=gf('sf-a');msg.to=gf('sf-t');}
+  let wRaw='';  // исходная сумма в токенах (для подсказки)
+  if(op==='Withdraw'){
+    // amount вводится в токенах — конвертируем в минимальные единицы по decimals сейфа
+    let dec=18;try{const co=await S.vlt.getVaultCore(S.user,S.vid);const tm=tokByAddr(co[1]);if(tm)dec=tm.decimals;}catch{}
+    wRaw=gf('sf-a');
+    let aWei;try{aWei=ethers.parseUnits(wRaw||'0',dec);}catch{toast('Неверная сумма','warning');return;}
+    msg.amount=aWei.toString();msg.to=gf('sf-t');
+  }
   else if(op==='TransferVault'||op==='InitSecureTransfer'){msg.to=gf('sf-t');msg.newMainKey=gf('sf-nm');msg.newRecoveryKey=gf('sf-nr');}
   else if(op==='SetTimelock'){msg.hoursVal=gf('sf-h');}
   else if(op==='SetVoluntaryLock'){msg.lockUntil=gf('sf-lu');}
@@ -1111,8 +1240,12 @@ window.doSign=async function(){
   const MAIN_OPS=['Withdraw','TransferVault','InitSecureTransfer','SetTimelock','SetVoluntaryLock'];
   const kType=MAIN_OPS.includes(op)?'Main key (mainAuthKey)':'Recovery key (recoveryAuthKey)';
   const kAddr=MAIN_OPS.includes(op)?au[1]:au[2];
+  let amtNote='';
+  if(op==='Withdraw'&&wRaw){
+    amtNote=`<div class="nc nci mb2">Сумма указана в токенах: <b>${E(wRaw)}</b>. В форме вывода в поле «Сумма» введите <b>ровно столько же</b> (${E(wRaw)}) — пульт сам переведёт в нужные единицы.</div>`;
+  }
   const ok=await cdlg(`Подписать: ${op}`,
-    `<div class="nc ncw mb2">Переключите MetaMask на <b>${kType}</b>:<br><code style="font-size:10.5px">${kAddr}</code><br><br>Подписывает именно этот кошелёк, не ваш основной!</div>`);
+    amtNote+`<div class="nc ncw mb2">Переключите MetaMask на <b>${kType}</b>:<br><code style="font-size:10.5px">${kAddr}</code><br><br>Подписывает именно этот кошелёк, не ваш основной!</div>`);
   if(!ok)return;
   try{
     const dom=await buildDom();
@@ -1132,7 +1265,7 @@ window.doSign=async function(){
 async function rEm(){
   const p=$('page');
   if(!S.user){p.innerHTML=nwc();return;}
-  S.vid=await S.vlt.activeVaultIdByToken(S.user,C.ANCR).catch(()=>0n);
+  S.vid=await S.vlt.activeVaultIdByToken(S.user,curTok().address).catch(()=>0n);
   if(!S.vid||S.vid===0n){p.innerHTML=nvc();return;}
   const v=await ldV();
   const em=await S.vlt.globalEmergency(S.user).catch(()=>'—');
@@ -1140,9 +1273,9 @@ async function rEm(){
   p.innerHTML=`
     <div style="max-width:540px;margin:0 auto;display:flex;flex-direction:column;gap:10px">
       <div class="card" style="border-color:rgba(249,115,22,.4)">
-        <div class="ch"><div class="ct">🆘 Аварийные операции</div></div>
+        <div class="ch"><div class="ct">🆘 Аварийные операции</div><span class="bdg bdg-w">${v.sym}</span></div>
         <div class="g2">
-          <div class="st"><div class="stl">В сейфе</div><div class="stv g">${tr(fu(v.amount))} ANCR</div></div>
+          <div class="st"><div class="stl">В сейфе</div><div class="stv g">${tr(fu(v.amount,v.dec))} ${v.sym}</div></div>
           <div class="st"><div class="stl">Резервный адрес</div><div class="stv" style="font-size:10px">${sh(em,10,8)}</div></div>
         </div>
       </div>
@@ -1151,7 +1284,7 @@ async function rEm(){
       <div class="card" style="border-color:rgba(239,68,68,.5)">
         <div class="ct mb2">⚡ Мгновенный вывод (Panic) — БЕЗ подписи</div>
         <div class="nc ncd mb2">20% комиссии. Средства → <code>${sh(em,8,6)}</code>. Используйте только если потеряли оба ключа.</div>
-        <div class="st mb2"><div class="stl">Получите примерно</div><div class="stv ok">${tr(fu(v.amount*80n/100n))} ANCR (80%)</div></div>
+        <div class="st mb2"><div class="stl">Получите примерно</div><div class="stv ok">${tr(fu(v.amount*80n/100n,v.dec))} ${v.sym} (80%)</div></div>
         <button class="btn btnd btnsm btnbl" onclick="dPanic('${v.id}')">⚡ Panic Withdraw</button>
       </div>
 
@@ -1231,7 +1364,7 @@ window.dEA=async function(vid){
 async function rSet(){
   const p=$('page');
   if(!S.user){p.innerHTML=nwc();return;}
-  S.vid=await S.vlt.activeVaultIdByToken(S.user,C.ANCR).catch(()=>0n);
+  S.vid=await S.vlt.activeVaultIdByToken(S.user,curTok().address).catch(()=>0n);
   if(!S.vid||S.vid===0n){p.innerHTML=nvc();return;}
   const v=await ldV();
   const dl=Math.floor(Date.now()/1000)+3600;
@@ -1367,31 +1500,46 @@ window.dCXC=async function(){
 /* ================================================================
    CREATOR PANEL
    ================================================================ */
+let CR_TOK='ANCR';  // выбранный токен для статистики/выводов в панели Creator
 async function rCreator(){
   const p=$('page');
   if(!S.user||!S.isCr){p.innerHTML=`<div class="card"><div class="nc ncd">Только для Creator.</div></div>`;return;}
+  const ct=TOKENS[CR_TOK]||TOKENS.ANCR;
+  const ctAddr=ct.address, ctDec=ct.decimals, ctSym=ct.symbol;
   const[cf,sr,rp,bu,wb,wbc,wbm,pau]=await Promise.all([
-    S.vlt.creatorFees(C.ANCR),S.vlt.strategicReserve(C.ANCR),
-    S.vlt.rewardPool(C.ANCR),S.vlt.totalBurnedANCR(),
-    S.vlt.welcomeBonus(),S.vlt.welcomeBonusClaims(),
-    S.vlt.maxWelcomeBonusClaims(),S.vlt.paused(),
+    S.vlt.creatorFees(ctAddr).catch(()=>0n),S.vlt.strategicReserve(ctAddr).catch(()=>0n),
+    S.vlt.rewardPool(ctAddr).catch(()=>0n),S.vlt.totalBurnedANCR().catch(()=>0n),
+    S.vlt.welcomeBonus().catch(()=>0n),S.vlt.welcomeBonusClaims().catch(()=>0n),
+    S.vlt.maxWelcomeBonusClaims().catch(()=>0n),S.vlt.paused().catch(()=>false),
   ]);
+  const tokSel=Object.keys(TOKENS).map(k=>`<option value="${k}" ${k===CR_TOK?'selected':''}>${k}</option>`).join('');
+  // быстрые кнопки: токены из реестра, которые ещё не в supportedTokens
+  let quickChips='';
+  try{
+    const checks=await Promise.all(Object.keys(vaultTokens()).map(async k=>({k,sup:await S.vlt.supportedTokens(TOKENS[k].address).catch(()=>false)})));
+    const notSup=checks.filter(c=>!c.sup);
+    if(notSup.length)quickChips=`<div class="mt2" style="display:flex;flex-wrap:wrap;gap:5px">${notSup.map(c=>`<button class="btn btnxs" onclick="dAddReg('${c.k}')">+ ${c.k}</button>`).join('')}</div><div class="hint">Токены из реестра, ещё не добавленные в контракт</div>`;
+  }catch{}
   p.innerHTML=`
     <div style="max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:10px">
       <div class="card cg">
-        <div class="ch"><div class="ct">📊 Статистика контракта</div></div>
+        <div class="ch"><div class="ct">📊 Статистика контракта</div>
+          <select id="crtok" onchange="crChg(this.value)" style="width:auto;padding:3px 7px;font-size:11px">${tokSel}</select>
+        </div>
         <div class="g4">
-          <div class="st"><div class="stl">Комиссии Creator</div><div class="stv g">${tr(fu(cf))}</div></div>
-          <div class="st"><div class="stl">Резерв</div><div class="stv">${tr(fu(sr))}</div></div>
-          <div class="st"><div class="stl">Пул наград</div><div class="stv">${tr(fu(rp))}</div></div>
-          <div class="st"><div class="stl">Сожжено</div><div class="stv d">${tr(fu(bu))}</div></div>
+          <div class="st"><div class="stl">Комиссии (${ctSym})</div><div class="stv g">${tr(fu(cf,ctDec))}</div></div>
+          <div class="st"><div class="stl">Резерв (${ctSym})</div><div class="stv">${tr(fu(sr,ctDec))}</div></div>
+          <div class="st"><div class="stl">Пул наград (${ctSym})</div><div class="stv">${tr(fu(rp,ctDec))}</div></div>
+          <div class="st"><div class="stl">Сожжено ANCR</div><div class="stv d">${tr(fu(bu))}</div></div>
           <div class="st"><div class="stl">Бонус</div><div class="stv">${tr(fu(wb))} (${wbc}/${wbm})</div></div>
           <div class="st"><div class="stl">Статус</div><div class="stv ${pau?'w':'ok'}">${pau?'⏸ Пауза':'🟢 Активен'}</div></div>
         </div>
       </div>
       <div class="card">
-        <div class="ct mb2">🪙 Токены</div>
-        <div class="flex gap2"><input id="ctk" class="mono flex-1" placeholder="0x… токен (18 decimals)"><button class="btn btnsm" onclick="dATk()">+ Добавить</button><button class="btn btnsm" onclick="dRTk()">− Убрать</button></div>
+        <div class="ct mb2">🪙 Поддерживаемые токены</div>
+        <div class="nc nci mb2">В сейф контракт принимает только токены с 18 знаками. Добавление чужого токена проверяет decimals.</div>
+        <div class="flex gap2"><input id="ctk" class="mono flex-1" placeholder="0x… адрес токена (18 decimals)"><button class="btn btnsm" onclick="dATk()">+ Добавить</button><button class="btn btnsm" onclick="dRTk()">− Убрать</button></div>
+        ${quickChips}
       </div>
       <div class="card">
         <div class="ct mb2">🎁 Welcome Bonus (макс 0.005 ANCR)</div>
@@ -1402,18 +1550,18 @@ async function rCreator(){
         <button class="btn btng btnsm" onclick="dSWB()">Установить бонус</button>
       </div>
       <div class="card">
-        <div class="ct mb2">💰 Вывод комиссий (7-дн таймлок)</div>
+        <div class="ct mb2">💰 Вывод комиссий · ${ctSym} (7-дн таймлок)</div>
         <div class="g2 mb2">
           <div><label class="lbl">Получатель</label><input id="cfa" class="mono" value="${S.user}"></div>
-          <div><label class="lbl">Сумма (ANCR)</label><input id="cfv" type="text" inputmode="decimal"></div>
+          <div><label class="lbl">Сумма (${ctSym})</label><input id="cfv" type="text" inputmode="decimal"></div>
         </div>
         <div class="flex gap2"><button class="btn btnsm" onclick="dRCF()">Заявить</button><button class="btn btnsm" onclick="dXCF()">Отменить</button><button class="btn btng btnsm" onclick="dWCF()">Забрать</button></div>
       </div>
       <div class="card">
-        <div class="ct mb2">🏦 Вывод резерва (7-дн таймлок)</div>
+        <div class="ct mb2">🏦 Вывод резерва · ${ctSym} (7-дн таймлок)</div>
         <div class="g2 mb2">
           <div><label class="lbl">Получатель</label><input id="rva" class="mono" value="${S.user}"></div>
-          <div><label class="lbl">Сумма (ANCR)</label><input id="rvv" type="text" inputmode="decimal"></div>
+          <div><label class="lbl">Сумма (${ctSym})</label><input id="rvv" type="text" inputmode="decimal"></div>
         </div>
         <div class="flex gap2"><button class="btn btnsm" onclick="dRRV()">Заявить</button><button class="btn btnsm" onclick="dXRV()">Отменить</button><button class="btn btng btnsm" onclick="dWRV()">Забрать</button></div>
       </div>
@@ -1435,13 +1583,33 @@ async function rCreator(){
       </div>
     </div>`;
 }
-window.dATk=async function(){const a=($('ctk')?.value||'').trim();if(!ethers.isAddress(a)){toast('Неверный адрес','warning');return;}await txc('Добавить токен',S.vlt.addSupportedToken(a));};
+window.crChg=function(k){CR_TOK=k;route('creator');};
+// добавить decimals в helper для CR_TOK
+function crTokObj(){return TOKENS[CR_TOK]||TOKENS.ANCR;}
+window.dAddReg=async function(k){
+  const t=TOKENS[k];if(!t)return;
+  const rc=await txc(`Добавить ${k}`,S.vlt.addSupportedToken(t.address));
+  if(rc)route('creator');
+};
+window.dATk=async function(){
+  const a=($('ctk')?.value||'').trim();
+  if(!ethers.isAddress(a)){toast('Неверный адрес','warning');return;}
+  // контракт примет только 18 decimals — проверяем заранее
+  try{
+    const e=new ethers.Contract(a,ERC20,S.prov);
+    const d=Number(await e.decimals());
+    if(d!==18){toast(`У токена ${d} знаков — контракт примет только 18`,'warning',6000);return;}
+  }catch{toast('Не удалось прочитать decimals токена','warning');return;}
+  const rc=await txc('Добавить токен',S.vlt.addSupportedToken(a));
+  if(rc)route('creator');
+};
 window.dRTk=async function(){
   const a=($('ctk')?.value||'').trim();
   if(!ethers.isAddress(a)){toast('Неверный адрес','warning');return;}
   if(a.toLowerCase()===C.ANCR.toLowerCase()){toast('ANCR убрать нельзя','warning');return;}
   const ok=await cdlg('Убрать токен','Продолжить?');if(!ok)return;
-  await txc('Убрать токен',S.vlt.removeSupportedToken(a));
+  const rc=await txc('Убрать токен',S.vlt.removeSupportedToken(a));
+  if(rc)route('creator');
 };
 window.dSWB=async function(){
   const a=($('wba')?.value||'').trim(),m=parseInt($('wbm2')?.value||'0');
@@ -1450,21 +1618,21 @@ window.dSWB=async function(){
   await txc('Set Welcome Bonus',S.vlt.setWelcomeBonus(w,BigInt(m)));
 };
 window.dRCF=async function(){
-  const to=($('cfa')?.value||'').trim(),a=($('cfv')?.value||'').trim();
+  const to=($('cfa')?.value||'').trim(),a=($('cfv')?.value||'').trim();const t=crTokObj();
   if(!ethers.isAddress(to)||!a){toast('Заполните поля','warning');return;}
-  let w;try{w=ethers.parseUnits(a,18);}catch{toast('Неверная сумма','warning');return;}
-  await txc('Request Creator Withdraw',S.vlt.requestCreatorWithdraw(C.ANCR,to,w));
+  let w;try{w=ethers.parseUnits(a,t.decimals);}catch{toast('Неверная сумма','warning');return;}
+  await txc('Request Creator Withdraw',S.vlt.requestCreatorWithdraw(t.address,to,w));
 };
-window.dXCF=async function(){await txc('Cancel Creator Withdraw',S.vlt.cancelCreatorWithdraw(C.ANCR));};
-window.dWCF=async function(){const ok=await cdlg('Забрать комиссии','Таймлок должен истечь.');if(!ok)return;await txc('Withdraw Fees',S.vlt.withdrawCreatorFees(C.ANCR));};
+window.dXCF=async function(){const t=crTokObj();await txc('Cancel Creator Withdraw',S.vlt.cancelCreatorWithdraw(t.address));};
+window.dWCF=async function(){const t=crTokObj();const ok=await cdlg('Забрать комиссии','Таймлок должен истечь.');if(!ok)return;await txc('Withdraw Fees',S.vlt.withdrawCreatorFees(t.address));};
 window.dRRV=async function(){
-  const to=($('rva')?.value||'').trim(),a=($('rvv')?.value||'').trim();
+  const to=($('rva')?.value||'').trim(),a=($('rvv')?.value||'').trim();const t=crTokObj();
   if(!ethers.isAddress(to)||!a){toast('Заполните поля','warning');return;}
-  let w;try{w=ethers.parseUnits(a,18);}catch{toast('Неверная сумма','warning');return;}
-  await txc('Request Reserve Withdraw',S.vlt.requestReserveWithdraw(C.ANCR,to,w));
+  let w;try{w=ethers.parseUnits(a,t.decimals);}catch{toast('Неверная сумма','warning');return;}
+  await txc('Request Reserve Withdraw',S.vlt.requestReserveWithdraw(t.address,to,w));
 };
-window.dXRV=async function(){await txc('Cancel Reserve Withdraw',S.vlt.cancelReserveWithdraw(C.ANCR));};
-window.dWRV=async function(){const ok=await cdlg('Забрать резерв','Таймлок?');if(!ok)return;await txc('Withdraw Reserve',S.vlt.withdrawStrategicReserve(C.ANCR));};
+window.dXRV=async function(){const t=crTokObj();await txc('Cancel Reserve Withdraw',S.vlt.cancelReserveWithdraw(t.address));};
+window.dWRV=async function(){const t=crTokObj();const ok=await cdlg('Забрать резерв','Таймлок?');if(!ok)return;await txc('Withdraw Reserve',S.vlt.withdrawStrategicReserve(t.address));};
 window.dUP=async function(){const ok=await cdlg('Снять паузу','Продолжить?');if(!ok)return;const rc=await txc('Unpause',S.vlt.unpause());if(rc){S.paused=false;await refreshIB();}};
 window.dTC=async function(){const a=($('nca')?.value||'').trim();if(!ethers.isAddress(a)){toast('Неверный адрес','warning');return;}const ok=await cdlg('Передать Creator','7 дней cooldown.');if(!ok)return;await txc('Transfer Creatorship',S.vlt.transferCreatorship(a));};
 window.dTG=async function(){const a=($('nga')?.value||'').trim();if(!ethers.isAddress(a)){toast('Неверный адрес','warning');return;}const ok=await cdlg('Передать Guardian','2 дня cooldown.');if(!ok)return;await txc('Transfer Guardianship',S.vlt.transferGuardianship(a));};
@@ -1513,7 +1681,8 @@ async function ldV(){
     S.vlt.getVaultTimings(S.user,S.vid),
     S.vlt.getVaultAuth(S.user,S.vid),
   ]);
-  return{id:co[0],token:co[1],amount:co[2],name:co[3],status:Number(co[4]),level:Number(co[5]),emergencyAddress:co[6],depositedAt:ti[0],voluntaryLockUntil:ti[1],timelockHours:Number(ti[2]),nonce:au[0],mainAuthKey:au[1],recoveryAuthKey:au[2]};
+  const tm=tokByAddr(co[1])||{decimals:18,symbol:'?'};
+  return{id:co[0],token:co[1],amount:co[2],name:co[3],status:Number(co[4]),level:Number(co[5]),emergencyAddress:co[6],depositedAt:ti[0],voluntaryLockUntil:ti[1],timelockHours:Number(ti[2]),nonce:au[0],mainAuthKey:au[1],recoveryAuthKey:au[2],dec:tm.decimals,sym:tm.symbol};
 }
 
 /* ================================================================
@@ -1526,6 +1695,18 @@ function bindAll(){
   $('sbb').onclick=()=>{$('sidebar').classList.remove('open');$('sbb').classList.remove('show');};
   $('lsel').value=S.lang;
   $('lsel').onchange=e=>{S.lang=e.target.value;localStorage.setItem('av45l',e.target.value);};
+  // селектор токена сейфа — только decimals==18
+  const ts=$('tokSel');
+  if(ts){
+    ts.innerHTML=Object.keys(vaultTokens()).map(k=>`<option value="${k}">${k}</option>`).join('');
+    ts.value=S.selTok;
+    ts.onchange=async e=>{
+      S.selTok=e.target.value;
+      log(`Токен сейфа: ${S.selTok}`,'info');
+      if(S.user)await refreshIB();
+      route(S.route);  // перерисовать текущую страницу под новый токен
+    };
+  }
   $('neth').href=`${C.EXP}/address/${C.CONTRACT}`;
   // mobile burger visible
   if(window.innerWidth<768)$('bbg').style.display='flex';

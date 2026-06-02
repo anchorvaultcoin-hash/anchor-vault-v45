@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // Licensed Work:  AnchorVaultV45
-// Licensor:       [ВПИШИ СВОЁ ИМЯ/НИК ИЛИ КОМПАНИЮ]
-// Copyright (c) 2026 [ВПИШИ СВОЁ ИМЯ/НИК]
+// Licensor:       Vitaliy
+// Copyright (c) 2026 AnchorVaultCoin
 //
 // Лицензия Business Source License 1.1 (BUSL-1.1).
 // Дополнительные права на использование: НЕТ (Additional Use Grant: None).

@@ -1,1 +1,1 @@
-cat DEPLOY_REPORT.md >> README.md
+echo "Агент работает! $(date)" >> /home/vit/agent.log

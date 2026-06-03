@@ -1,0 +1,25 @@
+name: DeepSeek Agent
+
+on:
+  push:
+    paths:
+      - '.github/commands/**'
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Read command
+        id: read
+        run: |
+          CMD=$(cat .github/commands/do.txt)
+          echo "command=$CMD" >> $GITHUB_OUTPUT
+      - name: Execute on server via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: ${{ steps.read.outputs.command }}

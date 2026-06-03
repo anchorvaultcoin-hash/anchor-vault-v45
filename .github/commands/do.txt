@@ -1,1 +1,0 @@
-echo "Агент работает! $(date)" >> /home/vit/agent.log

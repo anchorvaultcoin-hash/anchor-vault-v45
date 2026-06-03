@@ -347,13 +347,30 @@ pre.code{font-family:'JetBrains Mono',monospace;font-size:10px;white-space:pre-w
 
 <script>
 /* ================================================================
-   CONFIG V45 — ОБНОВЛЁННЫЕ АДРЕСА
+   ██████████████████████████████████████████████████████████████
+   DEPLOY — ЕДИНСТВЕННОЕ МЕСТО ДЛЯ АДРЕСОВ.
+   При новом деплое меняй только этот блок.
+   ██████████████████████████████████████████████████████████████
    ================================================================ */
-const C = {
-  CONTRACT: '0xAd228aFA6778166003deEBb3Aa8eF9A6Df01399F',
-  ANCR:     '0xf4A1c2D4Fa7D1161bF82f455012fCFed4EC1056e',
+const DEPLOY = {
+  CONTRACT: '0xAd228aFA6778166003deEBb3Aa8eF9A6Df01399F',  // AnchorVaultV45
   CREATOR:  '0x6226828cc3d1B9c5fc1c4d9BE3dF7b03A4A70479',
   GUARDIAN: '0xe0DACa428Abc3F1D5BD333C2D1Ca12dd1a36964D',
+  TOKENS: {
+    ANCR: { address:'0xf4A1c2D4Fa7D1161bF82f455012fCFed4EC1056e', symbol:'ANCR', decimals:18, native:true },
+    // Другие токены — добавлять сюда после addSupportedToken в контракте:
+    // WETH: { address:'0x…', symbol:'WETH', decimals:18 },
+  },
+};
+
+/* ================================================================
+   CONFIG V45 — не менять, берёт данные из DEPLOY выше
+   ================================================================ */
+const C = {
+  CONTRACT: DEPLOY.CONTRACT,
+  ANCR:     DEPLOY.TOKENS.ANCR.address,
+  CREATOR:  DEPLOY.CREATOR,
+  GUARDIAN: DEPLOY.GUARDIAN,
   CHAIN:    11155111,
   CHEX:     '0xaa36a7',
   EXP:      'https://sepolia.etherscan.io',
@@ -609,10 +626,8 @@ function applyI18n(){
 // HTML белой подсказки ❓ с трёхъязычным текстом
 function tip(k){return `<span class="tip" data-tip="${t(k).replace(/"/g,'&quot;')}">?</span>`;}
 
-const TOKENS = {
-  ANCR: { address:'0xf4A1c2D4Fa7D1161bF82f455012fCFed4EC1056e', symbol:'ANCR', decimals:18, native:true },
-  // Другие токены добавляются сюда после addSupportedToken в контракте.
-};
+// TOKENS — из DEPLOY-блока выше, не дублировать
+const TOKENS = DEPLOY.TOKENS;
 // Какой токен выбран сейчас (символ из TOKENS или адрес кастомного)
 function tokByAddr(addr){
   const a=(addr||'').toLowerCase();

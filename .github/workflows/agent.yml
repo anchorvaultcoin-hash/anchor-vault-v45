@@ -1,25 +1,27 @@
 name: DeepSeek Agent
 
 on:
-  push:
-    paths:
-      - '.github/commands/**'
+  issues:
+    types: [opened, edited]
+  workflow_dispatch:
 
 jobs:
   execute:
     runs-on: ubuntu-latest
+    if: contains(github.event.issue.title, 'DeepSeek') || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Read command
-        id: read
-        run: |
-          CMD=$(cat .github/commands/do.txt)
-          echo "command=$CMD" >> $GITHUB_OUTPUT
-      - name: Execute on server via SSH
-        uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: ${{ steps.read.outputs.command }}
+          token: ${{ secrets.GH_PAT }}
+      - name: Execute command from issue
+        run: |
+          echo "${{ github.event.issue.body }}" > command.sh
+          bash command.sh
+      - name: Commit results
+        run: |
+          git config user.name "DeepSeek Bot"
+          git config user.email "deepseek@agent.local"
+          git add -A
+          git commit -m "DeepSeek: выполнена команда из issue" || true
+          git push

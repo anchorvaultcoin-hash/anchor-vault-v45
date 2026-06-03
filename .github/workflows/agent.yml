@@ -10,28 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.title, 'DeepSeek') || github.event_name == 'workflow_dispatch'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
       - name: Execute command via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            ${{ github.event.issue.body }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: ${{ github.event.issue.body }}
       - name: Comment on issue
         if: github.event_name == 'issues'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_PAT }}
           script: |
-            const issue_number = context.issue.number;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
             await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
               body: '✅ Команда выполнена на сервере.'
             });

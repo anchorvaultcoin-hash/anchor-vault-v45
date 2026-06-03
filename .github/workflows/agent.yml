@@ -6,22 +6,32 @@ on:
   workflow_dispatch:
 
 jobs:
-  execute:
+  execute-on-server:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.title, 'DeepSeek') || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Execute command via SSH
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          token: ${{ secrets.GH_PAT }}
-      - name: Execute command from issue
-        run: |
-          echo "${{ github.event.issue.body }}" > command.sh
-          bash command.sh
-      - name: Commit results
-        run: |
-          git config user.name "DeepSeek Bot"
-          git config user.email "deepseek@agent.local"
-          git add -A
-          git commit -m "DeepSeek: выполнена команда из issue" || true
-          git push
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            ${{ github.event.issue.body }}
+      - name: Comment on issue
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_PAT }}
+          script: |
+            const issue_number = context.issue.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body: '✅ Команда выполнена на сервере.'
+            });

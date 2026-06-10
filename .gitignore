@@ -1,0 +1,20 @@
+# Foundry build artifacts
+out/
+cache/
+broadcast/
+
+# Node (не используется, на всякий случай)
+node_modules/
+
+# SECRETS — НИКОГДА НЕ КОММИТИТЬ
+.env
+.env.*
+*.key
+*.pem
+keystore/
+deployer.json
+*.mnemonic
+
+# OS / editor
+.DS_Store
+*.swp

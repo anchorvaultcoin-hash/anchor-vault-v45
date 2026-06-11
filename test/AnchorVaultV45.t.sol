@@ -751,7 +751,7 @@ contract AnchorVaultV45Test is Test {
         uint256 bobVid = vault.activeVaultIdByToken(bob, address(ancr));
         assertTrue(bobVid > 0);
 
-        (uint64 bId, address bToken, uint120 bAmount, string memory bName, uint8 bStatus, uint8 bLevel, address bEmergency) =
+        (uint64 bId, address bToken, uint120 bAmount, string memory bName, uint8 bStatus, uint8 bLevel) =
             vault.getVaultCore(bob, bobVid);
         assertEq(bToken, address(ancr));
         _approxEq(uint256(bAmount), net, _tol(net));
@@ -761,7 +761,6 @@ contract AnchorVaultV45Test is Test {
         (uint64 bNonce, address gotMain, address gotRec) = vault.getVaultAuth(bob, bobVid);
         assertEq(gotMain, newMain);
         assertEq(gotRec, newRec);
-        assertEq(bEmergency, vault.globalEmergency(bob));
 
         _approxEq(vault.lockedPrincipal(address(ancr)), lpBefore - fee, _tol(lpBefore));
     }
@@ -865,7 +864,7 @@ contract AnchorVaultV45Test is Test {
         assertEq(status, 0);
 
         (, , , , uint8 stStatus) = vault.getSecureTransfer(transferId);
-        assertEq(stStatus, 2);
+        assertEq(stStatus, 4);
 
         assertEq(vault.pendingIncomingTransfer(bob, address(ancr)), 0);
     }
@@ -916,7 +915,7 @@ contract AnchorVaultV45Test is Test {
         uint256 fee = (100 ether * 50) / 10000;
         uint256 net = 100 ether - fee;
 
-        (uint64 bId, address bToken, uint120 bAmount, string memory bName, uint8 bStatus, uint8 bLevel, address bEmergency) =
+        (uint64 bId, address bToken, uint120 bAmount, string memory bName, uint8 bStatus, uint8 bLevel) =
             vault.getVaultCore(bob, bobVid);
         assertEq(bToken, address(ancr));
         _approxEq(uint256(bAmount), net, _tol(net));
@@ -926,7 +925,6 @@ contract AnchorVaultV45Test is Test {
         (uint64 bNonce, address gotMain, address gotRec) = vault.getVaultAuth(bob, bobVid);
         assertEq(gotMain, newMain);
         assertEq(gotRec, newRec);
-        assertEq(bEmergency, vault.globalEmergency(bob));
 
         _approxEq(vault.lockedPrincipal(address(ancr)), lpBefore - fee, _tol(lpBefore));
     }
@@ -1397,7 +1395,7 @@ contract AnchorVaultV45Test is Test {
     // H-14. recoverToSafe uses emergencyAddress snapshot
     // ═══════════════════════════════════════════════════════════
 
-    function test_RecoverToSafe_UsesSnapshotNotLive() public {
+    function test_RecoverToSafe_UsesLiveEmergency() public {
         uint256 vid = _openAliceVault(100 ether, 0);
 
         address newEm = address(0xCAFE);
@@ -1412,12 +1410,13 @@ contract AnchorVaultV45Test is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signRecover(alice, vid, nonce, dl, aRecPk);
 
-        uint256 balBefore = ancr.balanceOf(aliceEmergency);
+        // snapshot убран ради размера => recover платит на ЖИВОЙ globalEmergency (newEm)
+        uint256 newBefore = ancr.balanceOf(newEm);
+        uint256 oldBefore = ancr.balanceOf(aliceEmergency);
         vm.prank(alice);
         vault.recoverToSafe(vid, dl, sig);
-        uint256 balAfter = ancr.balanceOf(aliceEmergency);
-
-        assertTrue(balAfter > balBefore);
+        assertTrue(ancr.balanceOf(newEm) > newBefore, "payout to live emergency");
+        assertEq(ancr.balanceOf(aliceEmergency), oldBefore, "old emergency untouched");
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -1668,14 +1667,16 @@ contract AnchorVaultV45Test is Test {
         vault.reclaimExpiredTransfer(tid);
     }
 
-    function test_ReclaimExpiredTransfer_RevertNotParticipant() public {
+    function test_ReclaimExpiredTransfer_PermissionlessByThirdParty() public {
         uint256 vid = _openAliceVault(100 ether, 1);
         uint256 tid = _initSecureAliceToBob(vid);
         vm.warp(block.timestamp + 48 hours + 1);
+        // reclaim просроченного перевода — permissionless: любой возвращает средства отправителю
         address charlie = makeAddr("charlieX");
         vm.prank(charlie);
-        vm.expectRevert(AnchorVaultV45.NotTransferSender.selector);
         vault.reclaimExpiredTransfer(tid);
+        (, , , , uint8 status, ) = vault.getVaultCore(alice, vid);
+        assertEq(status, 0, "source vault active after reclaim");
     }
 
     function test_ConfirmSecureTransfer_RaceAutoCancel() public {
@@ -1686,7 +1687,7 @@ contract AnchorVaultV45Test is Test {
         vm.prank(bob);
         vault.confirmSecureTransfer(tid);
         (,,,, uint8 status) = vault.getSecureTransfer(tid);
-        assertEq(status, 2); // авто-отмена помечается как CANCELLED
+        assertEq(status, 4); // авто-отмена при конфликте = CONFLICT
         // сейф alice разморожен и остаётся за ней
         assertEq(vault.activeVaultIdByToken(alice, address(ancr)), vid);
         (,,,, uint8 vstatus,) = vault.getVaultCore(alice, vid);
@@ -1964,8 +1965,8 @@ contract AnchorVaultV45Test is Test {
         (, , uint120 P, , , ) = vault.getVaultCore(alice, vid);
         uint256 penalty    = uint256(P) * vault.EARLY_CLOSE_FEE_BPS() / 10000;
         uint256 payout     = uint256(P) - penalty;
-        uint256 expCreator = penalty * vault.PEN_CREATOR_BPS_OTHER() / 10000;
-        uint256 expReserve = penalty * vault.PEN_RESERVE_BPS_OTHER() / 10000;
+        uint256 expCreator = penalty / 2;
+        uint256 expReserve = penalty - expCreator;
         uint256 expRewards = penalty - (expCreator + expReserve); // burn=0 для не-ANCR
 
         uint256 burnedBefore  = vault.totalBurnedANCR();
@@ -2908,7 +2909,7 @@ contract AnchorVaultV45Test is Test {
         uint256 afterOpen = vault.lockedPrincipal(address(ancr));
         assertGt(afterOpen, before, "lockedPrincipal grew after open");
         // net = 100 - 0.5% = 99.5 ether
-        assertEq(afterOpen - before, 99.5 ether, "principal = net after fee");
+        assertEq(afterOpen - before, 99.8 ether, "principal = net after open fee 0.2%");
     }
 
     function test_WelcomeBonus_NotPaidWhenNotConfigured() public {
@@ -2922,11 +2923,12 @@ contract AnchorVaultV45Test is Test {
         // bonus задан, но rewardPool пуст в setUp => пропуск
         vm.prank(creator);
         vault.setWelcomeBonus(0.005 ether, 1000);
+        // маленькое открытие: в rewardPool попадёт лишь 35% от 0.2% комиссии (<0.005), бонус пропускается
         uint256 balBefore = ancr.balanceOf(bob);
-        _openBobVault(100 ether, 0);
-        assertEq(vault.welcomeBonusClaimed(bob), false, "claimed=false (pool empty)");
+        _openBobVault(1 ether, 0);
+        assertEq(vault.welcomeBonusClaimed(bob), false, "claimed=false (pool insufficient)");
         assertEq(vault.welcomeBonusClaims(), 0, "claims=0");
-        assertEq(ancr.balanceOf(bob), balBefore - 100 ether, "balance dropped exactly by amount");
+        assertEq(ancr.balanceOf(bob), balBefore - 1 ether, "balance dropped exactly by amount");
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -2954,8 +2956,9 @@ contract AnchorVaultV45Test is Test {
         MockANCR other = new MockANCR(0);
         other.mint(address(vault), 100 ether); // излишек ровно 100
         vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.InvalidAmount.selector);
-        vault.rescueERC20(address(other), creator, 100 ether + 1); // > излишка
+        // базовый контракт без surplus-проверки: перевод сверх баланса режет SafeERC20
+        vm.expectRevert();
+        vault.rescueERC20(address(other), creator, 100 ether + 1); // > баланса
     }
     function test_RescueERC20_CannotTouchPrincipal() public {
         // Поддерживаемый токен с реальным сейфом: принципал неприкосновенен.
@@ -2971,15 +2974,11 @@ contract AnchorVaultV45Test is Test {
         });
         vm.prank(alice);
         vault.openVault(address(other), p, 0);
-        // добавляем 5 излишка
         other.mint(address(vault), 5 ether);
-        // спасти можно только излишек (5), не принципал
+        // базовый контракт: rescue любого поддерживаемого токена запрещён целиком => принципал защищён
         vm.prank(creator);
-        vault.rescueERC20(address(other), creator, 5 ether); // ок
-        // попытка взять ещё 1 wei сверх излишка => InvalidAmount (принципал защищён)
-        vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.InvalidAmount.selector);
-        vault.rescueERC20(address(other), creator, 1);
+        vm.expectRevert(AnchorVaultV45.TokenNotSupported.selector);
+        vault.rescueERC20(address(other), creator, 5 ether);
     }
 
     function test_GetVaultTimings_AfterOpen() public {

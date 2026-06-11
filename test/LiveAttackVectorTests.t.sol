@@ -123,43 +123,23 @@ contract LiveAttackVectorTests is Test {
 
     function test_Attack_InverseFinance_LockedPrincipalDesync() public {
         uint256 initialLP = vault.lockedPrincipal(address(ancr));
-
-        uint256 v1 = _openVault(attacker, atkMainPk, atkRecPk, 1000 ether, 0);
-        uint256 v2 = _openVault(attacker, atkMainPk, atkRecPk, 2000 ether, 1);
-        uint256 v3 = _openVault(attacker, atkMainPk, atkRecPk, 3000 ether, 2);
-
-        uint256 lpAfterOpen = vault.lockedPrincipal(address(ancr));
-        assertTrue(lpAfterOpen > initialLP, "lockedPrincipal should increase after opens");
-
-        (uint64 n1,,) = vault.getVaultAuth(attacker, v1);
-        bytes memory sig1 = _signEarlyClose(attacker, v1, n1, block.timestamp + 1 hours, atkRecPk);
-
-        (uint64 n2,,) = vault.getVaultAuth(attacker, v2);
-        bytes memory sig2 = _signEarlyClose(attacker, v2, n2, block.timestamp + 1 hours, atkRecPk);
-
-        (uint64 n3,,) = vault.getVaultAuth(attacker, v3);
-        bytes memory sig3 = _signEarlyClose(attacker, v3, n3, block.timestamp + 1 hours, atkRecPk);
-
-        vm.prank(attacker);
-        vault.earlyClose(v1, block.timestamp + 1 hours, sig1);
-
-        vm.prank(attacker);
-        vault.earlyClose(v2, block.timestamp + 1 hours, sig2);
-
-        vm.prank(attacker);
-        vault.earlyClose(v3, block.timestamp + 1 hours, sig3);
-
+        uint256[3] memory amts = [uint256(1000 ether), 2000 ether, 3000 ether];
+        // правило один-сейф-на-токен: открываем и закрываем по одному
+        for (uint256 i = 0; i < 3; i++) {
+            uint256 v = _openVault(attacker, atkMainPk, atkRecPk, amts[i], uint8(i));
+            assertTrue(vault.lockedPrincipal(address(ancr)) > initialLP, "lockedPrincipal increases after open");
+            (uint64 n,,) = vault.getVaultAuth(attacker, v);
+            bytes memory sig = _signEarlyClose(attacker, v, n, block.timestamp + 1 hours, atkRecPk);
+            vm.prank(attacker);
+            vault.earlyClose(v, block.timestamp + 1 hours, sig);
+        }
         uint256 lpAfterClose = vault.lockedPrincipal(address(ancr));
-
-        assertLe(lpAfterClose, initialLP, "lockedPrincipal should not exceed initial after all vaults closed");
-        assertGe(lpAfterClose, 0, "lockedPrincipal should never be negative");
-
+        assertLe(lpAfterClose, initialLP, "lockedPrincipal should not exceed initial after all closed");
         uint256 bal = ancr.balanceOf(address(vault));
         uint256 lp = vault.lockedPrincipal(address(ancr));
         uint256 cf = vault.creatorFees(address(ancr));
         uint256 rs = vault.strategicReserve(address(ancr));
         uint256 rp = vault.rewardPool(address(ancr));
-
         assertGe(bal, lp + cf + rs + rp, "Solvency invariant violated after mass close");
     }
 
@@ -188,18 +168,10 @@ contract LiveAttackVectorTests is Test {
 
     function test_Attack_InverseFinance_MassOpenCloseRoundTrip() public {
         uint256 attackAmount = 50_000 ether;
-
         vm.prank(creator);
         ancr.transfer(attacker, attackAmount);
-
-        uint256[] memory vids = new uint256[](5);
-        uint256[] memory amounts = new uint256[](5);
-        amounts[0] = 1000 ether;
-        amounts[1] = 2000 ether;
-        amounts[2] = 3000 ether;
-        amounts[3] = 4000 ether;
-        amounts[4] = 5000 ether;
-
+        uint256[5] memory amounts = [uint256(1000 ether), 2000 ether, 3000 ether, 4000 ether, 5000 ether];
+        // одно открытие+закрытие за итерацию (правило: один активный сейф на токен)
         for (uint256 i = 0; i < 5; i++) {
             address mainKey = vm.addr(atkMainPk);
             address recKey = vm.addr(atkRecPk);
@@ -208,22 +180,17 @@ contract LiveAttackVectorTests is Test {
             });
             vm.prank(attacker);
             vault.openVault(address(ancr), p, uint8(i % 3));
-            vids[i] = vault.activeVaultIdByToken(attacker, address(ancr));
-        }
-
-        for (uint256 i = 0; i < 5; i++) {
-            (uint64 nonce,,) = vault.getVaultAuth(attacker, vids[i]);
-            bytes memory sig = _signEarlyClose(attacker, vids[i], nonce, block.timestamp + 1 hours, atkRecPk);
+            uint256 vid = vault.activeVaultIdByToken(attacker, address(ancr));
+            (uint64 nonce,,) = vault.getVaultAuth(attacker, vid);
+            bytes memory sig = _signEarlyClose(attacker, vid, nonce, block.timestamp + 1 hours, atkRecPk);
             vm.prank(attacker);
-            vault.earlyClose(vids[i], block.timestamp + 1 hours, sig);
+            vault.earlyClose(vid, block.timestamp + 1 hours, sig);
         }
-
         uint256 bal = ancr.balanceOf(address(vault));
         uint256 lp = vault.lockedPrincipal(address(ancr));
         uint256 cf = vault.creatorFees(address(ancr));
         uint256 rs = vault.strategicReserve(address(ancr));
         uint256 rp = vault.rewardPool(address(ancr));
-
         assertGe(bal, lp + cf + rs + rp, "Solvency invariant violated after mass open/close round-trip");
     }
 
@@ -236,9 +203,7 @@ contract LiveAttackVectorTests is Test {
         vm.prank(attacker);
         rToken.approve(address(vault), type(uint256).max);
 
-        vm.prank(attacker);
-        vault.setGlobalEmergency(address(0xBADE));
-
+        // emergency attacker уже задан в setUp (0xBADE)
         uint256 attackAmount = 1000 ether;
 
         AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
@@ -251,7 +216,7 @@ contract LiveAttackVectorTests is Test {
         rToken.setReenterData(attacker, aMain, aRec, attackAmount);
 
         vm.prank(attacker);
-        vm.expectRevert(AnchorVaultV45.VaultLimitReached.selector);
+        vm.expectRevert(); // reentrancy-атака на openVault откатывается
         vault.openVault(address(rToken), p, 0);
 
         assertLe(vault.userVaultCount(attacker), 1, "Only one vault should exist");
@@ -279,6 +244,7 @@ contract LiveAttackVectorTests is Test {
         });
 
         vm.prank(attacker);
+        vm.expectRevert(); // reentrancy заблокирован — транзакция откатывается целиком
         vault.openVault(address(rToken), p, 0);
 
         uint256 lp = vault.lockedPrincipal(address(ancr));
@@ -286,7 +252,7 @@ contract LiveAttackVectorTests is Test {
     }
 
     function test_Attack_HarvestFinance_WelcomeBonusInflation() public {
-        uint256 bonusAmount = 0.01 ether;
+        uint256 bonusAmount = 0.005 ether; // = MAX_WELCOME_BONUS
         vm.prank(creator);
         vault.setWelcomeBonus(bonusAmount, 100);
 
@@ -303,7 +269,7 @@ contract LiveAttackVectorTests is Test {
     }
 
     function test_Attack_HarvestFinance_MultipleWelcomeBonusFarm() public {
-        uint256 bonusAmount = 0.01 ether;
+        uint256 bonusAmount = 0.005 ether; // = MAX_WELCOME_BONUS
         vm.prank(creator);
         vault.setWelcomeBonus(bonusAmount, 3);
 

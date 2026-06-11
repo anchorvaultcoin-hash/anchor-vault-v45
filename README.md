@@ -95,15 +95,18 @@ forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC --broadcast --verify
 See **`SECURITY.md`** for the threat model, centralization summary, accounting
 invariant, and accepted design decisions.
 
-## Deployment (Sepolia testnet)
+## Deployment (Sepolia testnet, chainId 11155111)
 
-To be filled after deployment:
+- AnchorVaultV45: `0x8E1F46fC913c4928303BbCEB92ccb7c54cD95BA4`
+- ANCR token (AnchorCoin): `0x6a837125eeB63cc4D3d38E93e2adCd30a2603cF7`
+- creator:        `0x725F1408c2CDa5757d8B44a92a84EACc529F5150`
+- guardian:       `0x0838238A55d846A2a92fC6889Cc96558533B68ab`
+- payout wallet:  `0x725F1408c2CDa5757d8B44a92a84EACc529F5150`
 
-- AnchorVaultV45: `0x...`
-- ANCR token:     `0x...`
-- creator:        `0x...`
-- guardian:       `0x...`
-- payout wallet:  `0x...`
+Build settings (must match for bytecode verification): solc 0.8.26, `optimizer_runs = 1`,
+`via_ir = true`, `evm_version = "cancun"`, `bytecode_hash = "none"`. Token distribution
+initialized: 500,000 ANCR rewardPool + 300,000 ANCR strategicReserve held in the vault,
+200,000 ANCR sent to the payout wallet.
 
 ## License
 

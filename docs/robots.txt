@@ -1,24 +1,3 @@
 User-agent: *
 Allow: /
-Disallow: /api/
-
-User-agent: GPTBot
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: anthropic-ai
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: CCBot
-Allow: /
-
-Sitemap: https://anchorvault.io/sitemap.xml
-Host: https://anchorvault.io
+Sitemap: https://anchorvaultcoin-hash.github.io/anchor-vault-v45/sitemap.xml

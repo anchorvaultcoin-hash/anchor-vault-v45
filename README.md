@@ -1,4 +1,4 @@
-```markdown
+
 # AnchorVaultV45
 
 Non-custodial, multi-asset ERC-20 vault with EIP-712 off-chain authorization.
@@ -41,7 +41,7 @@ The contract enforces the following invariants. Auditors should verify these hol
 
 - **Principal integrity:** `lockedPrincipal[token]` is always equal to the sum of `v.amount` of all active vaults for that token. No user action can transfer principal out of the contract without decreasing `lockedPrincipal` by the exact amount.
 - **User solvency:** For every vault, `v.amount` is always less than or equal to the contract's balance of that token minus all other vaults' locked amounts. A user can always withdraw their full vault balance unless the contract is paused (withdrawals remain available even on pause).
-- **Nonce monotonicity:** Each vault's `nonce` increases strictly by 1 after every successful operation (or after a failed signature attempt that passed `ecrecover`? – actually, nonce increments only after a valid signature; failed signature does not increase nonce). The nonce never decreases.
+- **Nonce monotonicity:** Each vault's `nonce` increases strictly by 1 only after a successful operation that consumes a valid signature. Failed or invalid signatures do not change the nonce. The nonce never decreases.
 - **Role separation:** `creator` and `guardian` cannot be the same address. `creator` cannot withdraw user principal; `guardian` cannot unpause the contract. Role transfers require a two-step handshake with a cooldown.
 - **Emergency address immutability (first set):** Once a user sets `globalEmergency`, it cannot be changed immediately; a 7-day timelock is required for any change, and the user can cancel the pending change. This prevents an attacker from redirecting emergency funds instantly.
 
@@ -52,7 +52,7 @@ The following design choices are intentional. Auditors should note them as accep
 - **EIP-712 domain separation:** The contract relies on the EIP-712 domain (chainId, contract address, name, version) to prevent cross‑chain replay. If the same domain appears on another chain, signatures could be replayed; but that is considered unlikely.
 - **Nonce overflow:** `nonce` is stored as `uint64`. The contract does **not** check for overflow (it uses `unchecked { v.nonce += 1; }`). Given that `uint64` maximum is ~1.8e19, reaching overflow would require billions of operations per vault, which is infeasible. This is an accepted performance optimisation.
 - **`voluntaryLockUntil` vs. emergency functions:** `recoverToSafe`, `emergencyWithdrawToAny`, `rotateAuthKeys` and `panicWithdraw` ignore `voluntaryLockUntil` (they use `_checkRecoverySigNoLock`). This is intentional – emergency actions must be possible even if the user set a voluntary lock. `earlyClose` respects the lock (uses `_checkRecoverySig`).
-- **Deadline timestamps:** `block.timestamp` is used for deadlines, timelocks, and cooldowns. Validators can manipulate `block.timestamp` within a few seconds, but all intervals are measured in hours or days, so the impact is negligible. This is a standard practice.
+- **Deadline timestamps:** `block.timestamp` is used for deadlines, timelocks, and cooldowns. Validators can manipulate `block.timestamp` within a few seconds, but all intervals are measured in hours or days. For timelocks measured in hours/days, a few seconds of manipulation does not affect security. This is a standard practice.
 - **Penalty distribution on pause:** When the contract is paused, ANCR penalties go 100% to `rewardPool`; non-ANCR penalties are split 50/50 between `creatorFees` and `strategicReserve`. This is a deliberate design to prevent the creator from profiting from forced pauses while still accumulating reserve.
 
 ## EIP-712 Signature Example (Withdraw)
@@ -76,10 +76,10 @@ To withdraw from a vault, the user must sign the following typed data structure 
 {
   "owner": "0x725F1408c2CDa5757d8B44a92a84EACc529F5150",
   "vaultId": "1",
-  "amount": "10000000000000000000",   // 10 * 10^18
+  "amount": "10000000000000000000",
   "to": "0x725F1408c2CDa5757d8B44a92a84EACc529F5150",
   "nonce": "0",
-  "deadline": "1749600000"            // some future timestamp
+  "deadline": "1749600000"
 }
 ```
 
@@ -196,4 +196,3 @@ Build settings (must match for bytecode verification): solc 0.8.26, `optimizer_r
 BUSL-1.1 — Licensor: Vitaliy — Copyright (c) 2026 AnchorVaultCoin.
 Change Date 2030-01-01 → GPL-2.0-or-later. Imported OpenZeppelin files are MIT.
 Commercial use before the Change Date requires written permission from the Licensor.
-```

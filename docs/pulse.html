@@ -87,15 +87,15 @@ input[type=checkbox]:checked::after{content:"✓";position:absolute;top:50%;left
 .ml1{margin-left:4px}
 
 /* Таблица пулов в админке */
-.ptbl{display:flex;flex-direction:column;gap:2px;border:1px solid #1e2536;border-radius:7px;overflow:hidden}
-.ptbl-h{display:grid;grid-template-columns:22px 60px 1fr 1fr 1fr 18px;gap:6px;padding:6px 8px;background:#161e2e;font-size:9.5px;font-weight:700;color:#7c8aa0;letter-spacing:.04em;text-transform:uppercase;align-items:center}
+.ptbl{display:flex;flex-direction:column;gap:2px;border:1px solid #1e2536;border-radius:7px;overflow:visible}
+.ptbl-h{display:grid;grid-template-columns:26px 70px 1.1fr 1.1fr 1fr 22px;gap:8px;padding:7px 10px;background:#161e2e;font-size:9.5px;font-weight:700;color:#7c8aa0;letter-spacing:.04em;text-transform:uppercase;align-items:center}
 .prow{background:#0f1626;border-top:1px solid #1e2536}
 .prow:first-child{border-top:none}
-.prow-h{display:grid;grid-template-columns:22px 60px 1fr 1fr 1fr 18px;gap:6px;padding:7px 8px;font-size:11.5px;align-items:center;cursor:pointer;transition:.12s}
+.prow-h{display:grid;grid-template-columns:26px 70px 1.1fr 1.1fr 1fr 22px;gap:8px;padding:8px 10px;font-size:11.5px;align-items:center;cursor:pointer;transition:.12s}
 .prow-h:hover{background:#13192a}
 .prow-ico{font-size:14px;text-align:center;line-height:1}
-.prow-tok{font-weight:700;color:#d4a843}
-.prow-cf,.prow-sr,.prow-rp{font-family:'JetBrains Mono',monospace;color:#e2e8f0;font-size:10.5px;overflow:hidden;text-overflow:ellipsis}
+.prow-tok{font-weight:700;color:#d4a843;font-size:12px}
+.prow-cf,.prow-sr,.prow-rp{font-family:'JetBrains Mono',monospace;color:#e2e8f0;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .prow-tog{color:#64748b;font-size:9px;text-align:center;transition:transform .15s}
 .prow.open .prow-tog{transform:rotate(180deg)}
 .prow-b{display:none;padding:8px 10px 10px;background:#0c1220;border-top:1px solid #1e2536}
@@ -150,9 +150,23 @@ input[type=checkbox]:checked::after{content:"✓";position:absolute;top:50%;left
 .mbox{background:#181e2c;border:1px solid #2a3347;border-radius:13px;padding:18px;max-width:500px;width:100%}
 
 /* TOOLTIP ❓ (белый кружок, пояснение снизу) */
-.tip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;min-width:15px;border-radius:50%;background:#fff;color:#0b0d11;font-size:10px;font-weight:800;cursor:help;margin-left:5px;vertical-align:middle;position:relative;user-select:none}
-.tip:hover::after,.tip:active::after{content:attr(data-tip);position:absolute;top:135%;left:0;transform:translateX(-40%);background:#0f1318;color:#cbd5e1;border:1px solid #2a3347;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:400;line-height:1.45;width:220px;max-width:70vw;z-index:400;white-space:normal;box-shadow:0 10px 28px rgba(0,0,0,.65);text-align:left}
-@media(max-width:767px){.tip:hover::after,.tip:active::after{left:auto;right:0;transform:none}}
+.tip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;min-width:15px;border-radius:50%;background:#fff;color:#0b0d11;font-size:10px;font-weight:800;cursor:help;margin-left:5px;vertical-align:middle;position:relative;user-select:none;z-index:auto}
+.tip:hover,.tip:active{z-index:401}
+.tip:hover::after,.tip:active::after{
+  content:attr(data-tip);position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:#0f1318;color:#cbd5e1;border:1px solid #2a3347;border-radius:8px;
+  padding:8px 10px;font-size:11px;font-weight:400;line-height:1.45;
+  width:240px;max-width:min(240px, calc(100vw - 24px));
+  z-index:9999;white-space:normal;box-shadow:0 10px 28px rgba(0,0,0,.65);
+  text-align:left;pointer-events:none
+}
+/* На узких экранах прижимаем тултип к правому краю кружочка, чтобы не уходил за вьюпорт слева */
+@media(max-width:767px){
+  .tip:hover::after,.tip:active::after{left:auto;right:0;transform:none}
+}
+/* Контейнерам которые могут обрезать тултип — даём ему пролететь */
+.ptbl, .ptbl-h, .prow, .prow-h, .prow-b, .card, .ch, .ct, .stl{ overflow:visible }
+.prow-cf, .prow-sr, .prow-rp{ overflow:hidden }  /* эти ячейки текста — обрезаем длинные числа */
 
 /* TOASTS */
 #tb{position:fixed;top:62px;right:10px;z-index:300;display:flex;flex-direction:column;gap:5px;max-width:320px;width:calc(100vw - 20px)}
@@ -403,7 +417,7 @@ const DEPLOY = {
 /* ================================================================
    CONFIG V45 — не менять, берёт данные из DEPLOY выше
    ================================================================ */
-const C = {
+const C = Object.freeze({
   CONTRACT: DEPLOY.CONTRACT,
   ANCR:     DEPLOY.TOKENS.ANCR.address,
   CREATOR:  DEPLOY.CREATOR,
@@ -414,7 +428,7 @@ const C = {
   RPC:      'https://1rpc.io/sepolia',
   DOM_NAME: 'AnchorVault',
   DOM_VER:  '45',
-};
+});
 
 /* ================================================================
    I18N — словарь интерфейса на 3 языках (RU / EN / ZH).
@@ -645,6 +659,9 @@ const I18N = {
   kw_mm_hint:{ru:"Совет: в MetaMask заранее создайте 2 новых аккаунта — они и станут вашими ключами.",en:"Tip: create 2 new accounts in MetaMask beforehand — they'll be your keys.",zh:"提示：请提前在 MetaMask 中创建 2 个新账户——它们将成为您的钥匙。"},
   kw_import_note:{ru:"Чтобы подписывать операции этим кошельком, импортируйте его в MetaMask по секретной фразе (Импорт аккаунта → секретная фраза).",en:"To sign operations with this wallet, import it into MetaMask using the secret phrase (Import account → secret phrase).",zh:"要用此钱包签署操作，请用助记词将其导入 MetaMask（导入账户 → 助记词）。"},
   kw_mainnet_warn:{ru:"Создание ключей в браузере подходит для тестовой сети. Для реальных денег используйте аккаунты MetaMask или аппаратный кошелёк.",en:"Creating keys in the browser is fine for testnet. For real funds use MetaMask accounts or a hardware wallet.",zh:"在浏览器中创建钥匙适用于测试网。如涉及真实资金，请使用 MetaMask 账户或硬件钱包。"},
+  kw_danger_title:{ru:"ОПАСНО! Только для тестовой сети!",en:"DANGER! Testnet only!",zh:"危险！仅用于测试网！"},
+  kw_danger_text:{ru:"Приватный ключ создаётся прямо в браузере. Любое расширение, любой XSS, любой вирус могут его украсть. На mainnet это НЕДОПУСТИМО. Ключи стираются из памяти при закрытии этого окна или через 5 минут.",en:"The private key is generated directly in the browser. Any extension, any XSS, any virus can steal it. NEVER use this on mainnet. Keys are wiped from memory when this window closes or after 5 minutes.",zh:"私钥直接在浏览器中生成。任何扩展、任何 XSS、任何病毒都能窃取它。绝不可在主网上使用。关闭此窗口或 5 分钟后，密钥将从内存中清除。"},
+  kw_agree_check:{ru:"Я понимаю риск. Использую только для тестовой сети Sepolia.",en:"I understand the risk. I use this only for the Sepolia testnet.",zh:"我了解风险。我仅将此用于 Sepolia 测试网。"},
   kw_done:{ru:"Адрес подставлен",en:"Address filled in",zh:"地址已填入"},
 
   // ВСТРОЕННАЯ ПОДПИСЬ
@@ -1082,7 +1099,27 @@ window.openKW=function(targetId,label){
   $('kwz').classList.add('show');
   if(KW_TARGET)kwChoose(); else kwPickField();
 };
-window.closeKW=function(){$('kwz').classList.remove('show');};
+window.closeKW=function(){
+  $('kwz').classList.remove('show');
+  // SECURITY: затираем приватные ключи и фразы из памяти при закрытии мастера
+  if(KW_GEN.length){
+    KW_GEN.forEach(g=>{g.pk='';g.phrase='';});
+    KW_GEN.length=0;
+  }
+  if(window.__kwTimer){clearTimeout(window.__kwTimer);window.__kwTimer=null;}
+};
+// Автоочистка через 5 минут даже если мастер открыт
+function kwArmTimer(){
+  if(window.__kwTimer)clearTimeout(window.__kwTimer);
+  window.__kwTimer=setTimeout(()=>{
+    if(KW_GEN.length){
+      KW_GEN.forEach(g=>{g.pk='';g.phrase='';});
+      KW_GEN.length=0;
+      log('🔒 Сгенерированные ключи стёрты из памяти (5 мин таймаут).','warning');
+      try{closeKW();}catch{}
+    }
+  }, 5*60*1000);
+}
 
 // Экран 1: выбор какого поля (когда запуск общей кнопкой)
 function kwPickField(){
@@ -1101,9 +1138,16 @@ window.kwSetField=function(id,l){KW_TARGET=id;KW_LABEL=l;kwChoose();};
 function kwChoose(){
   $('kwz-sub').textContent=KW_LABEL;
   $('kwz-body').innerHTML=`
-    <div class="nc ncw mb3" style="font-size:10.5px">${t('kw_mainnet_warn')}</div>
+    <div class="nc ncd mb3" style="font-size:11.5px;line-height:1.5;border-left:4px solid #f97316;padding:10px 12px">
+      <b style="color:#fed7aa">⚠ ${t('kw_danger_title')}</b><br>
+      <span style="color:#fcd9b6">${t('kw_danger_text')}</span>
+    </div>
+    <label class="flex items-start gap2 mb3" style="font-size:11px;color:#e2e8f0;cursor:pointer">
+      <input type="checkbox" id="kwagree" style="margin-top:1px;flex-shrink:0" onchange="kwTogAgree(this.checked)">
+      <span>${t('kw_agree_check')}</span>
+    </label>
     <div style="display:flex;flex-direction:column;gap:9px">
-      <button class="btn btnsm btnbl" style="text-align:left;padding:11px" onclick="kwGen()">
+      <button class="btn btnsm btnbl" id="kwgenbtn" style="text-align:left;padding:11px;opacity:.4;cursor:not-allowed" disabled onclick="kwGen()">
         <div style="font-weight:700">${t('kw_gen_btn')}</div>
         <div style="font-size:10px;color:#94a3b8;font-weight:400;margin-top:2px">${t('kw_gen_desc')}</div>
       </button>
@@ -1116,6 +1160,13 @@ function kwChoose(){
       </button>
     </div>`;
 }
+window.kwTogAgree=function(checked){
+  const b=$('kwgenbtn');
+  if(!b)return;
+  b.disabled=!checked;
+  b.style.opacity=checked?'1':'.4';
+  b.style.cursor=checked?'pointer':'not-allowed';
+};
 
 // Способ A: генерация нового кошелька
 window.kwGen=function(){
@@ -1123,6 +1174,7 @@ window.kwGen=function(){
   try{w=ethers.Wallet.createRandom();}catch(e){toast(perr(e),'error');return;}
   const addr=w.address, phrase=w.mnemonic?.phrase||'', pk=w.privateKey;
   KW_GEN.push({label:KW_LABEL,address:addr,phrase,pk});
+  kwArmTimer();
   $('kwz-sub').textContent=KW_LABEL;
   $('kwz-body').innerHTML=`
     <div class="nc ncw mb3">${t('kw_gen_warn')}</div>
@@ -1402,6 +1454,15 @@ window.doOpen=async function(){
   if(!ethers.isAddress(rk)||rk===ZERO){toast('Неверный Recovery Key','warning');return;}
   if(mk.toLowerCase()===rk.toLowerCase()){toast('Ключи должны различаться','warning');return;}
   if(mk.toLowerCase()===S.user.toLowerCase()||rk.toLowerCase()===S.user.toLowerCase()){toast('Ключи ≠ ваш кошелёк — иначе нет двухфакторности','warning');return;}
+  // SECURITY: ключи не должны совпадать с резервным адресом — иначе если резервный скомпрометирован, всё рушится разом
+  try{
+    const em = await S.vlt.globalEmergency(S.user);
+    if(em && em!==ZERO){
+      if(mk.toLowerCase()===em.toLowerCase()||rk.toLowerCase()===em.toLowerCase()){
+        toast('Ключи ≠ ваш резервный адрес — иначе ослабляется двухфакторная защита','warning',6000);return;
+      }
+    }
+  }catch{/* пропускаем — не блокирующая проверка */}
   let w;try{w=ethers.parseUnits(amt,tk.decimals);}catch{toast('Неверная сумма','warning');return;}
   if(w<ethers.parseUnits('0.01',tk.decimals)){toast('Минимум 0.01 '+tk.symbol,'warning');return;}
   // проверка поддержки токена контрактом + баланс + allowance
@@ -1814,12 +1875,91 @@ window.signOp=async function(op){
     const dom=await buildDom();
     const signer=await S.prov.getSigner();  // свежий signer = текущий выбранный в MetaMask аккаунт (ключ)
     const sig=await signer.signTypedData(dom,{[op]:T712[op]},msg);
-    if($(cfg.sig)){$(cfg.sig).value=sig;}
+    if($(cfg.sig)){
+      $(cfg.sig).value=sig;
+      // SECURITY: запоминаем хэш параметров — чтобы заметить изменение формы после подписи
+      $(cfg.sig).dataset.paramsHash = ethers.id(JSON.stringify(built.msg));
+    }
     if($(cfg.dl)){$(cfg.dl).value=String(dl);}
+    // UX: показать тикающий индикатор времени жизни подписи
+    attachSigBadge(cfg.sig, cfg.dl);
     toast(t('sign_ready'),'success',7000);
     log(`Подпись ${op} готова`,'success');
+    // Привязываем слушатели на поля чтобы при изменении показать предупреждение
+    const watched = SIGN_WATCH[op] || [];
+    watched.forEach(fid=>{
+      const el=$(fid);if(!el||el.dataset.sigWatch)return;
+      el.dataset.sigWatch='1';
+      el.addEventListener('input',()=>{
+        const sigEl=$(cfg.sig);if(!sigEl||!sigEl.value)return;
+        // Сравниваем новые параметры с зафиксированными в хэше
+        const fresh=cfg.build();
+        if(fresh.err)return;
+        const newHash=ethers.id(JSON.stringify(fresh.msg));
+        if(newHash !== sigEl.dataset.paramsHash){
+          sigEl.value='';
+          sigEl.dataset.paramsHash='';
+          toast(S.lang==='en'?'Form changed — please sign again.':S.lang==='zh'?'表单已更改 — 请重新签名。':'Форма изменилась — нужно переподписать.', 'warning', 5000);
+          log('Подпись сброшена: параметры формы изменились','warning');
+        }
+      });
+    });
   }catch(e){toast(perr(e),'error');log('Подпись: '+perr(e),'error');}
 };
+// Поля которые отслеживаем для каждой операции (если меняются после подписи — сбрасываем подпись)
+const SIGN_WATCH = {
+  Withdraw:['wa','wto'],
+  TransferVault:['tto','tnm','tnr'],
+  EmergencyWithdraw:['eat'],
+  RotateAuthKeys:['rm','rr'],
+  SetTimelock:['tlh'],
+  SetVoluntaryLock:['vld'],
+};
+
+/* Универсальный тикающий индикатор «подпись истекает через…» */
+function attachSigBadge(sigId, dlId){
+  const sigEl=$(sigId), dlEl=$(dlId);
+  if(!sigEl||!dlEl)return;
+  // ищем родительский контейнер подписи (хидден инпуты лежат рядом с кнопкой)
+  let parent = sigEl.parentElement;
+  // создаём бэйдж один раз
+  let badge = parent.querySelector('.sig-badge');
+  if(!badge){
+    badge = document.createElement('div');
+    badge.className = 'sig-badge';
+    badge.style.cssText = 'display:none;margin-top:5px;font-size:10.5px;padding:4px 8px;border-radius:5px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#86efac;font-family:JetBrains Mono,monospace';
+    parent.appendChild(badge);
+  }
+}
+// Глобальный тикер обновляет все .sig-badge на странице
+if(!window.__sigTicker){
+  window.__sigTicker = setInterval(()=>{
+    const now = Math.floor(Date.now()/1000);
+    document.querySelectorAll('.sig-badge').forEach(b=>{
+      // ищем рядом hidden поле подписи и deadline
+      const par = b.parentElement;
+      const sig = par.querySelector('input[id$="sg"],input[id$="ss"],input[id$="cs"],input[id$="ls"],input[id="rs"],input[id="vls"]');
+      // более надёжно ищем по data-атрибуту
+      const dlInput = par.querySelector('input[id$="dl"],input[id$="cd"],input[id$="sd"],input[id$="ad"],input[id$="dd"],input[id="rd"],input[id="tld"]');
+      if(!sig||!dlInput||!sig.value){b.style.display='none';return;}
+      const dl = Number(dlInput.value);
+      const left = dl - now;
+      b.style.display='block';
+      if(left<=0){
+        b.style.background='rgba(249,115,22,.12)';
+        b.style.borderColor='rgba(249,115,22,.4)';
+        b.style.color='#fdba74';
+        b.textContent='⌛ ' + (S.lang==='en'?'Signature expired — please sign again':S.lang==='zh'?'签名已过期 — 请重新签名':'Подпись истекла — переподпишите');
+      } else {
+        const m=Math.floor(left/60), s=left%60;
+        b.style.background='rgba(34,197,94,.1)';
+        b.style.borderColor='rgba(34,197,94,.3)';
+        b.style.color='#86efac';
+        b.textContent='✓ ' + (S.lang==='en'?`signature ok · ${m}m ${s}s left`:S.lang==='zh'?`签名有效 · 剩余 ${m}分 ${s}秒`:`подпись готова · истечёт через ${m}м ${s}с`);
+      }
+    });
+  }, 1000);
+}
 
 /* ================================================================
    EMERGENCY
@@ -1911,7 +2051,17 @@ window.dEA=async function(vid){
   if(!to||!dl||!sig){toast('Заполните поля','warning');return;}
   if(!ethers.isAddress(to)||to===ZERO){toast('Неверный адрес получателя','warning');return;}
   if(Number(dl)<=Math.floor(Date.now()/1000)){toast('Deadline должен быть в будущем','warning');return;}
-  const ok=await cdlg('Emergency Any',`Куда: <code>${sh(to,8,6)}</code>. Комиссия 15%.`);if(!ok)return;
+  // UX-проверки: подсказываем если адрес неоптимальный, не блокируем
+  let hint='';
+  try{
+    const em = await S.vlt.globalEmergency(S.user);
+    if(em && em.toLowerCase()===to.toLowerCase()){
+      hint = `<div class="nc ncw mb2"><b>💡 Подсказка:</b> Адрес совпадает с вашим <b>резервным</b>. Для этого случая дешевле использовать <b>«Возврат в резерв»</b> (комиссия 10% вместо 15%).</div>`;
+    } else if(to.toLowerCase()===S.user.toLowerCase()){
+      hint = `<div class="nc ncw mb2"><b>💡 Подсказка:</b> Адрес совпадает с вашим <b>основным</b> кошельком. Для этого случая дешевле использовать <b>«Досрочное закрытие»</b> (комиссия 5% вместо 15%).</div>`;
+    }
+  }catch{}
+  const ok=await cdlg('Emergency Any',`${hint}Куда: <code>${sh(to,8,6)}</code>. Комиссия <b>15%</b>.`);if(!ok)return;
   const rc=await txc('Emergency to Any',S.vlt.emergencyWithdrawToAny(BigInt(vid),to,BigInt(dl),sig));
   if(rc){S.vid=0n;await refreshIB();route('home');}
 };
@@ -2042,6 +2192,14 @@ window.dSE=async function(){
 window.dPEC=async function(){
   const a=($('emn')?.value||'').trim();
   if(!ethers.isAddress(a)){toast('Неверный адрес','warning');return;}
+  if(a.toLowerCase()===S.user.toLowerCase()){toast('Резервный ≠ ваш текущий кошелёк','warning');return;}
+  // SECURITY: проверяем что новый адрес отличается от текущего — иначе пустая трата газа + лишний таймлок
+  try{
+    const cur = await S.vlt.globalEmergency(S.user);
+    if(cur && cur.toLowerCase()===a.toLowerCase()){
+      toast('Этот адрес уже установлен как резервный','warning');return;
+    }
+  }catch{/* пропускаем */}
   const ok=await cdlg('Предложить смену',`Новый: <b>${E(a)}</b>. Таймлок 7 дней.`);if(!ok)return;
   const rc=await txc('Propose Change',S.vlt.proposeGlobalEmergencyChange(a));if(rc)route('emgr');
 };
@@ -2255,10 +2413,13 @@ async function rCreator(){
 
     </div>`;
 
-  // Запустить тикающие таймеры
-  if(window.__crCdTimer) clearInterval(window.__crCdTimer);
+  // Запустить тикающие таймеры (останавливается автоматически при уходе со страницы)
+  if(window.__crCdTimer){clearInterval(window.__crCdTimer);window.__crCdTimer=null;}
   window.__crCdTimer = setInterval(()=>{
-    if(!document.getElementById('page')||!$('page').querySelector('.ptbl')){ clearInterval(window.__crCdTimer); return; }
+    // Триггер остановки: ушли со страницы creator ИЛИ таблицы больше нет в DOM
+    if(S.route !== 'creator' || !document.querySelector('#page .ptbl')){
+      clearInterval(window.__crCdTimer); window.__crCdTimer=null; return;
+    }
     const t=Math.floor(Date.now()/1000);
     document.querySelectorAll('[data-cd]').forEach(el=>{
       const un=Number(el.getAttribute('data-cd'));

@@ -1,92 +1,98 @@
-# Security Notes — AnchorVaultV45
+# Security Policy — AnchorVaultV45
 
-## Threat model
+## Disclosure
 
-Each vault is protected by two user-held keys plus the owner's wallet account:
+Found a vulnerability? Please report it privately to **anchorvaultcoin@gmail.com**.
 
-- The **owner account** (`msg.sender`) must equal the vault owner on every call.
-- The **main key** signs everyday operations.
-- The **recovery key** signs emergency operations.
+Do **not** open a public issue until a fix is released. We aim to acknowledge reports within 72 hours.
 
-**The recovery key is effectively the master key.** It can move funds to any address
-(`emergencyWithdrawToAny`), rotate both keys (`rotateAuthKeys`), and it bypasses the
-voluntary lock. Users must keep the recovery key in the coldest possible storage.
+## Scope
 
-## Replay & signature safety
+- **In scope:** `src/AnchorVaultV45.sol` (the vault contract).
+- **Out of scope:** OpenZeppelin libraries (`IERC20`, `SafeERC20`, `IERC20Metadata`, `ReentrancyGuard`, `EIP712`, `ECDSA`) — audited upstream and pinned by commit (see *Dependencies*).
 
-- The EIP-712 domain binds chainId + contract address.
-- Each signed struct includes a per-vault `nonce` (incremented on use) and a `deadline`.
-- Signatures are verified with OpenZeppelin `ECDSA.recover`, which rejects malleable
-  (high-`s`) signatures.
+## Trust Model & Roles
 
-## Accounting invariant
+The contract is **non-custodial**: a user's principal can only leave the contract through that user's own signed operation. No privileged role can move user principal.
 
-For every token, the contract balance always covers all obligations:
+| Role | Can do | Cannot do |
+|---|---|---|
+| **creator** (deployer) | withdraw accrued `creatorFees` / `strategicReserve` (each behind a 7-day timelock), set welcome bonus, add/remove supported tokens, unpause, transfer roles (2-step + cooldown) | **touch user principal**; rescue any token that was ever supported |
+| **guardian** | pause (2-day delayed, or immediate `emergencyPause`) | unpause; move any funds |
+| **owner** (user) | open/deposit/withdraw/transfer/close their own vault | act on another user's vault |
+| **mainAuthKey** (per vault) | sign withdraw, transfer, secure-transfer, set timelock/voluntary-lock | sign recovery operations |
+| **recoveryAuthKey** (per vault) | sign rotate-keys, early-close, recover, emergency-withdraw | — |
+| **globalEmergency[user]** | receive funds from `recoverToSafe` / `panicWithdraw` | set instantly after first change (7-day timelock) |
+
+**Two-factor design:** every state-changing user operation requires both `msg.sender == owner` **and** a valid EIP-712 signature from the relevant key. Compromising the wallet account alone does not allow fund movement.
+
+### Centralization summary
+
+- `creator` and `guardian` must be different addresses (enforced in the constructor and on every role transfer).
+- `creator` **cannot** reach user principal: `rescueERC20` rejects any token in `wasSupported`, and `removeSupportedToken` never touches balances.
+- **Known centralization point:** in the current testnet deployment `payoutWallet` **equals** `creator` (`0x725F…5150`), so the 200k ANCR payout share and all creator/reserve withdrawals route to a single EOA. **For mainnet, separate these and make `creator` a multisig.**
+
+## Accounting Invariant (Critical Guarantee)
+
+For every supported token, the contract must always satisfy:
 
 ```
-balance(token) >= lockedPrincipal(token)
-                + creatorFees(token)
-                + strategicReserve(token)
-                + rewardPool(token)
+balanceOf(contract) >= lockedPrincipal[token]
+                       + creatorFees[token]
+                       + strategicReserve[token]
+                       + rewardPool[token]
 ```
 
-`creator` withdrawals are bounded by `creatorFees` / `strategicReserve` and can never
-reach `lockedPrincipal` (user funds).
+and `lockedPrincipal[token]` always equals the sum of `v.amount` over all active vaults for that token.
 
-## Reentrancy
+**Automated check:** `test/AnchorVaultInvariant_t.sol` is a Foundry invariant suite that fuzzes random sequences of open/deposit/withdraw/early-close and asserts both properties after every step. Full suite: **314 passing, 0 failing**.
 
-All external state-changing functions use `nonReentrant` and follow
-checks-effects-interactions: state is updated before any external call, and token burns
-and payouts happen last.
+## Threat Model
 
-## Accepted design decisions (not bugs)
+| Vector | Mitigation (verified in code) |
+|---|---|
+| Reentrancy | `nonReentrant` on all external entry points + Checks-Effects-Interactions; external transfers/burns happen last |
+| Signature replay | per-vault `nonce` + `deadline` + EIP-712 domain (chainId + contract address) |
+| Signature malleability | OpenZeppelin ECDSA v5 rejects high-`s` signatures |
+| Cross-vault / cross-user replay | typehash binds `owner` and `vaultId` |
+| Admin principal drain | `rescueERC20` gated by `wasSupported`; `removeSupportedToken` cannot move balances |
+| Role merger | `creator != guardian` enforced everywhere |
+| Fee-on-transfer tokens | `_safeReceive` credits the actually-received amount (balance diff) |
+| Sham-transfer griefing | recipient can `rejectIncomingTransfer`; conflicting transfers move to CONFLICT status |
+| Welcome-bonus drain | per-address claim flag + max-claims cap + per-claim cap + pool check |
+| Gas / DoS | no unbounded loops; all per-user/token lookups are O(1) |
 
-1. **Withdrawals are allowed while paused.** Pause halts new deposits and transfers but
-   never traps user funds — a deliberate non-custodial guarantee. Adding `whenNotPaused`
-   to `withdrawFromVault` would let an operator freeze user funds and is intentionally
-   avoided.
-2. **`panicWithdraw` bypasses the voluntary lock.** It is an emergency exit to the user's
-   pre-committed emergency address with a 20 % penalty.
-3. **`timelockHours` is a soft cooldown, not a hard lock.** It is set by the main key and
-   can be lowered to 0 by the same key, so it is not a theft-prevention control. The hard
-   lock is `voluntaryLock`, which **is** enforced in withdraw, quick transfer, and secure
-   transfer.
-4. **`depositedAt` is not reset on deposit.** The timelock is measured from vault
-   creation; topping up does not re-lock the vault.
-5. **The emergency address is restricted to EOAs** (`code.length == 0`). Rationale: an EOA
-   can always custody the token and adds no callback/reentrancy surface as a payout
-   destination. This excludes smart-contract wallets / multisigs as emergency destinations.
-6. **Recovery operations ignore the voluntary lock** (`recoverToSafe`,
-   `emergencyWithdrawToAny`, `rotateAuthKeys`) so a user can always escape a compromised
-   main key.
+## Accepted Design Decisions
 
-## Centralization summary
+These are intentional trade-offs, not vulnerabilities.
 
-| Power                       | Holder   | Constraint                              |
-|-----------------------------|----------|-----------------------------------------|
-| Withdraw creator fees       | creator  | 7-day timelock                          |
-| Withdraw strategic reserve  | creator  | 7-day timelock                          |
-| Set welcome bonus           | creator  | ≤ MAX_WELCOME_BONUS                      |
-| Add / remove supported token| creator  | —                                       |
-| Unpause                     | creator  | —                                       |
-| Pause                       | guardian | 2-day delay, or immediate emergencyPause|
-| Transfer roles              | creator  | 2-step, 7-day / 2-day cooldown          |
+- **Nonce width (`uint64`):** the contract **does** check for overflow — `if (v.nonce == type(uint64).max) revert NonceOverflow();` runs before the increment, and only the `+= 1` is `unchecked`. Reaching the `uint64` max is infeasible; the check is a defensive backstop.
+- **Voluntary lock vs. emergency ops:** `recoverToSafe`, `emergencyWithdrawToAny`, `rotateAuthKeys` ignore `voluntaryLockUntil` (they call `_checkSig(..., enforceLock = false)`); `earlyClose` respects it (`enforceLock = true`); `panicWithdraw` carries no signature and bypasses the lock by design. Emergency exits must remain possible under a voluntary lock.
+- **`panicWithdraw` without signature:** a deliberate dead-man's-switch. If both keys are lost, the owner (`msg.sender`) can evacuate to the pre-set `globalEmergency` for a 20% penalty. Residual risk: an attacker controlling the owner EOA for >7 days could change `globalEmergency` and then panic — `globalEmergency` must be treated as a critical address.
+- **Penalty distribution on pause:** ANCR penalties go 100% to `rewardPool` (no burn / creator / reserve); non-ANCR penalties stay 50/50 creator/reserve. This prevents the creator from profiting from a forced pause.
+- **`block.timestamp` for timelocks:** all intervals are hours/days, so seconds-level validator drift is irrelevant.
+- **EIP-712 domain separation:** prevents cross-chain replay via chainId + contract address in the domain.
 
-No role can access user principal.
+## Continuous Monitoring
 
-## Hardening applied before this audit
+- **CI (GitHub Actions):** every push to `main` runs `forge build --sizes` + `forge test` (314 tests). See `.github/workflows/ci.yml`.
+- **Dependencies pinned:** OpenZeppelin Contracts (5.6.1) and forge-std are git submodules locked to fixed commits — no silent dependency drift.
+- **Key hygiene:** the per-vault `recoveryAuthKey` is the most powerful credential and should be cold-stored, separate from `mainAuthKey`. Users may rotate keys via `rotateAuthKeys`.
+- **Planned:** Slither static analysis as a CI step, and an external human audit before mainnet. *(Not yet active — do not claim these as live until configured.)*
 
-- **M-1:** the voluntary lock can now be extended, and `setTimelock` works while
-  voluntarily locked (previously the lock blocked its own management).
-- **L-1:** a recipient can immediately reject an unwanted incoming secure transfer
-  (`rejectIncomingTransfer`) instead of waiting 48 h.
-- Renamed a misleading error to `EmergencyAlreadySet`.
-- `totalBurnedANCR` now increments only after tokens actually leave the contract.
-- `donateToRewardPool` is restricted to ANCR (the reward pool is consumed only for ANCR
-  welcome bonuses), preventing stuck non-ANCR donations.
-- Removed an unused storage field and dead errors; consolidated the four signature checks
-  into one and the creator/reserve withdrawal logic into shared helpers.
+## Audit History
 
-## Reporting
+| Date | Type | Findings | Status |
+|---|---|---|---|
+| 2026-05-29 | AI-assisted review (Claude, DeepSeek) | All criticals resolved | ✅ Done |
+| 2026-06-12 | Invariant test suite added (Foundry) | Solvency + principal-integrity hold over fuzzed runs; 314 tests green | ✅ Done |
+| (Planned) | External human audit (e.g. Code4rena / Cantina) + TVL cap | TBD | ⬜ Pending |
 
-Please report security findings privately to the Licensor before public disclosure.
+> Note: AI-assisted review is **not** a substitute for an independent human audit. A full external audit and an initial TVL cap are required before any mainnet deployment.
+
+## Contacts
+
+- **Security reports:** anchorvaultcoin@gmail.com
+- **Contract (Sepolia):** `0x8E1F46fC913c4928303BbCEB92ccb7c54cD95BA4`
+- **creator / admin:** `0x725F1408c2CDa5757d8B44a92a84EACc529F5150`
+- **guardian:** `0x0838238A55d846A2a92fC6889Cc96558533B68ab`

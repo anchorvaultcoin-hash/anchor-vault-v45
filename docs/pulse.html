@@ -107,6 +107,19 @@ input[type=checkbox]:checked::after{content:"✓";position:absolute;top:50%;left
 .in-sm{padding:4px 7px !important;font-size:10.5px !important;min-width:0;flex:1}
 .in-xs{padding:4px 7px !important;font-size:10.5px !important;width:90px !important;flex:none}
 
+/* FAQ — аккордеон */
+.faq-g{margin-top:10px}
+.faq-g:first-of-type{margin-top:4px}
+.faq-gt{font-size:12px;font-weight:700;color:#d4a843;letter-spacing:.04em;text-transform:uppercase;padding:6px 0 4px;border-bottom:1px solid #1e2536;margin-bottom:6px}
+.faq-it{background:#0f1626;border:1px solid #1e2536;border-radius:6px;margin-bottom:4px;overflow:hidden;transition:.13s}
+.faq-it[open]{border-color:#2a3347;background:#13192a}
+.faq-it summary{cursor:pointer;padding:8px 12px;font-size:12px;font-weight:500;color:#e2e8f0;list-style:none;display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+.faq-it summary::before{content:'▸';color:#d4a843;font-size:10px;flex-shrink:0;margin-top:3px;transition:transform .13s}
+.faq-it[open] summary::before{transform:rotate(90deg)}
+.faq-it summary::-webkit-details-marker{display:none}
+.faq-it summary:hover{color:#fff}
+.faq-a{padding:0 12px 10px 26px;font-size:11.5px;color:#cbd5e1;line-height:1.55}
+
 /* BADGES */
 .bdg{display:inline-block;padding:2px 7px;border-radius:7px;font-size:9px;font-weight:700;letter-spacing:.03em}
 .bdg-g{background:rgba(212,168,67,.15);color:#d4a843;border:1px solid rgba(212,168,67,.3)}
@@ -304,6 +317,7 @@ pre.code{font-family:'JetBrains Mono',monospace;font-size:10px;white-space:pre-w
       <div class="ns" data-i18n="nav_section_security">Безопасность</div>
       <!-- Раздел "Подписи EIP-712" скрыт из меню (код сохранён, маршрут sign рабочий) -->
       <div class="ni" data-r="emgr"><span class="ico">🛡</span><span data-i18n="nav_reserve">Резервный адрес</span></div>
+      <div class="ni" data-r="faq"><span class="ico">❓</span><span data-i18n="nav_faq">FAQ</span></div>
       <div class="ns hidden" id="sadm" data-i18n="nav_section_admin">Администрирование</div>
       <div class="ni hidden" id="ncr" data-r="creator"><span class="ico">👑</span>Creator<span class="nb">ADMIN</span></div>
       <div class="ni hidden" id="ngd" data-r="guardian"><span class="ico">🛡</span>Guardian<span class="nb">ADMIN</span></div>
@@ -416,6 +430,7 @@ const I18N = {
   nav_emergency:{ru:"Аварийный",en:"Emergency",zh:"紧急"},
   nav_settings:{ru:"Настройки",en:"Settings",zh:"设置"},
   nav_reserve:{ru:"Резервный адрес",en:"Backup address",zh:"备用地址"},
+  nav_faq:{ru:"FAQ",en:"FAQ",zh:"常见问题"},
 
   ib_network:{ru:"Сеть",en:"Network",zh:"网络"},
   ib_status:{ru:"Статус",en:"Status",zh:"状态"},
@@ -640,6 +655,47 @@ const I18N = {
   sign_ready:{ru:"Подпись готова ✓ Теперь переключите MetaMask обратно на основной кошелёк и нажмите кнопку операции.",en:"Signature ready ✓ Now switch MetaMask back to your main wallet and press the operation button.",zh:"签名已就绪 ✓ 现在请将 MetaMask 切回主钱包并按操作按钮。"},
   sign_need:{ru:"Сначала подпишите ключом (шаг 1)",en:"Sign with the key first (step 1)",zh:"请先用钥匙签名（第一步）"},
   sign_step2:{ru:"Шаг 2. ",en:"Step 2. ",zh:"第二步："},
+
+  // ===== Подсказки админки (Creator) =====
+  ti_cr_burned:{ru:"Сумма ANCR, сожжённых через комиссии. Дефляция: каждая операция уменьшает общее предложение ANCR.",en:"Total ANCR burned via penalties. Deflation: each operation reduces ANCR supply.",zh:"通过手续费销毁的 ANCR 总量。每次操作都会减少 ANCR 供应。"},
+  ti_cr_bonus:{ru:"Размер приветственного бонуса для новых пользователей и сколько уже выдано из лимита.",en:"Welcome bonus size for new users and how many out of the limit have been claimed.",zh:"新用户欢迎奖励金额，以及已发放/限额。"},
+  ti_cr_status:{ru:"Состояние контракта. На паузе — все операции пользователей заморожены.",en:"Contract state. On pause — all user operations are frozen.",zh:"合约状态。暂停时所有用户操作冻结。"},
+  ti_cr_tokcount:{ru:"Сколько токенов поддерживается контрактом сейчас. По каждому — отдельные пулы комиссий и резерва.",en:"How many tokens are currently supported. Each has its own fee and reserve pools.",zh:"目前支持的代币数量。每个代币都有自己的手续费和储备池。"},
+  ti_cr_table:{ru:"По каждому поддерживаемому токену — три пула: комиссии создателю, резерв, пул наград (только ANCR). Раскрой строку чтобы заявить вывод.",en:"For each supported token — three pools: creator fees, strategic reserve, rewards (ANCR only). Expand a row to request withdrawal.",zh:"每种支持的代币有三个池：创建者手续费、储备、奖励（仅 ANCR）。展开行以申请提取。"},
+  ti_cr_pool_cf:{ru:"Накопленные комиссии создателя по этому токену. Доля от каждой пользовательской комиссии. Выводится через заявку с 7-дн таймлоком.",en:"Accumulated creator fees for this token. Share of each user penalty. Withdrawn via a request with a 7-day timelock.",zh:"该代币累积的创建者手续费。每笔用户罚金的一部分。通过 7 天时间锁的申请提取。"},
+  ti_cr_pool_sr:{ru:"Стратегический резерв по токену. Тоже выводится через заявку с 7-дн таймлоком. Слот заявки отдельный от комиссий.",en:"Strategic reserve for the token. Also withdrawn via a request with a 7-day timelock. Separate slot from fees.",zh:"代币的战略储备。也通过 7 天时间锁的申请提取。与手续费槽位独立。"},
+  ti_cr_pool_rp:{ru:"Пул наград — только в ANCR. Тратится автоматически на welcome-бонусы новым пользователям. Вывести нельзя.",en:"Rewards pool — ANCR only. Spent automatically on welcome bonuses for new users. Cannot be withdrawn.",zh:"奖励池 — 仅 ANCR。自动用于新用户欢迎奖励。无法提取。"},
+  ti_cr_req:{ru:"Заявить вывод. После заявки 7 дней таймлок, потом можно забрать. Одна заявка на токен на тип за раз.",en:"Request a withdrawal. 7-day timelock, then withdraw. One request per token per type at a time.",zh:"申请提取。7 天时间锁后可以提取。每个代币每种类型同时只能有一次申请。"},
+  ti_cr_take:{ru:"Забрать средства по истёкшей заявке. Деньги уйдут на адрес из заявки.",en:"Withdraw funds from an expired request. Funds go to the request's address.",zh:"从已过期的申请中提取资金。资金将转至申请中的地址。"},
+  ti_cr_cancel:{ru:"Отменить активную заявку. Слот освободится, можно подать новую сразу.",en:"Cancel the active request. The slot is freed up for a new one.",zh:"取消活动申请。槽位释放，可以立即提交新申请。"},
+  ti_cr_all:{ru:"Забрать одним кликом всё что прошло таймлок. Контракт не атомарен — каждая лужа отдельной транзакцией, MetaMask попросит подтвердить каждую.",en:"Withdraw everything past timelock with one click. Contract is not atomic — each pool needs a separate tx, MetaMask asks to confirm each one.",zh:"一键提取所有超过时间锁的资金。合约非原子操作 — 每个池都需单独交易，MetaMask 会请求逐一确认。"},
+  ti_cr_addtok:{ru:"Добавить токен в список поддерживаемых. Должен иметь ровно 18 decimals — проверяется автоматически.",en:"Add a token to the supported list. Must have exactly 18 decimals — checked automatically.",zh:"添加代币到支持列表。必须正好为 18 位小数 — 自动检查。"},
+  ti_cr_rmtok:{ru:"Убрать токен. Существующие сейфы продолжат работать (вывод, передача, закрытие), но новые открыть нельзя.",en:"Remove a token. Existing vaults keep working (withdraw, transfer, close), but no new ones can be opened.",zh:"移除代币。现有保险库继续工作（提取、转移、关闭），但无法开设新的。"},
+  ti_cr_quick:{ru:"Быстрое добавление токенов, которые есть в реестре пульта, но ещё не в контракте.",en:"Quick add for tokens registered in the dashboard but not yet in the contract.",zh:"快速添加已在面板注册但尚未在合约中的代币。"},
+  ti_cr_wb:{ru:"Сумма ANCR, выдаваемая новому пользователю при открытии первого сейфа. Максимум 0.005 ANCR (половина MIN_DEPOSIT).",en:"ANCR given to a new user opening their first vault. Max 0.005 ANCR (half of MIN_DEPOSIT).",zh:"新用户开设首个保险库时获得的 ANCR。最多 0.005 ANCR（MIN_DEPOSIT 的一半）。"},
+  ti_cr_wbm:{ru:"Лимит выдач бонуса. Когда исчерпан — бонус новым не идёт.",en:"Bonus issuance limit. Once exhausted — no more bonuses to newcomers.",zh:"奖励发放限额。用完后不再向新人发放。"},
+  ti_cr_tcr:{ru:"Передать роль Creator другому адресу. Принимающий должен явно её принять (acceptCreatorship). После приёма 7-дн таймлок. Необратимо.",en:"Transfer the Creator role to another address. The recipient must explicitly accept (acceptCreatorship). 7-day timelock after acceptance. Irreversible.",zh:"将 Creator 角色转移到另一地址。接收方必须明确接受（acceptCreatorship）。接受后 7 天时间锁。不可逆。"},
+  ti_cr_tgd:{ru:"Передать роль Guardian. Принимающий получает право ставить паузу.",en:"Transfer the Guardian role. The recipient gains pause authority.",zh:"转移 Guardian 角色。接收方获得暂停权限。"},
+  ti_cr_acpt:{ru:"Принять Creator-роль, если предыдущий создатель передал её на ваш адрес.",en:"Accept the Creator role if the previous creator transferred it to your address.",zh:"如果上一个创建者已将 Creator 角色转移到您的地址，请接受。"},
+  ti_cr_unp:{ru:"Снять паузу с контракта. Доступно только Creator. Используется после устранения причины паузы.",en:"Unpause the contract. Creator only. Used after the pause reason is resolved.",zh:"解除合约暂停。仅限 Creator。用于暂停原因解决后。"},
+
+  // ===== Подсказки на главной =====
+  ti_h_locked:{ru:"Сумма ваших токенов, запертых в сейфе. Их нельзя забрать просто так — нужна EIP-712 подпись.",en:"Your tokens locked in a vault. Cannot be withdrawn freely — requires an EIP-712 signature.",zh:"锁定在保险库中的代币。不能随意提取 — 需 EIP-712 签名。"},
+  ti_h_free:{ru:"Свободные токены на вашем кошельке — можно тратить, переводить, или внести в сейф.",en:"Free tokens in your wallet — can be spent, transferred, or deposited into a vault.",zh:"钱包中的可用代币 — 可花费、转账或存入保险库。"},
+  ti_h_emgr:{ru:"Резервный адрес для panicWithdraw. Куда уйдут средства в крайнем случае — без подписей, мгновенно.",en:"Reserve address for panicWithdraw. Where funds go in the extreme case — no signatures, instant.",zh:"panicWithdraw 的储备地址。极端情况下资金的去向 — 无需签名，即时转移。"},
+
+  // ===== Подсказки операций =====
+  ti_op_dep:{ru:"Пополнить существующий сейф этим же токеном. Не требует EIP-712 подписи. Уровень и таймлок сейфа не меняются.",en:"Top up an existing vault with the same token. No EIP-712 signature needed. Vault level and timelock stay the same.",zh:"使用相同代币补充现有保险库。无需 EIP-712 签名。保险库等级和时间锁不变。"},
+  ti_op_wd:{ru:"Вывести часть средств из сейфа. Требует EIP-712 подпись mainAuthKey. Комиссия 0.5%.",en:"Withdraw part of vault funds. Requires mainAuthKey EIP-712 signature. 0.5% fee.",zh:"从保险库提取部分资金。需要 mainAuthKey EIP-712 签名。手续费 0.5%。"},
+  ti_op_xfer:{ru:"Защищённая передача сейфа другому пользователю. Получатель должен принять её в течение 7 дней — иначе истечёт.",en:"Secure vault transfer to another user. Recipient must accept within 7 days, otherwise it expires.",zh:"将保险库安全转移给另一用户。接收方必须在 7 天内接受，否则过期。"},
+  ti_op_tl:{ru:"Установить добровольный таймлок на свой сейф. На время таймлока вывод заблокирован для всех — даже для вас.",en:"Set a voluntary timelock on your vault. During the timelock, withdrawals are blocked for everyone, including you.",zh:"为您的保险库设置自愿时间锁。在此期间，所有人（包括您）都不能提取。"},
+
+  // ===== Подсказки аварийных =====
+  ti_em_panic:{ru:"Мгновенный вывод на резервный адрес. Без подписей и кодов. Комиссия 20%. Используйте если потеряли все ключи.",en:"Instant withdrawal to the reserve address. No signatures or codes. 20% fee. Use if you lost all keys.",zh:"立即提取到储备地址。无需签名或代码。手续费 20%。用于丢失所有密钥时。"},
+  ti_em_ec:{ru:"Закрыть сейф досрочно. Средства вам. Подпись recoveryAuthKey. Комиссия 5%.",en:"Close the vault early. Funds to you. recoveryAuthKey signature. 5% fee.",zh:"提前关闭保险库。资金返还给您。recoveryAuthKey 签名。手续费 5%。"},
+  ti_em_rs:{ru:"Возврат в резерв. Средства на ваш резервный адрес. Подпись recoveryAuthKey. Комиссия 10%.",en:"Return to reserve. Funds to your reserve address. recoveryAuthKey signature. 10% fee.",zh:"返回储备。资金到您的储备地址。recoveryAuthKey 签名。手续费 10%。"},
+  ti_em_any:{ru:"Аварийный вывод на любой адрес. Используется если и основной, и резервный кошельки скомпрометированы. Комиссия 15%.",en:"Emergency withdrawal to any address. Used if both main and reserve wallets are compromised. 15% fee.",zh:"紧急提取到任意地址。用于主钱包和储备钱包都被攻击的情况。手续费 15%。"},
+
 };
 function t(k){const e=I18N[k];if(!e)return k;return e[S.lang]||e.ru||k;}
 // Проставляет переводы в статичные элементы с атрибутом data-i18n
@@ -728,8 +784,10 @@ const ABI = [
   'function getVaultAuth(address,uint256) view returns (uint64 nonce,address mainAuthKey,address recoveryAuthKey)',
   'function domainSeparator() view returns (bytes32)',
   'function getMaxTimelockForLevel(uint8) pure returns (uint256)',
+  'function creatorWithdrawalTo(address) view returns (address)',
   'function creatorWithdrawalAmount(address) view returns (uint256)',
   'function creatorWithdrawalUnlock(address) view returns (uint256)',
+  'function reserveWithdrawalTo(address) view returns (address)',
   'function reserveWithdrawalAmount(address) view returns (uint256)',
   'function reserveWithdrawalUnlock(address) view returns (uint256)',
   'function setGlobalEmergency(address)',
@@ -1146,7 +1204,7 @@ async function buildDom(){
 /* ================================================================
    ROUTER
    ================================================================ */
-const ROUTES={home:rHome,open:rOpen,ops:rOps,em:rEm,set:rSet,sign:rSign,emgr:rEmgr,creator:rCreator,guardian:rGuardian};
+const ROUTES={home:rHome,open:rOpen,ops:rOps,em:rEm,set:rSet,sign:rSign,emgr:rEmgr,creator:rCreator,guardian:rGuardian,faq:rFaq};
 function route(name){
   S.route=name;
   document.querySelectorAll('.ni[data-r]').forEach(el=>el.classList.toggle('active',el.dataset.r===name));
@@ -2051,7 +2109,7 @@ async function rCreator(){
   });
   const alertHtml = readyList.length ? `
     <div class="card" style="border-color:#22c55e;background:linear-gradient(180deg,rgba(34,197,94,.07),transparent)">
-      <div class="ct" style="color:#22c55e">⏰ Готово к выводу · ${readyList.length}</div>
+      <div class="ct" style="color:#22c55e">⏰ Готово к выводу · ${readyList.length}${tip('ti_cr_all')}</div>
       <div class="hint" style="color:#94a3b8;margin-top:4px">
         ${readyList.map(r=>`<div>• ${tr(fu(r.amt,r.t.decimals))} ${r.k} (${r.type==='cf'?'комиссии':'резерв'})</div>`).join('')}
       </div>
@@ -2139,22 +2197,22 @@ async function rCreator(){
       <div class="card cg">
         <div class="ct">📊 Контракт</div>
         <div class="g4 mt1">
-          <div class="st"><div class="stl">🔥 Сожжено ANCR</div><div class="stv d">${tr(fu(bu))}</div></div>
-          <div class="st"><div class="stl">🎁 Бонус</div><div class="stv">${tr(fu(wb))} (${wbc}/${wbm})</div></div>
-          <div class="st"><div class="stl">⚙ Статус</div><div class="stv ${pau?'w':'ok'}">${pau?'⏸ Пауза':'🟢 Активен'}</div></div>
-          <div class="st"><div class="stl">🪙 Токенов</div><div class="stv">${supKeys.length}</div></div>
+          <div class="st"><div class="stl">🔥 Сожжено ANCR${tip('ti_cr_burned')}</div><div class="stv d">${tr(fu(bu))}</div></div>
+          <div class="st"><div class="stl">🎁 Бонус${tip('ti_cr_bonus')}</div><div class="stv">${tr(fu(wb))} (${wbc}/${wbm})</div></div>
+          <div class="st"><div class="stl">⚙ Статус${tip('ti_cr_status')}</div><div class="stv ${pau?'w':'ok'}">${pau?'⏸ Пауза':'🟢 Активен'}</div></div>
+          <div class="st"><div class="stl">🪙 Токенов${tip('ti_cr_tokcount')}</div><div class="stv">${supKeys.length}</div></div>
         </div>
       </div>
 
       <!-- Таблица пулов -->
       <div class="card">
-        <div class="ct">💰 Пулы по токенам</div>
+        <div class="ct">💰 Пулы по токенам${tip('ti_cr_table')}</div>
         <div class="hint mb2">Раскрой строку чтобы заявить вывод. 7-дней таймлок. Цвет: 🟢 пусто · 🟡 есть остаток · ⏱ идёт ожидание · ✅ готово к выводу.</div>
         <div class="ptbl">
           <div class="ptbl-h">
             <span class="ph-ico"></span><span class="ph-tok">токен</span>
-            <span class="ph-cf">комиссии</span><span class="ph-sr">резерв</span>
-            <span class="ph-rp">награды</span><span class="ph-tog"></span>
+            <span class="ph-cf">комиссии${tip('ti_cr_pool_cf')}</span><span class="ph-sr">резерв${tip('ti_cr_pool_sr')}</span>
+            <span class="ph-rp">награды${tip('ti_cr_pool_rp')}</span><span class="ph-tog"></span>
           </div>
           ${tableRows}
         </div>
@@ -2162,17 +2220,17 @@ async function rCreator(){
 
       <!-- Управление токенами (компактно) -->
       <div class="card">
-        <div class="ct mb2">🪙 Токены</div>
-        <div class="flex gap2"><input id="ctk" class="mono flex-1" placeholder="0x… токен (18 dec)"><button class="btn btnsm" onclick="dATk()">+</button><button class="btn btnsm" onclick="dRTk()">−</button></div>
+        <div class="ct mb2">🪙 Токены${tip('ti_cr_addtok')}</div>
+        <div class="flex gap2"><input id="ctk" class="mono flex-1" placeholder="0x… токен (18 dec)"><button class="btn btnsm" onclick="dATk()" title="Добавить токен">+</button><button class="btn btnsm" onclick="dRTk()" title="Убрать токен">−</button></div>
         ${quickChips}
       </div>
 
       <!-- Welcome Bonus -->
       <div class="card">
-        <div class="ct mb2">🎁 Welcome Bonus (макс 0.005 ANCR)</div>
+        <div class="ct mb2">🎁 Welcome Bonus${tip('ti_cr_wb')}</div>
         <div class="g2 mb2">
-          <div><label class="lbl">Размер (ANCR)</label><input id="wba" type="text" inputmode="decimal" placeholder="0.001"></div>
-          <div><label class="lbl">Макс выдач</label><input id="wbm2" type="number" placeholder="1000"></div>
+          <div><label class="lbl">Размер (ANCR)${tip('ti_cr_wb')}</label><input id="wba" type="text" inputmode="decimal" placeholder="0.001"></div>
+          <div><label class="lbl">Макс выдач${tip('ti_cr_wbm')}</label><input id="wbm2" type="number" placeholder="1000"></div>
         </div>
         <button class="btn btng btnsm" onclick="dSWB()">Установить</button>
       </div>
@@ -2183,14 +2241,14 @@ async function rCreator(){
         <div class="mt2">
           <div class="hint mb2">Передача Creator — необратимо, через 7 дней приёма. Внимательно проверь адрес.</div>
           <div class="g2 mb2">
-            <div><label class="lbl">Новый Creator</label><input id="nca" class="mono" placeholder="0x…"></div>
-            <div><label class="lbl">Новый Guardian</label><input id="nga" class="mono" placeholder="0x…"></div>
+            <div><label class="lbl">Новый Creator${tip('ti_cr_tcr')}</label><input id="nca" class="mono" placeholder="0x…"></div>
+            <div><label class="lbl">Новый Guardian${tip('ti_cr_tgd')}</label><input id="nga" class="mono" placeholder="0x…"></div>
           </div>
           <div class="flex gap2">
             <button class="btn btnsm" onclick="dTC()">Передать Creator</button>
             <button class="btn btnsm" onclick="dTG()">Передать Guardian</button>
-            <button class="btn btnsm" onclick="dAC()">Принять Creator</button>
-            <button class="btn btnok btnsm btnbl" onclick="dUP()">unpause()</button>
+            <button class="btn btnsm" onclick="dAC()" title="Принять переданную роль">Принять Creator${tip('ti_cr_acpt')}</button>
+            <button class="btn btnok btnsm btnbl" onclick="dUP()" title="Снять паузу с контракта">unpause()${tip('ti_cr_unp')}</button>
           </div>
         </div>
       </details>
@@ -2337,6 +2395,154 @@ window.dUP=async function(){const ok=await cdlg('Снять паузу','Про�
 window.dTC=async function(){const a=($('nca')?.value||'').trim();if(!ethers.isAddress(a)){toast('Неверный адрес','warning');return;}const ok=await cdlg('Передать Creator','7 дней cooldown.');if(!ok)return;await txc('Transfer Creatorship',S.vlt.transferCreatorship(a));};
 window.dTG=async function(){const a=($('nga')?.value||'').trim();if(!ethers.isAddress(a)){toast('Неверный адрес','warning');return;}const ok=await cdlg('Передать Guardian','2 дня cooldown.');if(!ok)return;await txc('Transfer Guardianship',S.vlt.transferGuardianship(a));};
 window.dAC=async function(){await txc('Accept Creatorship',S.vlt.acceptCreatorship());};
+
+/* ================================================================
+   FAQ — частые вопросы пользователя
+   ================================================================ */
+const FAQ_GROUPS = [
+  {id:'basics', t:{ru:'🚀 Основы',en:'🚀 Basics',zh:'🚀 基础'}, items:[
+    {
+      q:{ru:'Что такое AnchorVault?',en:'What is AnchorVault?',zh:'什么是 AnchorVault？'},
+      a:{ru:'Хранилище токенов с защитой от взлома основного кошелька. Сейф управляется не вашим обычным ключом, а отдельными ключами-подписями. Даже если кто-то получит доступ к основному кошельку, он не сможет вытащить ваши деньги — для этого нужны отдельные подписи.',
+         en:'A token vault with protection against main wallet compromise. The vault is controlled not by your usual key, but by separate signing keys. Even if someone gains access to your main wallet, they cannot withdraw your funds — separate signatures are needed.',
+         zh:'一个保护主钱包免受攻击的代币保险库。保险库不由您的常用密钥控制，而是由单独的签名密钥控制。即使有人访问了您的主钱包，他们也无法提取您的资金 — 需要单独的签名。'}
+    },
+    {
+      q:{ru:'Чем V45 лучше V44?',en:'Why is V45 better than V44?',zh:'V45 比 V44 好在哪里？'},
+      a:{ru:'В V44 коды передавались в открытом виде в мемпуле — их можно было перехватить. В V45 используются EIP-712 подписи: ничего секретного в транзакцию не попадает, перехватить нечего. Это принципиально другой уровень защиты.',
+         en:'In V44, codes were sent in plain text in the mempool — they could be intercepted. V45 uses EIP-712 signatures: nothing secret enters the transaction, nothing to intercept. A fundamentally different level of protection.',
+         zh:'在 V44 中，代码以明文形式发送到内存池 — 可能被拦截。V45 使用 EIP-712 签名：交易中没有任何秘密，无法拦截。这是根本不同的保护级别。'}
+    },
+    {
+      q:{ru:'Какой минимальный депозит?',en:'What is the minimum deposit?',zh:'最低存款是多少？'},
+      a:{ru:'0.01 ANCR (или эквивалент в другом supported токене). Это защищает от спама пустыми сейфами.',
+         en:'0.01 ANCR (or equivalent in another supported token). This protects against spam with empty vaults.',
+         zh:'0.01 ANCR（或其他支持代币的等值）。这可以防止空保险库的垃圾邮件。'}
+    },
+  ]},
+  {id:'keys', t:{ru:'🔑 Ключи и подписи',en:'🔑 Keys & signatures',zh:'🔑 密钥和签名'}, items:[
+    {
+      q:{ru:'Что такое mainAuthKey и recoveryAuthKey?',en:'What are mainAuthKey and recoveryAuthKey?',zh:'什么是 mainAuthKey 和 recoveryAuthKey？'},
+      a:{ru:'Два отдельных кошелька (приватных ключа), которыми вы подписываете операции с сейфом. Main — для обычных операций (вывод, депозит, передача). Recovery — для экстренных (досрочное закрытие, аварийный вывод). Они НЕ совпадают с вашим основным кошельком, и хранить их нужно отдельно — в идеале на разных устройствах или в холодном хранении.',
+         en:'Two separate wallets (private keys) used to sign vault operations. Main — for regular ops (withdraw, deposit, transfer). Recovery — for emergencies (early close, panic withdraw). They are NOT the same as your main wallet, and should be stored separately — ideally on different devices or in cold storage.',
+         zh:'两个独立的钱包（私钥），用于签署保险库操作。Main — 用于常规操作（提取、存款、转移）。Recovery — 用于紧急情况（提前关闭、紧急提取）。它们与您的主钱包不同，应分开存储 — 最好放在不同的设备上或冷存储中。'}
+    },
+    {
+      q:{ru:'Если я потеряю mainAuthKey?',en:'What if I lose mainAuthKey?',zh:'如果我丢失 mainAuthKey 怎么办？'},
+      a:{ru:'Используйте recoveryAuthKey для досрочного закрытия (earlyClose) или возврата в резерв (recoverToSafe). Recovery — отдельный ключ именно для таких случаев.',
+         en:'Use recoveryAuthKey for earlyClose or recoverToSafe. Recovery is a separate key precisely for such cases.',
+         zh:'使用 recoveryAuthKey 进行 earlyClose 或 recoverToSafe。Recovery 正是为这种情况而设的独立密钥。'}
+    },
+    {
+      q:{ru:'А если потеряю оба ключа?',en:'What if I lose both keys?',zh:'如果两个密钥都丢失怎么办？'},
+      a:{ru:'Остаётся panicWithdraw — мгновенный вывод на резервный адрес без подписей. Комиссия 20%, но средства не теряются. Поэтому критически важно ЗАРАНЕЕ установить резервный адрес.',
+         en:'panicWithdraw remains — instant withdrawal to the reserve address without signatures. 20% fee, but funds are not lost. That is why it is critically important to set the reserve address IN ADVANCE.',
+         zh:'还有 panicWithdraw — 无需签名即可立即提取到储备地址。手续费 20%，但资金不会丢失。因此提前设置储备地址至关重要。'}
+    },
+    {
+      q:{ru:'Что такое EIP-712?',en:'What is EIP-712?',zh:'什么是 EIP-712？'},
+      a:{ru:'Стандарт типизированных подписей в Ethereum. Вы подписываете не голый хэш, а структуру с типами полей — кошелёк показывает читаемое сообщение что именно вы подписываете. Это защита от слепого подписания.',
+         en:'A standard for typed signatures in Ethereum. You sign not a raw hash, but a structure with field types — the wallet shows a readable message of what exactly you are signing. Protection from blind signing.',
+         zh:'以太坊中的类型化签名标准。您签署的不是原始哈希，而是带有字段类型的结构 — 钱包显示您正在签署内容的可读消息。这是对盲签的保护。'}
+    },
+  ]},
+  {id:'safety', t:{ru:'🛡 Безопасность',en:'🛡 Safety',zh:'🛡 安全'}, items:[
+    {
+      q:{ru:'Что такое резервный адрес (globalEmergency)?',en:'What is the reserve address (globalEmergency)?',zh:'什么是储备地址（globalEmergency）？'},
+      a:{ru:'Адрес, куда автоматически уйдут средства в случае panicWithdraw. Устанавливается один раз для всего вашего аккаунта (для всех ваших сейфов). Менять можно, но через 7-дневный таймлок — защита от подмены при взломе.',
+         en:'Address where funds automatically go on panicWithdraw. Set once for your entire account (all your vaults). Can be changed, but through a 7-day timelock — protection against substitution if compromised.',
+         zh:'panicWithdraw 时资金自动转入的地址。为您整个帐户（所有保险库）设置一次。可以更改，但需要 7 天时间锁 — 防止被入侵时被替换。'}
+    },
+    {
+      q:{ru:'Что такое таймлок сейфа?',en:'What is a vault timelock?',zh:'什么是保险库时间锁？'},
+      a:{ru:'Добровольное самоограничение: вы запрещаете самому себе выводить средства из сейфа в течение N часов. На уровне SAFE — нельзя поставить таймлок. VAULT — до 72ч. FORTRESS — до 168ч. Защита от импульсивных действий и от взлома (даже с ключами вор не сможет ничего вывести пока таймлок не истечёт).',
+         en:'Voluntary self-restriction: you forbid yourself from withdrawing from the vault for N hours. SAFE level — no timelock. VAULT — up to 72h. FORTRESS — up to 168h. Protection from impulsive actions and from compromise (even with keys, a thief cannot withdraw until the timelock expires).',
+         zh:'自愿自我限制：您禁止自己在 N 小时内从保险库提取。SAFE 等级 — 无时间锁。VAULT — 最多 72 小时。FORTRESS — 最多 168 小时。防止冲动行为和被入侵（即使有密钥，小偷也无法在时间锁到期前提取）。'}
+    },
+    {
+      q:{ru:'Контракт может быть приостановлен?',en:'Can the contract be paused?',zh:'合约可以暂停吗？'},
+      a:{ru:'Да, через роль Guardian. Это сделано для аварийной ситуации (например при обнаружении бага). На паузе все операции пользователей замораживаются, но средства остаются на месте. Снять паузу может Creator.',
+         en:'Yes, via the Guardian role. This is for emergencies (e.g. discovered bug). On pause all user operations freeze, but funds stay in place. Only Creator can unpause.',
+         zh:'是的，通过 Guardian 角色。这是为了应对紧急情况（例如发现漏洞）。暂停时所有用户操作都冻结，但资金仍在原处。只有 Creator 可以解除暂停。'}
+    },
+    {
+      q:{ru:'Чем подтверждена безопасность контракта?',en:'How is contract safety verified?',zh:'合约安全性如何验证？'},
+      a:{ru:'Внутреннее тестирование: 12/12 Foundry-тестов, Slither 0 уязвимостей, инвариант платёжеспособности (баланс контракта всегда >= обязательств), DeepSeek-аудит 2 Low. Внешний аудит — в процессе. Mainnet будет только после положительного аудита.',
+         en:'Internal testing: 12/12 Foundry tests, Slither 0 vulnerabilities, solvency invariant (contract balance always >= obligations), DeepSeek audit 2 Low. External audit — in progress. Mainnet only after positive audit.',
+         zh:'内部测试：12/12 Foundry 测试，Slither 0 漏洞，偿付能力不变式（合约余额始终 >= 义务），DeepSeek 审计 2 Low。外部审计 — 进行中。仅在审计通过后部署主网。'}
+    },
+  ]},
+  {id:'fees', t:{ru:'💰 Комиссии',en:'💰 Fees',zh:'💰 手续费'}, items:[
+    {
+      q:{ru:'Иерархия комиссий — куда сколько уходит?',en:'Fee hierarchy — where does what go?',zh:'手续费层级 — 各项流向何处？'},
+      a:{ru:'withdraw: 0.5% · earlyClose: 5% · recoverToSafe: 10% · emergencyWithdrawToAny: 15% · panicWithdraw: 20%. Чем экстреннее операция — тем выше комиссия (защита от злоупотреблений).',
+         en:'withdraw: 0.5% · earlyClose: 5% · recoverToSafe: 10% · emergencyWithdrawToAny: 15% · panicWithdraw: 20%. The more emergency the operation — the higher the fee (anti-abuse).',
+         zh:'withdraw: 0.5% · earlyClose: 5% · recoverToSafe: 10% · emergencyWithdrawToAny: 15% · panicWithdraw: 20%。操作越紧急 — 手续费越高（防止滥用）。'}
+    },
+    {
+      q:{ru:'Куда уходят собранные комиссии?',en:'Where do collected fees go?',zh:'收取的手续费去哪里？'},
+      a:{ru:'Для ANCR: 20% сжигается (дефляция), 25% создателю, 20% в резерв, 35% в пул наград (welcome-бонусы). Для других токенов: 50% создателю, 50% в резерв. Никаких автовыплат — создатель забирает через заявку с 7-дн таймлоком.',
+         en:'For ANCR: 20% burned (deflation), 25% creator, 20% reserve, 35% rewards pool (welcome bonuses). For other tokens: 50% creator, 50% reserve. No auto-payouts — creator withdraws via a 7-day timelock request.',
+         zh:'对于 ANCR：20% 销毁（通缩），25% 创建者，20% 储备，35% 奖励池（欢迎奖励）。其他代币：50% 创建者，50% 储备。无自动支付 — 创建者通过 7 天时间锁申请提取。'}
+    },
+    {
+      q:{ru:'Зачем 7-дневный таймлок на вывод создателю?',en:'Why a 7-day timelock on creator withdrawals?',zh:'为什么创建者提取需要 7 天时间锁？'},
+      a:{ru:'Прозрачность для пользователей. Создатель не может внезапно вывести деньги — заявка видна публично, и пользователи имеют 7 дней чтобы заметить и среагировать. Это знак честного проекта.',
+         en:'Transparency for users. Creator cannot suddenly withdraw — the request is public, and users have 7 days to notice and react. A sign of an honest project.',
+         zh:'为用户透明。创建者不能突然提取 — 申请是公开的，用户有 7 天时间注意并作出反应。这是诚实项目的标志。'}
+    },
+  ]},
+  {id:'usage', t:{ru:'⚙ Использование',en:'⚙ Usage',zh:'⚙ 使用'}, items:[
+    {
+      q:{ru:'Что такое уровни SAFE / VAULT / FORTRESS?',en:'What are SAFE / VAULT / FORTRESS levels?',zh:'SAFE / VAULT / FORTRESS 等级是什么？'},
+      a:{ru:'SAFE: комиссия открытия 0.5%, без таймлока. VAULT: 1.5%, таймлок до 72ч. FORTRESS: 2.0%, таймлок до 168ч (неделя). Выше уровень — выше плата за открытие, но больше защиты.',
+         en:'SAFE: 0.5% open fee, no timelock. VAULT: 1.5%, timelock up to 72h. FORTRESS: 2.0%, timelock up to 168h (week). Higher level — higher open fee, but more protection.',
+         zh:'SAFE：开仓费 0.5%，无时间锁。VAULT：1.5%，时间锁最长 72 小时。FORTRESS：2.0%，时间锁最长 168 小时（一周）。等级越高 — 开仓费越高，但保护越强。'}
+    },
+    {
+      q:{ru:'Можно ли передать сейф другому пользователю?',en:'Can a vault be transferred to another user?',zh:'可以将保险库转移给其他用户吗？'},
+      a:{ru:'Да — Secure Transfer. Создаёте передачу подписью recovery-ключа, получатель должен принять в течение 7 дней. Если не принял — передача истечёт, сейф остаётся у вас.',
+         en:'Yes — Secure Transfer. Create a transfer with recovery key signature, recipient must accept within 7 days. If not accepted — transfer expires, vault stays with you.',
+         zh:'可以 — Secure Transfer。使用 recovery 密钥签名创建转移，接收者必须在 7 天内接受。如果未接受 — 转移过期，保险库保留在您处。'}
+    },
+    {
+      q:{ru:'Что будет если creator уберёт токен из supported?',en:'What if creator removes a token from supported?',zh:'如果 creator 从支持列表中移除代币会怎样？'},
+      a:{ru:'Существующие сейфы продолжают работать полностью: вывод, депозит, передача, закрытие. Нельзя только открыть НОВЫЙ сейф с этим токеном. Это защита пользователей — нельзя «отжать» средства административно.',
+         en:'Existing vaults keep fully working: withdraw, deposit, transfer, close. Only opening a NEW vault with this token is blocked. User protection — funds cannot be administratively taken away.',
+         zh:'现有保险库完全继续运作：提取、存款、转移、关闭。只是无法开设此代币的新保险库。保护用户 — 资金无法被管理员剥夺。'}
+    },
+  ]},
+];
+
+async function rFaq(){
+  const p=$('page');
+  const groups = FAQ_GROUPS.map((g,gi)=>{
+    const lang=S.lang;
+    const items = g.items.map((it,ii)=>{
+      const q = it.q[lang]||it.q.ru;
+      const a = it.a[lang]||it.a.ru;
+      const id = `faq_${g.id}_${ii}`;
+      return `<details class="faq-it">
+        <summary>${esc(q)}</summary>
+        <div class="faq-a">${esc(a)}</div>
+      </details>`;
+    }).join('');
+    const title = g.t[lang]||g.t.ru;
+    return `<div class="faq-g">
+      <div class="faq-gt">${esc(title)}</div>
+      ${items}
+    </div>`;
+  }).join('');
+  p.innerHTML = `
+    <div style="max-width:740px;margin:0 auto;display:flex;flex-direction:column;gap:10px">
+      <div class="card">
+        <div class="ct">❓ FAQ — частые вопросы</div>
+        <div class="hint mb2">${S.lang==='en'?'Click a question to expand. Searchable by Ctrl+F.':S.lang==='zh'?'点击问题展开。可使用 Ctrl+F 搜索。':'Кликни по вопросу — раскроется ответ. Ищется через Ctrl+F.'}</div>
+        ${groups}
+      </div>
+    </div>`;
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 /* ================================================================
    GUARDIAN PANEL

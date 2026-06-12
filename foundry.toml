@@ -8,3 +8,6 @@ optimizer = true
 optimizer_runs = 1
 evm_version = "cancun"
 bytecode_hash = "none"
+
+[profile.local]
+solc = "/home/vitaly/.svm/0.8.26/solc"

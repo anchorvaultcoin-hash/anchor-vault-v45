@@ -30,54 +30,62 @@ sequenceDiagram
     Vault-->>User: Transfer tokens to `to`
     Vault-->>Frontend: Event VaultWithdrawn
     Frontend-->>User: Success
-Similar flows exist for transferVault (quick transfer), initSecureTransfer/confirmSecureTransfer (escrow), setTimelock, setVoluntaryLock, rotateAuthKeys, and emergency operations (earlyClose, recoverToSafe, emergencyWithdrawToAny, panicWithdraw).
+```
 
-Invariants (Critical Guarantees)
+Similar flows exist for `transferVault` (quick transfer), `initSecureTransfer`/`confirmSecureTransfer` (escrow), `setTimelock`, `setVoluntaryLock`, `rotateAuthKeys`, and emergency operations (`earlyClose`, `recoverToSafe`, `emergencyWithdrawToAny`, `panicWithdraw`).
+
+## Invariants (Critical Guarantees)
+
 The contract enforces the following invariants. Auditors should verify these hold under all conditions.
 
-Principal integrity: lockedPrincipal[token] is always equal to the sum of v.amount of all active vaults for that token. No user action can transfer principal out of the contract without decreasing lockedPrincipal by the exact amount.
+- **Principal integrity:** `lockedPrincipal[token]` is always equal to the sum of `v.amount` of all active vaults for that token. No user action can transfer principal out of the contract without decreasing `lockedPrincipal` by the exact amount.
 
-User solvency: For every vault, v.amount is always less than or equal to the contract's balance of that token minus all other vaults' locked amounts. A user can always withdraw their full vault balance unless the contract is paused (withdrawals remain available even on pause).
+- **User solvency:** For every vault, `v.amount` is always less than or equal to the contract's balance of that token minus all other vaults' locked amounts. A user can always withdraw their full vault balance — withdrawals remain available even when the contract is paused (non-custodial guarantee).
 
-Nonce monotonicity: Each vault's nonce increases strictly by 1 only after a successful operation that consumes a valid signature. Failed or invalid signatures do not change the nonce. The nonce never decreases.
+- **Nonce monotonicity:** Each vault's `nonce` increases strictly by 1 only after a successful operation that consumes a valid signature. Failed or invalid signatures do not change the nonce. The nonce never decreases.
 
-Role separation: creator and guardian cannot be the same address. creator cannot withdraw user principal; guardian cannot unpause the contract. Role transfers require a two-step handshake with a cooldown.
+- **Role separation:** `creator` and `guardian` cannot be the same address. `creator` cannot withdraw user principal; `guardian` cannot unpause the contract. Role transfers require a two-step handshake with a cooldown.
 
-Emergency address immutability (first set): Once a user sets globalEmergency, it cannot be changed immediately; a 7-day timelock is required for any change, and the user can cancel the pending change. This prevents an attacker from redirecting emergency funds instantly.
+- **Emergency address immutability (first set):** Once a user sets `globalEmergency`, it cannot be changed immediately; a 7-day timelock is required for any change, and the user can cancel the pending change. This prevents an attacker from redirecting emergency funds instantly.
 
-Known Risks & Accepted Design Decisions
+> **Automated verification:** the two accounting invariants above (principal integrity and user solvency) are continuously checked by a Foundry **invariant test suite** — `test/AnchorVaultInvariant_t.sol`. It fuzzes random sequences of open / deposit / withdraw / early-close and asserts after every step that the contract is never insolvent (`balance ≥ lockedPrincipal + creatorFees + strategicReserve + rewardPool`) and that `lockedPrincipal` always matches the live vault amount. Full test suite: **314 passing, 0 failing**.
+
+## Known Risks & Accepted Design Decisions
+
 The following design choices are intentional. Auditors should note them as accepted trade-offs, not vulnerabilities.
 
-EIP-712 domain separation: The contract relies on the EIP-712 domain (chainId, contract address, name, version) to prevent cross‑chain replay. If the same domain appears on another chain, signatures could be replayed; but that is considered unlikely.
+- **EIP-712 domain separation:** The contract relies on the EIP-712 domain (chainId, contract address, name, version) to prevent cross-chain replay. If the same domain appeared on another chain, signatures could be replayed; that is considered unlikely.
 
-Nonce overflow: nonce is stored as uint64. The contract does not check for overflow (it uses unchecked { v.nonce += 1; }). Given that uint64 maximum is ~1.8e19, reaching overflow would require billions of operations per vault, which is infeasible. This is an accepted performance optimisation.
+- **Nonce overflow:** `nonce` is stored as `uint64`. The contract **explicitly checks for overflow** — `if (v.nonce == type(uint64).max) revert NonceOverflow();` is evaluated **before** the increment, and only the `+= 1` itself runs inside an `unchecked` block. Reaching the `uint64` maximum (~1.8e19) would require billions of operations on a single vault and is infeasible; the explicit check is a defensive backstop.
 
-voluntaryLockUntil vs. emergency functions: recoverToSafe, emergencyWithdrawToAny, rotateAuthKeys and panicWithdraw ignore voluntaryLockUntil (they use _checkRecoverySigNoLock). This is intentional – emergency actions must be possible even if the user set a voluntary lock. earlyClose respects the lock (uses _checkRecoverySig).
+- **voluntaryLockUntil vs. emergency functions:** `recoverToSafe`, `emergencyWithdrawToAny` and `rotateAuthKeys` ignore `voluntaryLockUntil` — they call the shared `_checkSig(..., enforceLock = false)`. `earlyClose` respects the lock — it calls `_checkSig(..., enforceLock = true)`. `panicWithdraw` carries **no signature at all** and therefore also bypasses the lock by design. This is intentional: emergency exits must remain possible even when the user has set a voluntary lock.
 
-Deadline timestamps: block.timestamp is used for deadlines, timelocks, and cooldowns. Validators can manipulate block.timestamp within a few seconds, but all intervals are measured in hours or days. For timelocks measured in hours/days, a few seconds of manipulation does not affect security. This is a standard practice.
+- **Deadline timestamps:** `block.timestamp` is used for deadlines, timelocks, and cooldowns. Validators can manipulate `block.timestamp` within a few seconds, but all intervals are measured in hours or days, so a few seconds of drift does not affect security. This is standard practice.
 
-Penalty distribution on pause: When the contract is paused:
+- **Penalty distribution on pause:** When the contract is paused:
+  - For **ANCR**, the entire penalty (100%) goes to `rewardPool`. The 20% burn, 25% creator, and 20% reserve shares from normal mode are all redirected to the reward pool — no tokens are burned or allocated to creator/reserve during pause.
+  - For **other tokens**, penalties are split 50/50 between `creatorFees` and `strategicReserve` (same as normal mode); no reward-pool allocation occurs.
 
-For ANCR, the entire penalty (100%) goes to rewardPool. This means the 20% burn, 25% creator, and 20% reserve shares from the normal mode are all redirected to the reward pool. No tokens are burned or allocated to creator/reserve during pause.
+  This prevents the creator from profiting from forced pauses while still accumulating reserve for non-ANCR tokens.
 
-For other tokens, penalties are split 50/50 between creatorFees and strategicReserve (same as normal mode). No reward pool allocation occurs for non-ANCR tokens.
-This design prevents the creator from profiting from forced pauses while still accumulating reserve for non-ANCR tokens.
+## EIP-712 Signature Example (Withdraw)
 
-EIP-712 Signature Example (Withdraw)
-To withdraw from a vault, the user must sign the following typed data structure using their main key (the wallet address stored as mainAuthKey in the vault).
+To withdraw from a vault, the user must sign the following typed-data structure using their **main key** (the wallet address stored as `mainAuthKey` in the vault).
 
-Domain Separator (automatically derived by the contract; example values for Sepolia):
+Domain separator (automatically derived by the contract; example values for Sepolia):
 
-json
+```json
 {
   "name": "AnchorVault",
   "version": "45",
   "chainId": 11155111,
   "verifyingContract": "0x8E1F46fC913c4928303BbCEB92ccb7c54cD95BA4"
 }
+```
+
 Message (Withdraw):
 
-json
+```json
 {
   "owner": "0x725F1408c2CDa5757d8B44a92a84EACc529F5150",
   "vaultId": "1",
@@ -86,9 +94,11 @@ json
   "nonce": "0",
   "deadline": "1749600000"
 }
+```
+
 Types:
 
-json
+```json
 {
   "Withdraw": [
     { "name": "owner", "type": "address" },
@@ -99,98 +109,107 @@ json
     { "name": "deadline", "type": "uint256" }
   ]
 }
-The frontend obtains the current nonce via getVaultAuth(user, vaultId), computes the typed data hash, and requests the user's wallet (which holds the main key) to sign it. The resulting signature is passed as the last argument to withdrawFromVault.
+```
 
-Similar structures exist for TransferVault, InitSecureTransfer, SetTimelock, SetVoluntaryLock, RotateAuthKeys, EarlyClose, RecoverToSafe, EmergencyWithdraw.
+The frontend obtains the current nonce via `getVaultAuth(user, vaultId)`, computes the typed-data hash, and requests the user's wallet (which holds the main key) to sign it. The resulting signature is passed as the last argument to `withdrawFromVault`.
 
-Vault levels
-Level	Deposit fee	Max timelock
-SAFE	0.50 %	0 h
-VAULT	1.50 %	72 h
-FORTRESS	2.00 %	168 h
-Fees & penalties
-Operation	Fee
-Open vault	0.20 %
-Withdraw / Transfer / Secure transfer	0.50 %
-Early close	5 %
-Recover to safe	10 %
-Emergency withdraw to any	15 %
-Panic withdraw	20 %
-Penalty distribution
+Similar structures exist for `TransferVault`, `InitSecureTransfer`, `SetTimelock`, `SetVoluntaryLock`, `RotateAuthKeys`, `EarlyClose`, `RecoverToSafe`, `EmergencyWithdraw`.
 
-ANCR: 20 % burned, 25 % creator fees, 20 % strategic reserve, 35 % reward pool.
+## Vault levels
 
-Other tokens: 50 % creator fees, 50 % strategic reserve (no burn, no reward pool).
+| Level | Deposit fee | Max timelock |
+|---|---|---|
+| SAFE | 0.50 % | 0 h |
+| VAULT | 1.50 % | 72 h |
+| FORTRESS | 2.00 % | 168 h |
 
-While paused: ANCR → 100 % reward pool; other tokens → 50 / 50 creator / reserve.
+## Fees & penalties
 
-Roles & trust
-creator (deployer): withdraws accrued creator fees and strategic reserve (each behind a 7-day timelock), sets the welcome bonus, adds/removes supported tokens, unpauses, transfers roles (2-step, cooldown). Cannot touch user principal.
+| Operation | Fee |
+|---|---|
+| Open vault | 0.20 % |
+| Withdraw / Transfer / Secure transfer | 0.50 % |
+| Early close | 5 % |
+| Recover to safe | 10 % |
+| Emergency withdraw to any | 15 % |
+| Panic withdraw | 20 % |
 
-guardian: pauses the contract (2-day delayed pause, or immediate emergencyPause). Cannot unpause and cannot move funds.
+**Penalty distribution**
 
-Role transfers are two-step with cooldowns; creator and guardian must differ.
+- **ANCR:** 20 % burned, 25 % creator fees, 20 % strategic reserve, 35 % reward pool.
+- **Other tokens:** 50 % creator fees, 50 % strategic reserve (no burn, no reward pool).
+- **While paused:** ANCR → 100 % reward pool; other tokens → 50 / 50 creator / reserve.
 
-Key mechanisms
-Global emergency address (per user, EOA only): first set is immediate; changing it needs a 7-day timelock (propose → confirm → can cancel). Recovery operations route here.
+## Roles & trust
 
-Quick transfer (transferVault): one-step move of a vault to another user.
+- **creator** (deployer): withdraws accrued creator fees and strategic reserve (each behind a 7-day timelock), sets the welcome bonus, adds/removes supported tokens, unpauses, transfers roles (2-step, cooldown). **Cannot touch user principal.**
+- **guardian:** pauses the contract (2-day delayed pause, or immediate `emergencyPause`). Cannot unpause and cannot move funds.
 
-Secure transfer (initSecureTransfer → confirmSecureTransfer): two-step escrow with a 48 h window; sender can cancel/reclaim, recipient can reject.
+Role transfers are two-step with cooldowns; `creator` and `guardian` must differ.
 
-Voluntary lock: a hard, time-bounded lock (≤ 5 years) blocking main-key operations. Can only be extended.
+## Key mechanisms
 
-Timelock (timelockHours): a soft, owner-set withdrawal cooldown, measured from vault creation.
+- **Global emergency address** (per user, EOA only): first set is immediate; changing it needs a 7-day timelock (propose → confirm → can cancel). Recovery operations route here.
+- **Quick transfer** (`transferVault`): one-step move of a vault to another user.
+- **Secure transfer** (`initSecureTransfer` → `confirmSecureTransfer`): two-step escrow with a 48 h window; sender can cancel/reclaim, recipient can reject.
+- **Voluntary lock:** a hard, time-bounded lock (≤ 5 years) blocking main-key operations. Can only be extended.
+- **Timelock** (`timelockHours`): a soft, owner-set withdrawal cooldown, measured from vault creation.
+- **Pause:** stops new deposits/transfers; withdrawals of user funds stay available (non-custodial guarantee).
 
-Pause: stops new deposits/transfers; withdrawals of user funds stay available (non-custodial guarantee).
+## Build
 
-Build
-Solidity 0.8.26
+- Solidity 0.8.26
+- OpenZeppelin Contracts 5.6.1
+- Settings: `via_ir = true`, `optimizer = true`, `optimizer_runs = 1`, `evm_version = cancun`
+- Runtime size: 24,458 / 24,576 bytes (EIP-170)
 
-OpenZeppelin Contracts 5.6.1
-
-Settings: via_ir = true, optimizer = true, optimizer_runs = 1, evm_version = cancun
-
-Runtime size: 24,458 / 24,576 bytes (EIP-170)
-
-bash
+```bash
 forge install OpenZeppelin/openzeppelin-contracts@v5.6.1
 forge install foundry-rs/forge-std
 forge build
 forge test
+```
+
 Deploy (constructor args via env, no secrets in repo):
 
-bash
+```bash
 ANCR_TOKEN=0x... GUARDIAN=0x... PAYOUT_WALLET=0x... \
 forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC --broadcast --verify
-Size Monitoring
-The contract is very close to the EIP-170 limit of 24,576 bytes. We continuously monitor the size using:
+```
 
-bash
+## Size Monitoring
+
+The contract is very close to the EIP-170 limit of 24,576 bytes. Size is monitored with:
+
+```bash
 forge build --sizes | grep AnchorVaultV45
-The current size is 24,458 bytes (118 bytes spare). The compiler settings (via-ir, optimizer_runs = 1) are optimised for minimal bytecode size. Any future changes must be accompanied by a size check to ensure the limit is not exceeded.
+```
 
-Audit scope
-In scope: src/AnchorVaultV45.sol
+Current size is **24,458 bytes (118 bytes spare)**. The compiler settings (`via_ir`, `optimizer_runs = 1`) are tuned for minimal bytecode size. Any future change must be accompanied by a size check to ensure the limit is not exceeded.
 
-Out of scope: OpenZeppelin libraries (IERC20, SafeERC20, IERC20Metadata, ReentrancyGuard, EIP712, ECDSA).
+## Audit scope
 
-See SECURITY.md for the threat model, centralization summary, accounting invariant, and accepted design decisions.
+- **In scope:** `src/AnchorVaultV45.sol`
+- **Out of scope:** OpenZeppelin libraries (`IERC20`, `SafeERC20`, `IERC20Metadata`, `ReentrancyGuard`, `EIP712`, `ECDSA`).
 
-Deployment (Sepolia testnet, chainId 11155111)
-AnchorVaultV45: 0x8E1F46fC913c4928303BbCEB92ccb7c54cD95BA4
+See `SECURITY.md` for the threat model, centralization summary, accounting invariant, and accepted design decisions.
 
-ANCR token (AnchorCoin): 0x6a837125eeB63cc4D3d38E93e2adCd30a2603cF7
+## Deployment (Sepolia testnet, chainId 11155111)
 
-creator: 0x725F1408c2CDa5757d8B44a92a84EACc529F5150
+- **AnchorVaultV45:** `0x8E1F46fC913c4928303BbCEB92ccb7c54cD95BA4`
+- **ANCR token (AnchorCoin):** `0x6a837125eeB63cc4D3d38E93e2adCd30a2603cF7`
+- **creator:** `0x725F1408c2CDa5757d8B44a92a84EACc529F5150`
+- **guardian:** `0x0838238A55d846A2a92fC6889Cc96558533B68ab`
+- **payout wallet:** `0x725F1408c2CDa5757d8B44a92a84EACc529F5150`
 
-guardian: 0x0838238A55d846A2a92fC6889Cc96558533B68ab
+> **Centralization note:** in this testnet deployment, `payoutWallet` equals the `creator` address (`0x725F…5150`). This means the 200,000 ANCR payout share and all accrued creator/reserve withdrawals route to the same EOA. Acceptable on testnet. **For mainnet, separate `payoutWallet` from `creator`, and ideally make `creator` a multisig** to remove this single-key centralization point.
 
-payout wallet: 0x725F1408c2CDa5757d8B44a92a84EACc529F5150
+**Build settings (must match for bytecode verification):** `solc 0.8.26`, `optimizer_runs = 1`, `via_ir = true`, `evm_version = "cancun"`, `bytecode_hash = "none"`.
 
-Build settings (must match for bytecode verification): solc 0.8.26, optimizer_runs = 1, via_ir = true, evm_version = "cancun", bytecode_hash = "none". Token distribution initialized: 500,000 ANCR rewardPool + 300,000 ANCR strategicReserve held in the vault, 200,000 ANCR sent to the payout wallet.
+**Token distribution initialized:** 500,000 ANCR `rewardPool` + 300,000 ANCR `strategicReserve` held in the vault, 200,000 ANCR sent to the payout wallet.
 
-License
+## License
+
 BUSL-1.1 — Licensor: Vitaliy — Copyright (c) 2026 AnchorVaultCoin.
 Change Date 2030-01-01 → GPL-2.0-or-later. Imported OpenZeppelin files are MIT.
 Commercial use before the Change Date requires written permission from the Licensor.

@@ -68,8 +68,6 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     error VaultTimelocked();
     error NameTooLong();
     error NonceOverflow();
-    error LockCannotBeDecreased();
-    error TokenHasActiveVaults();
 
     // ─── EVENTS ─────────────────────────────────────────────
     event VaultCreated(address indexed user, uint256 vaultId, address indexed token, uint256 amount, string name, address emergencyAddress, uint8 level);
@@ -241,7 +239,6 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     mapping(address => address) public reserveWithdrawalTo;
     mapping(address => uint256) public reserveWithdrawalAmount;
     mapping(address => uint256) public reserveWithdrawalUnlock;
-    mapping(address => uint256) public activeVaultCount;
 
     // ─── CONSTRUCTOR ────────────────────────────────────────
     constructor(address _ancrToken, address _guardian, address _payoutWallet) EIP712("AnchorVault", "45") {
@@ -377,9 +374,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     }
     function _safeReceive(address token, address from, uint256 amount) internal returns (uint256 received) {
         uint256 balBefore = IERC20(token).balanceOf(address(this));
-        IERC20(token).forceApprove(from, 0);
         IERC20(token).safeTransferFrom(from, address(this), amount);
-        IERC20(token).forceApprove(from, 0);
         received = IERC20(token).balanceOf(address(this)) - balBefore;
     }
 
@@ -456,7 +451,6 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
 
         vaultId = ++userVaultCount[msg.sender];
         activeVaultIdByToken[msg.sender][token] = vaultId;
-        activeVaultCount[token]++;
 
         uint256 received = _safeReceive(token, msg.sender, p.amount);
         uint256 openFee = (received * OPEN_VAULT_FEE_BPS) / 10000;
@@ -554,14 +548,11 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         address token = v.token;
         v.amount -= uint120(amount);
         lockedPrincipal[token] -= amount;
-        uint256 burnAmt = _accrueFees(token, fee);
+        uint256 burnAmt = _settlePenalty(token, fee); // L-3 fix: единое поведение на паузе
 
         if (v.amount == 0) {
             v.status = 2;
             activeVaultIdByToken[msg.sender][token] = 0;
-            if (activeVaultCount[token] > 0) {
-                activeVaultCount[token]--;
-            }
         }
         emit VaultWithdrawn(msg.sender, vid, token, net);
         IERC20(token).safeTransfer(to, net);
@@ -679,8 +670,9 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
 
         if (globalEmergency[to] == address(0)) revert NoEmergencySet();
 
+        // ИСПРАВЛЕНИЕ: конфликт переводит в статус 4 (CONFLICT)
         if (activeVaultIdByToken[to][token] != 0) {
-            st.status = 4;
+            st.status = 4;               // CONFLICT
             v.status = 0;
             pendingIncomingTransfer[to][token] = 0;
             emit SecureTransferAutoCancelled(transferId);
@@ -708,6 +700,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     function cancelSecureTransfer(uint256 transferId) external nonReentrant {
         SecureTransfer storage st = secureTransfers[transferId];
         if (transferId == 0 || transferId >= nextSecureTransferId || st.from == address(0)) revert TransferNotFound();
+        // ИСПРАВЛЕНИЕ: разрешаем отмену также для статуса CONFLICT (4)
         if (st.status != 0 && st.status != 4) revert TransferNotPending();
         if (msg.sender != st.from) revert NotTransferSender();
         _closeTransfer(transferId, st, 2);
@@ -717,18 +710,22 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     function reclaimExpiredTransfer(uint256 transferId) external nonReentrant {
         SecureTransfer storage st = secureTransfers[transferId];
         if (transferId == 0 || transferId >= nextSecureTransferId || st.from == address(0)) revert TransferNotFound();
+        // ИСПРАВЛЕНИЕ: разрешаем возврат также для статуса CONFLICT (4)
         if (st.status != 0 && st.status != 4) revert TransferNotPending();
         if (block.timestamp < st.expiresAt) revert TransferStillValid();
         _closeTransfer(transferId, st, 3);
         emit SecureTransferExpired(transferId);
     }
 
+    // L-1 FIX: получатель может СРАЗУ отклонить входящий перевод, не дожидаясь
+    // истечения 48ч. Защита от мелкого вредительства: чужой sham-перевод больше
+    // не блокирует входящие переводы жертвы по этому токену.
     function rejectIncomingTransfer(uint256 transferId) external nonReentrant {
         SecureTransfer storage st = secureTransfers[transferId];
         if (transferId == 0 || transferId >= nextSecureTransferId || st.from == address(0)) revert TransferNotFound();
         if (st.status != 0) revert TransferNotPending();
         if (msg.sender != st.to) revert NotTransferRecipient();
-        _closeTransfer(transferId, st, 2);
+        _closeTransfer(transferId, st, 2); // 2 = CANCELLED; сейф отправителя возвращается в активный статус
         emit SecureTransferCancelled(transferId);
     }
 
@@ -803,7 +800,6 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         v.voluntaryLockUntil = 0;
         lockedPrincipal[token] -= amount;
         if (activeVaultIdByToken[msg.sender][token] == vid) activeVaultIdByToken[msg.sender][token] = 0;
-        activeVaultCount[token]--;
 
         uint256 burnAmt = _settlePenalty(token, penalty);
 
@@ -856,10 +852,11 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         if (lockUntilTimestamp <= block.timestamp) revert InvalidAmount();
         if (lockUntilTimestamp > block.timestamp + MAX_VOLUNTARY_LOCK) revert LockTooLong();
         if (lockUntilTimestamp > type(uint48).max) revert LockTooLong();
-        if (lockUntilTimestamp <= v.voluntaryLockUntil) revert LockCannotBeDecreased();
         bytes32 sh = keccak256(abi.encode(SET_VLOCK_TYPEHASH, msg.sender, vid, lockUntilTimestamp, v.nonce, deadline));
         _checkSig(v, sh, deadline, sig, v.mainAuthKey, false);
-        v.voluntaryLockUntil = uint48(lockUntilTimestamp);
+        if (uint48(lockUntilTimestamp) > v.voluntaryLockUntil) {
+            v.voluntaryLockUntil = uint48(lockUntilTimestamp);
+        }
         emit VoluntaryLockSet(msg.sender, vid, v.voluntaryLockUntil);
     }
 
@@ -888,7 +885,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     }
 
     function donateToRewardPool(address token, uint256 amount) external nonReentrant {
-        if (token != ANCR_TOKEN) revert TokenNotSupported();
+        if (token != ANCR_TOKEN) revert TokenNotSupported(); // reward-пул используется только для ANCR
         if (amount == 0) revert InvalidAmount();
         uint256 received = _safeReceive(token, msg.sender, amount);
         rewardPool[token] += received;
@@ -896,11 +893,11 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     }
 
     // ═══════════════════════════════════════════════════════
-    //          RESCUE (только для токенов без активных хранилищ)
+    //          RESCUE (только для токенов, НИКОГДА не бывших в поддержке)
     // ═══════════════════════════════════════════════════════
     function rescueERC20(address token, address to, uint256 amount) external onlyCreator nonReentrant {
-        if (token == ANCR_TOKEN) revert InvalidAddress();
-        if (activeVaultCount[token] > 0) revert TokenHasActiveVaults();
+        // ИСПРАВЛЕНИЕ: запрещаем спасать ЛЮБЫЕ токены, которые когда-либо были добавлены
+        if (wasSupported[token]) revert TokenNotSupported();
         if (to == address(0) || to == address(this)) revert InvalidAddress();
         if (amount == 0) revert InvalidAmount();
         IERC20(token).safeTransfer(to, amount);
@@ -920,6 +917,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     }
     function acceptCreatorship() external nonReentrant {
         if (msg.sender != pendingCreator) revert NotPendingRole();
+        if (pendingCreator == guardian) revert InvalidAddress(); // L-2 fix: запрет слияния ролей на accept
         if (block.timestamp < creatorshipRequestedAt + CREATOR_COOLDOWN) revert CooldownNotExpired();
         creator = pendingCreator;
         pendingCreator = address(0);
@@ -942,6 +940,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     }
     function acceptGuardianship() external nonReentrant {
         if (msg.sender != pendingGuardian) revert NotPendingRole();
+        if (pendingGuardian == creator) revert InvalidAddress(); // L-2 fix: запрет слияния ролей на accept
         if (block.timestamp < guardianshipRequestedAt + GUARDIAN_COOLDOWN) revert CooldownNotExpired();
         guardian = pendingGuardian;
         pendingGuardian = address(0);
@@ -976,6 +975,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         emit PauseStateChanged(true, false);
     }
     function emergencyPause() external onlyGuardian nonReentrant {
+        // ИСПРАВЛЕНИЕ: отменяем ожидающий запрос паузы
         if (pauseTimestamp != 0) {
             emit PauseRequestCancelled(msg.sender);
             pauseTimestamp = 0;
@@ -1017,6 +1017,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         emit ReserveWithdrawn(token, to, amount);
     }
 
+    // Общая логика заявки/отмены/исполнения вывода (creator и reserve используют одно и то же).
     function _requestWithdraw(
         mapping(address => uint256) storage avail,
         mapping(address => address) storage toM,

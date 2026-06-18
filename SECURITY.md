@@ -72,11 +72,16 @@ These are intentional trade-offs, not vulnerabilities.
 - **Penalty distribution on pause:** ANCR penalties go 100% to `rewardPool` (no burn / creator / reserve); non-ANCR penalties stay 50/50 creator/reserve. This prevents the creator from profiting from a forced pause.
 - **`block.timestamp` for timelocks:** all intervals are hours/days, so seconds-level validator drift is irrelevant.
 - **EIP-712 domain separation:** prevents cross-chain replay via chainId + contract address in the domain.
+- **Supported tokens must be standard (operational rule, M-1):** the creator must only whitelist standard 18-decimal, non-rebasing, non-fee-on-transfer, non-reentrant ERC-20 tokens via `addSupportedToken`. `_safeReceive` handles deposit-side fee-on-transfer (credits actual received), but **withdraw-side fee and rebase are not reconciled** — adding such a token would desync `lockedPrincipal` from the real balance and could block withdrawals (token-level insolvency). Gated by creator trust; ANCR is a standard token.
+- **Authorization keys must be EOAs:** `ECDSA.recover` does not support ERC-1271, so smart-contract wallets (Safe, Argent) **cannot** be used as `mainAuthKey` / `recoveryAuthKey`. Using one would make the vault unmanageable (only `panicWithdraw` would work). The frontend must enforce and communicate this.
+- **Deposit into a de-listed token (L-1):** `depositToVault` checks vault status but not `supportedTokens`, so an existing vault owner can keep depositing after `removeSupportedToken`. Harmless (1:1 accounting, user adds own funds; not a share-vault). By design.
+- **`transferVault` (quick) needs no recipient consent:** sender unilaterally creates a vault for `to`. Not economically abusable (sender loses funds, recipient can always extract via panic); the consented path is secure-transfer. `code.length == 0` is an EOA heuristic, not a hard guarantee (counterfactual CREATE2) — no exploit, the user sets their own address.
 
 ## Continuous Monitoring
 
 - **CI (GitHub Actions):** every push to `main` runs `forge build --sizes` + `forge test` (314 tests). See `.github/workflows/ci.yml`.
 - **Dependencies pinned:** OpenZeppelin Contracts (5.6.1) and forge-std are git submodules locked to fixed commits — no silent dependency drift.
+- **Bytecode size:** current source (with L-2/L-3 fixes) compiles to **24,498 / 24,576 bytes (spare 78)** under prod flags on OZ 5.6.1 — verified by direct compilation (0 errors, 0 warnings). Margin is thin; any future change must be re-measured.
 - **Key hygiene:** the per-vault `recoveryAuthKey` is the most powerful credential and should be cold-stored, separate from `mainAuthKey`. Users may rotate keys via `rotateAuthKeys`.
 - **Planned:** Slither static analysis as a CI step, and an external human audit before mainnet. *(Not yet active — do not claim these as live until configured.)*
 
@@ -86,6 +91,7 @@ These are intentional trade-offs, not vulnerabilities.
 |---|---|---|---|
 | 2026-05-29 | AI-assisted review (Claude, DeepSeek) | All criticals resolved | ✅ Done |
 | 2026-06-12 | Invariant test suite added (Foundry) | Solvency + principal-integrity hold over fuzzed runs; 314 tests green | ✅ Done |
+| 2026-06-18 | Deep manual + tooling audit (Claude) | 0 critical/high; L-2/L-3 fixes verified by direct compile (0 errors/warnings, 24,498 bytes); M-1 (non-standard tokens) documented as operational rule | ✅ Done |
 | (Planned) | External human audit (e.g. Code4rena / Cantina) + TVL cap | TBD | ⬜ Pending |
 
 > Note: AI-assisted review is **not** a substitute for an independent human audit. A full external audit and an initial TVL cap are required before any mainnet deployment.
@@ -93,6 +99,6 @@ These are intentional trade-offs, not vulnerabilities.
 ## Contacts
 
 - **Security reports:** anchorvaultcoin@gmail.com
-- **Contract (Sepolia):** `0x8E1F46fC913c4928303BbCEB92ccb7c54cD95BA4`
+- **Contract (Sepolia):** `0x8E1F46fC913c4928303BbCEB92ccb7c54cD95BA4` *(verified on Etherscan; this is the pre-L-2/L-3 revision. The source in this repo includes the L-2/L-3 fixes and is not yet redeployed — redeploy planned before mainnet.)*
 - **creator / admin:** `0x725F1408c2CDa5757d8B44a92a84EACc529F5150`
 - **guardian:** `0x0838238A55d846A2a92fC6889Cc96558533B68ab`

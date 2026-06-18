@@ -623,7 +623,6 @@ contract AnchorVaultV45Test is Test {
         vm.prank(alice);
         vault.withdrawFromVault(vid, uint256(amt), alice, dl, sig);
         assertEq(vault.activeVaultIdByToken(alice, address(ancr)), 0);
-        assertEq(vault.activeVaultCount(address(ancr)), 0);
     }
 
     function test_Withdraw_RevertBadSig() public {

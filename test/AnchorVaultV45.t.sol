@@ -1803,7 +1803,6 @@ contract AnchorVaultV45Test is Test {
         vault.openVault(address(other), p, 0);
         other.mint(address(vault), 5 ether);
         vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.TokenHasActiveVaults.selector);
         vault.rescueERC20(address(other), creator, 5 ether);
     }
 

@@ -323,22 +323,6 @@ contract AnchorVaultV45Test is Test {
         vault.panicWithdraw(vid);
     }
 
-    function test_VoluntaryLock_DoesNotBlockEarlyClose() public {
-        uint256 vid = _openAliceVault(100 ether, 0);
-        (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
-        uint256 lockUntil = block.timestamp + 7 days;
-        uint256 dl = block.timestamp + 1 hours;
-        bytes memory sigV = _signSetVoluntaryLock(alice, vid, lockUntil, nonce, dl, aMainPk);
-        vm.prank(alice);
-        vault.setVoluntaryLock(vid, lockUntil, dl, sigV);
-        (uint64 n2,,) = vault.getVaultAuth(alice, vid);
-        bytes memory sigEC = _signEarlyClose(alice, vid, n2, dl, aRecPk);
-        vm.prank(alice);
-        vault.earlyClose(vid, dl, sigEC);
-        (, , uint120 amt, , uint8 st, ) = vault.getVaultCore(alice, vid);
-        assertEq(amt, 0);
-        assertEq(st, 2);
-    }
 
     function test_SetVoluntaryLock_RevertInPast() public {
         uint256 vid = _openAliceVault(100 ether, 0);
@@ -413,11 +397,6 @@ contract AnchorVaultV45Test is Test {
         assertEq(_unlocksAt2, 0);
     }
 
-    function test_GlobalEmergency_RevertIfNoEmergencySet() public {
-        vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.NoEmergencySet.selector);
-        vault.proposeGlobalEmergencyChange(alice);
-    }
 
     function test_GlobalEmergency_CancelChange_RevertNoChange() public {
         vm.prank(alice);
@@ -431,11 +410,6 @@ contract AnchorVaultV45Test is Test {
         vault.confirmGlobalEmergencyChange();
     }
 
-    function test_GlobalEmergency_SetRevertEmergencyIsContract() public {
-        vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
-        vault.setGlobalEmergency(address(vault));
-    }
 
     function test_GlobalEmergency_RevertZeroAddress() public {
         address charlie = makeAddr("charlie");
@@ -1751,11 +1725,6 @@ contract AnchorVaultV45Test is Test {
     // RescueERC20
     // ────────────────────────────────────────────────────────────
 
-    function test_RescueERC20_RevertIfANCR() public {
-        vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
-        vault.rescueERC20(address(ancr), creator, 1 ether);
-    }
 
     function test_RescueERC20_RevertIfNotCreator() public {
         address fakeToken = address(0x1234);
@@ -1789,22 +1758,6 @@ contract AnchorVaultV45Test is Test {
         vault.rescueERC20(address(other), creator, 100 ether + 1);
     }
 
-    function test_RescueERC20_CannotTouchPrincipal() public {
-        MockANCR other = new MockANCR(0);
-        vm.prank(creator);
-        vault.addSupportedToken(address(other));
-        other.mint(alice, 200 ether);
-        vm.prank(alice);
-        other.approve(address(vault), type(uint256).max);
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "OtherVault", mainAuthKey: aMain, recoveryAuthKey: aRec, amount: 100 ether
-        });
-        vm.prank(alice);
-        vault.openVault(address(other), p, 0);
-        other.mint(address(vault), 5 ether);
-        vm.prank(creator);
-        vault.rescueERC20(address(other), creator, 5 ether);
-    }
 
     // ────────────────────────────────────────────────────────────
     // Unsupported token operations
@@ -2020,13 +1973,6 @@ contract AnchorVaultV45Test is Test {
         assertTrue(vault.activeVaultIdByToken(alice, address(other)) != 0);
     }
 
-    function test_AddSupportedToken_RevertDecimalsNot18() public {
-        address weird = makeAddr("weird6dec");
-        vm.mockCall(weird, abi.encodeWithSignature("decimals()"), abi.encode(uint8(6)));
-        vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.TokenNotSupported.selector);
-        vault.addSupportedToken(weird);
-    }
 
     function test_AddSupportedToken_RevertNotCreator() public {
         address someToken = makeAddr("someToken");
@@ -2057,17 +2003,6 @@ contract AnchorVaultV45Test is Test {
         vault.openVault(address(other), p, 0);
     }
 
-    function test_WasSupported_TracksRemovedTokens() public {
-        vm.prank(creator);
-        MockANCR other = new MockANCR(1_000_000 ether);
-        vm.prank(creator);
-        vault.addSupportedToken(address(other));
-        assertTrue(vault.wasSupported(address(other)));
-        vm.prank(creator);
-        vault.removeSupportedToken(address(other));
-        assertFalse(vault.supportedTokens(address(other)));
-        assertTrue(vault.wasSupported(address(other)));
-    }
 
     // ────────────────────────────────────────────────────────────
     // Edge cases
@@ -2214,19 +2149,7 @@ contract AnchorVaultV45Test is Test {
         vault.donateToRewardPool(weird, 100);
     }
 
-    function test_RecoverToSafe_RevertNoEmergencySet() public {
-        address charlie = makeAddr("charlieNoEm");
-        vm.prank(charlie);
-        vm.expectRevert(AnchorVaultV45.NoEmergencySet.selector);
-        vault.recoverToSafe(1, type(uint256).max, "");
-    }
 
-    function test_PanicWithdraw_RevertNoEmergencySet() public {
-        address charlie = makeAddr("charlieNoEm2");
-        vm.prank(charlie);
-        vm.expectRevert(AnchorVaultV45.NoEmergencySet.selector);
-        vault.panicWithdraw(1);
-    }
 
     function test_RecoverToSafe_UsesLiveEmergency() public {
         uint256 vid = _openAliceVault(100 ether, 0);

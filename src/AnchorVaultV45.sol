@@ -206,7 +206,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
 
     // ─── STORAGE ────────────────────────────────────────────
     mapping(address => bool) public supportedTokens;
-    mapping(address => bool) public wasSupported;
+    mapping(address => uint8) public tokenDecimals;
     mapping(address => mapping(uint256 => Vault)) private vaults;
     mapping(address => uint256) public userVaultCount;
     mapping(address => mapping(address => uint256)) public activeVaultIdByToken;
@@ -252,7 +252,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         guardian = _guardian;
         payoutWallet = _payoutWallet;
         supportedTokens[_ancrToken] = true;
-        wasSupported[_ancrToken] = true;
+        tokenDecimals[_ancrToken] = 18;
         nextSecureTransferId = 1;
         emit TokenSupported(_ancrToken);
     }
@@ -291,9 +291,9 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     // ═══════════════════════════════════════════════════════
     function addSupportedToken(address token) external onlyCreator nonReentrant {
         if (token == address(0)) revert ZeroAddress();
-        if (IERC20Metadata(token).decimals() != 18) revert TokenNotSupported();
+        tokenDecimals[token] = IERC20Metadata(token).decimals();
         supportedTokens[token] = true;
-        wasSupported[token] = true;
+        
         emit TokenSupported(token);
     }
 
@@ -378,6 +378,12 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         received = IERC20(token).balanceOf(address(this)) - balBefore;
     }
 
+    function getMinimumDeposit(address token) public view returns (uint256) {
+        uint8 d = tokenDecimals[token];
+        uint256 m = 10 ** uint256(d) / 100;
+        return m == 0 ? 1 : m;
+    }
+
     // ═══════════════════════════════════════════════════════
     //          PENALTY / FEE DISTRIBUTION
     // ═══════════════════════════════════════════════════════
@@ -441,7 +447,8 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         if (!supportedTokens[token]) revert TokenNotSupported();
         _checkUint120(p.amount);
         if (level_ > uint8(VaultLevel.FORTRESS)) revert InvalidLevel();
-        if (p.amount < MIN_DEPOSIT) revert DepositBelowMinimum();
+        uint256 minDep = getMinimumDeposit(token);
+        if (p.amount < minDep) revert DepositBelowMinimum();
         address emergency = globalEmergency[msg.sender];
         if (emergency == address(0)) revert NoEmergencySet();
         if (activeVaultIdByToken[msg.sender][token] != 0) revert VaultLimitReached();
@@ -455,7 +462,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         uint256 received = _safeReceive(token, msg.sender, p.amount);
         uint256 openFee = (received * OPEN_VAULT_FEE_BPS) / 10000;
         uint256 net = received - openFee;
-        if (net < MIN_DEPOSIT) revert DepositBelowMinimum();
+        if (net < minDep) revert DepositBelowMinimum();
         _checkUint120(net);
 
         Vault storage v = vaults[msg.sender][vaultId];
@@ -511,14 +518,15 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         external nonReentrant whenNotPaused vaultExists(msg.sender, vid)
     {
         _checkUint120(amount);
-        if (amount < MIN_DEPOSIT) revert DepositBelowMinimum();
         Vault storage v = vaults[msg.sender][vid];
         if (v.status != 0) revert NotActive();
         address token = v.token;
+        uint256 minDep = getMinimumDeposit(token);
+        if (amount < minDep) revert DepositBelowMinimum();
         uint256 received = _safeReceive(token, msg.sender, amount);
         uint256 fee = (received * _getDepositFee(v.level)) / 10000;
         uint256 net = received - fee;
-        if (net < MIN_DEPOSIT) revert DepositBelowMinimum();
+        if (net < minDep) revert DepositBelowMinimum();
         _checkUint120(uint256(v.amount) + net);
         v.amount += uint120(net);
         lockedPrincipal[token] += net;
@@ -897,7 +905,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     // ═══════════════════════════════════════════════════════
     function rescueERC20(address token, address to, uint256 amount) external onlyCreator nonReentrant {
         // ИСПРАВЛЕНИЕ: запрещаем спасать ЛЮБЫЕ токены, которые когда-либо были добавлены
-        if (wasSupported[token]) revert TokenNotSupported();
+        if (supportedTokens[token]) revert TokenNotSupported();
         if (to == address(0) || to == address(this)) revert InvalidAddress();
         if (amount == 0) revert InvalidAmount();
         IERC20(token).safeTransfer(to, amount);

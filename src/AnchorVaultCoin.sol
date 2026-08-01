@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-// Licensed Work:  AnchorVaultV45
+// Licensed Work:  AnchorVaultCoin
 // Licensor:       Vitaliy
 // Copyright (c) 2026 AnchorVaultCoin
 //
@@ -20,7 +20,7 @@ interface IBurnable {
     function burn(uint256 amount) external;
 }
 
-contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
+contract AnchorVaultCoin is ReentrancyGuard, EIP712 {
     using SafeERC20 for IERC20;
 
     // ─── ERRORS ─────────────────────────────────────────────
@@ -66,11 +66,10 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     error NoGlobalEmergencyChange();
     error EmergencyTimelockNotExpired();
     error VaultTimelocked();
-    error NameTooLong();
     error NonceOverflow();
 
     // ─── EVENTS ─────────────────────────────────────────────
-    event VaultCreated(address indexed user, uint256 vaultId, address indexed token, uint256 amount, string name, address emergencyAddress, uint8 level);
+    event VaultCreated(address indexed user, uint256 vaultId, address indexed token, uint256 amount, address emergencyAddress, uint8 level);
     event VaultDeposited(address indexed user, uint256 vaultId, address indexed token, uint256 net, uint256 newTotal);
     event VaultWithdrawn(address indexed user, uint256 vaultId, address indexed token, uint256 amount);
     event VaultEarlyClosed(address indexed user, uint256 vaultId, uint256 payout, uint256 penalty);
@@ -119,7 +118,6 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     enum VaultLevel { SAFE, VAULT, FORTRESS }
 
     struct VaultParams {
-        string  name;
         address mainAuthKey;
         address recoveryAuthKey;
         uint256 amount;
@@ -135,9 +133,9 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         uint16  timelockHours;
         uint8   level;
         uint8   status;
+        uint64  lockedByTransfer; // ANCV1-1: id перевода, удерживающего сейф
         address mainAuthKey;
         address recoveryAuthKey;
-        string  name;
     }
 
     struct SecureTransfer {
@@ -169,7 +167,6 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     uint256 public constant VAULT_MAX_TIMELOCK_HOURS = 72;
     uint256 public constant FORTRESS_MAX_TIMELOCK_HOURS = 168;
 
-    uint256 public constant OPEN_VAULT_FEE_BPS = 20;
     uint256 public constant WITHDRAW_FEE_BPS = 50;
     uint256 public constant TRANSFER_FEE_BPS = 50;
     uint256 public constant SECURE_TRANSFER_FEE_BPS = 50;
@@ -192,6 +189,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     // EIP-712 typehashes
     bytes32 private constant WITHDRAW_TYPEHASH = keccak256("Withdraw(address owner,uint256 vaultId,uint256 amount,address to,uint64 nonce,uint256 deadline)");
     bytes32 private constant TRANSFER_TYPEHASH = keccak256("TransferVault(address owner,uint256 vaultId,address to,address newMainKey,address newRecoveryKey,uint64 nonce,uint256 deadline)");
+    bytes32 private constant ACCEPT_TRANSFER_TYPEHASH = keccak256("AcceptVaultTransfer(address from,uint256 vaultId,address to,address newMainKey,address newRecoveryKey,uint256 deadline)");
     bytes32 private constant INIT_SECURE_TYPEHASH = keccak256("InitSecureTransfer(address owner,uint256 vaultId,address to,address newMainKey,address newRecoveryKey,uint64 nonce,uint256 deadline)");
     bytes32 private constant SET_TIMELOCK_TYPEHASH = keccak256("SetTimelock(address owner,uint256 vaultId,uint256 hoursVal,uint64 nonce,uint256 deadline)");
     bytes32 private constant SET_VLOCK_TYPEHASH = keccak256("SetVoluntaryLock(address owner,uint256 vaultId,uint256 lockUntil,uint64 nonce,uint256 deadline)");
@@ -242,7 +240,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     mapping(address => uint256) public reserveWithdrawalUnlock;
 
     // ─── CONSTRUCTOR ────────────────────────────────────────
-    constructor(address _ancrToken, address _guardian, address _payoutWallet) EIP712("AnchorVault", "45") {
+    constructor(address _ancrToken, address _guardian, address _payoutWallet) EIP712("AnchorVaultCoin", "45") {
         if (_ancrToken == address(0) || _guardian == address(0) || _payoutWallet == address(0)) revert ZeroAddress();
         if (_guardian == msg.sender) revert InvalidAddress();
         if (_ancrToken == msg.sender || _ancrToken == _guardian) revert InvalidAddress();
@@ -367,6 +365,9 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         if (level == uint256(VaultLevel.FORTRESS)) return FORTRESS_MAX_TIMELOCK_HOURS;
         revert InvalidLevel();
     }
+    function _checkTimelock(Vault storage v) internal view {
+        if (block.timestamp < uint256(v.depositedAt) + uint256(v.timelockHours) * 1 hours) revert VaultTimelocked();
+    }
     function _validateAuthKeys(address mainKey, address recoveryKey, address owner) internal view {
         if (mainKey == address(0) || recoveryKey == address(0)) revert BadAuthKey();
         if (mainKey == recoveryKey) revert BadAuthKey();
@@ -443,19 +444,20 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         _checkUint120(p.amount);
         if (level_ > uint8(VaultLevel.FORTRESS)) revert InvalidLevel();
         uint256 minDep = minDeposit[token];
-        if (p.amount < minDep) revert DepositBelowMinimum();
         address emergency = globalEmergency[msg.sender];
         if (emergency == address(0)) revert NoEmergencySet();
         if (activeVaultIdByToken[msg.sender][token] != 0) revert VaultLimitReached();
         _validateAuthKeys(p.mainAuthKey, p.recoveryAuthKey, msg.sender);
 
-        if (bytes(p.name).length > 64) revert NameTooLong();
-
         vaultId = ++userVaultCount[msg.sender];
         activeVaultIdByToken[msg.sender][token] = vaultId;
 
         uint256 received = _safeReceive(token, msg.sender, p.amount);
-        uint256 openFee = (received * OPEN_VAULT_FEE_BPS) / 10000;
+        // ANCV1-4: открытие тарифицируется так же, как пополнение — по ставке
+        // уровня. Прежняя льготная ставка делала «закрыть и переоткрыть»
+        // дешевле честного пополнения и субсидировала крупные вклады.
+        // Дешёвый вход обеспечивается выбором уровня (SAFE 0.5%), а не скидкой.
+        uint256 openFee = (received * _getDepositFee(level_)) / 10000;
         uint256 net = received - openFee;
         if (net < minDep) revert DepositBelowMinimum();
         _checkUint120(net);
@@ -468,14 +470,13 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         v.level = level_;
         v.mainAuthKey = p.mainAuthKey;
         v.recoveryAuthKey = p.recoveryAuthKey;
-        v.name = p.name;
         v.status = 0;
 
         lockedPrincipal[token] += net;
         uint256 burnAmt = _accrueFees(token, openFee);
 
         emit FeeCollected(msg.sender, token, openFee);
-        emit VaultCreated(msg.sender, vaultId, token, net, p.name, emergency, level_);
+        emit VaultCreated(msg.sender, vaultId, token, net, emergency, level_);
 
         _maybePayWelcomeBonus();
         _burnIfNeeded(token, burnAmt);
@@ -517,7 +518,6 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         if (v.status != 0) revert NotActive();
         address token = v.token;
         uint256 minDep = minDeposit[token];
-        if (amount < minDep) revert DepositBelowMinimum();
         uint256 received = _safeReceive(token, msg.sender, amount);
         uint256 fee = (received * _getDepositFee(v.level)) / 10000;
         uint256 net = received - fee;
@@ -541,7 +541,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         if (v.status != 0) revert NotActive();
         if (amount == 0 || amount > v.amount) revert InvalidAmount();
         if (to == address(0) || to == address(this)) revert InvalidAddress();
-        if (block.timestamp < uint256(v.depositedAt) + uint256(v.timelockHours) * 1 hours) revert VaultTimelocked();
+        _checkTimelock(v);
 
         bytes32 sh = keccak256(abi.encode(WITHDRAW_TYPEHASH, msg.sender, vid, amount, to, v.nonce, deadline));
         _checkSig(v, sh, deadline, sig, v.mainAuthKey, true);
@@ -565,9 +565,12 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     // ═══════════════════════════════════════════════════════
     //          QUICK TRANSFER
     // ═══════════════════════════════════════════════════════
+    // ANCV1-2: перевод требует ДВЕ подписи — mainAuthKey отправителя и согласие
+    // самого получателя. Без второй подписи атакующий мог фронт-ранить открытие
+    // сейфа и навязать жертве сейф с ключами, которые контролирует сам.
     function transferVault(
         uint256 vid, address to, address newMainKey, address newRecoveryKey,
-        uint256 deadline, bytes calldata sig
+        uint256 deadline, bytes calldata sig, bytes calldata acceptSig
     ) external nonReentrant whenNotPaused vaultExists(msg.sender, vid) {
         Vault storage v = vaults[msg.sender][vid];
         if (v.status != 0) revert NotActive();
@@ -577,6 +580,13 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         if (pendingIncomingTransfer[to][token] != 0) revert TransferAlreadyExists();
         if (globalEmergency[to] == address(0)) revert NoEmergencySet();
         _validateAuthKeys(newMainKey, newRecoveryKey, to);
+
+        // M-3: перевод не должен быть дешёвым обходом таймлока (0.5% против
+        // штрафной лестницы 5/10/15/20%). Под активным таймлоком сейф не уезжает.
+        _checkTimelock(v);
+
+        bytes32 ah = keccak256(abi.encode(ACCEPT_TRANSFER_TYPEHASH, msg.sender, vid, to, newMainKey, newRecoveryKey, deadline));
+        if (ECDSA.recover(_hashTypedDataV4(ah), acceptSig) != to) revert BadSignature();
 
         bytes32 sh = keccak256(abi.encode(TRANSFER_TYPEHASH, msg.sender, vid, to, newMainKey, newRecoveryKey, v.nonce, deadline));
         _checkSig(v, sh, deadline, sig, v.mainAuthKey, true);
@@ -588,7 +598,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
 
         lockedPrincipal[token] -= v.amount;
 
-        uint256 newId = _createReceivedVault(to, token, net, v.level, newMainKey, newRecoveryKey, v.name);
+        uint256 newId = _createReceivedVault(to, token, net, v.level, newMainKey, newRecoveryKey);
 
         delete vaults[msg.sender][vid];
         activeVaultIdByToken[msg.sender][token] = 0;
@@ -612,12 +622,15 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         if (pendingIncomingTransfer[to][token] != 0) revert TransferAlreadyExists();
         if (globalEmergency[to] == address(0)) revert NoEmergencySet();
         _validateAuthKeys(newMainKey, newRecoveryKey, to);
+        _checkTimelock(v); // M-3: тот же запрет для медленного перевода
 
         bytes32 sh = keccak256(abi.encode(INIT_SECURE_TYPEHASH, msg.sender, vid, to, newMainKey, newRecoveryKey, v.nonce, deadline));
         _checkSig(v, sh, deadline, sig, v.mainAuthKey, true);
 
         v.status = 1;
         transferId = _writeSecureTransfer(msg.sender, to, vid, newMainKey, newRecoveryKey);
+        // ANCV1-1: transferId инкрементальный от 1, переполнение uint64 недостижимо
+        v.lockedByTransfer = uint64(transferId);
         pendingIncomingTransfer[to][token] = transferId;
     }
 
@@ -639,10 +652,8 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
 
     function _createReceivedVault(
         address to, address token, uint256 net, uint8 level,
-        address newMainKey, address newRecoveryKey, string memory vName
+        address newMainKey, address newRecoveryKey
     ) internal returns (uint256 newId) {
-        if (bytes(vName).length > 64) revert NameTooLong();
-
         newId = ++userVaultCount[to];
         Vault storage nv = vaults[to][newId];
         nv.token = token;
@@ -652,7 +663,6 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         nv.level = level;
         nv.mainAuthKey = newMainKey;
         nv.recoveryAuthKey = newRecoveryKey;
-        nv.name = vName;
         nv.status = 0;
         activeVaultIdByToken[to][token] = newId;
         lockedPrincipal[token] += net;
@@ -672,11 +682,14 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         address token = v.token;
 
         if (globalEmergency[to] == address(0)) revert NoEmergencySet();
+        // ANCV1-1: сейф-источник должен существовать и удерживаться этим переводом
+        if (token == address(0) || v.status != 1 || v.lockedByTransfer != transferId) revert NotActive();
 
         // ИСПРАВЛЕНИЕ: конфликт переводит в статус 4 (CONFLICT)
         if (activeVaultIdByToken[to][token] != 0) {
             st.status = 4;               // CONFLICT
             v.status = 0;
+            v.lockedByTransfer = 0;
             pendingIncomingTransfer[to][token] = 0;
             emit SecureTransferAutoCancelled(transferId);
             return;
@@ -689,7 +702,7 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
 
         lockedPrincipal[token] -= v.amount;
 
-        _createReceivedVault(to, token, net, v.level, st.newMainKey, st.newRecoveryKey, v.name);
+        _createReceivedVault(to, token, net, v.level, st.newMainKey, st.newRecoveryKey);
 
         delete vaults[from][fromVid];
         activeVaultIdByToken[from][token] = 0;
@@ -732,10 +745,19 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         emit SecureTransferCancelled(transferId);
     }
 
-    function _closeTransfer(uint256 /*transferId*/, SecureTransfer storage st, uint8 newStatus) internal {
-        address token = vaults[st.from][st.vaultId].token;
-        vaults[st.from][st.vaultId].status = 0;
-        pendingIncomingTransfer[st.to][token] = 0;
+    // ANCV1-1: разблокируем сейф и чистим входящий слот ТОЛЬКО если они всё ещё
+    // принадлежат этому переводу. Устаревшая CONFLICT-запись больше не может
+    // освободить сейф, удерживаемый более новым переводом.
+    function _closeTransfer(uint256 transferId, SecureTransfer storage st, uint8 newStatus) internal {
+        Vault storage v = vaults[st.from][st.vaultId];
+        if (v.status == 1 && v.lockedByTransfer == transferId) {
+            v.status = 0;
+            v.lockedByTransfer = 0;
+        }
+        address token = v.token;
+        if (pendingIncomingTransfer[st.to][token] == transferId) {
+            pendingIncomingTransfer[st.to][token] = 0;
+        }
         st.status = newStatus;
     }
 
@@ -879,7 +901,13 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
         uint256 payoutShare  = 200_000 ether;
         uint256 reserveShare = 300_000 ether;
         uint256 rewardShare  = total - payoutShare - reserveShare;
-        if (IERC20(ANCR_TOKEN).balanceOf(address(this)) < total) revert InsufficientBalanceForDistribution();
+        // H-1: баланс должен покрывать раздачу СВЕРХ всего, что уже учтено
+        // за пользователями и ранее начисленными пулами. Иначе распределение
+        // можно провести за счёт чужих средств и сломать инвариант
+        // платёжеспособности.
+        uint256 committed = lockedPrincipal[ANCR_TOKEN] + creatorFees[ANCR_TOKEN]
+            + strategicReserve[ANCR_TOKEN] + rewardPool[ANCR_TOKEN];
+        if (IERC20(ANCR_TOKEN).balanceOf(address(this)) < total + committed) revert InsufficientBalanceForDistribution();
         distributionInitialized = true;
         rewardPool[ANCR_TOKEN] += rewardShare;
         strategicReserve[ANCR_TOKEN] += reserveShare;
@@ -1071,10 +1099,10 @@ contract AnchorVaultV45 is ReentrancyGuard, EIP712 {
     //          VIEW GETTERS
     // ═══════════════════════════════════════════════════════
     function getVaultCore(address user, uint256 vid) external view vaultExists(user, vid)
-        returns (uint64 id, address token, uint120 amount, string memory name, uint8 status, uint8 level)
+        returns (uint64 id, address token, uint120 amount, uint8 status, uint8 level)
     {
         Vault storage v = vaults[user][vid];
-        return (v.id, v.token, v.amount, v.name, v.status, v.level);
+        return (v.id, v.token, v.amount, v.status, v.level);
     }
     function getVaultTimings(address user, uint256 vid) external view vaultExists(user, vid)
         returns (uint48 depositedAt, uint48 voluntaryLockUntil, uint16 timelockHours)

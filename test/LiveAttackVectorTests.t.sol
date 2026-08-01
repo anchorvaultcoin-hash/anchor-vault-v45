@@ -2,12 +2,12 @@
 pragma solidity ^0.8.26;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {AnchorVaultV45} from "../src/AnchorVaultV45.sol";
+import {AnchorVaultCoin} from "../src/AnchorVaultCoin.sol";
 import {MockANCR} from "./mocks/MockANCR.sol";
 import {ReentrancyToken} from "./mocks/ReentrancyToken.sol";
 
 contract LiveAttackVectorTests is Test {
-    AnchorVaultV45 vault;
+    AnchorVaultCoin vault;
     MockANCR ancr;
 
     address creator = address(0xC0);
@@ -56,7 +56,7 @@ contract LiveAttackVectorTests is Test {
         ancr = new MockANCR(10_000_000 ether);
 
         vm.prank(creator);
-        vault = new AnchorVaultV45(address(ancr), guardian, payoutWallet);
+        vault = new AnchorVaultCoin(address(ancr), guardian, payoutWallet);
 
         vm.prank(creator);
         ancr.transfer(alice, 100_000 ether);
@@ -113,8 +113,8 @@ contract LiveAttackVectorTests is Test {
     function _openVault(address user, uint256 pkMain, uint256 pkRec, uint256 amount, uint8 level) internal returns (uint256 vid) {
         address mainKey = vm.addr(pkMain);
         address recKey = vm.addr(pkRec);
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "Vault", mainAuthKey: mainKey, recoveryAuthKey: recKey, amount: amount
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
+            mainAuthKey: mainKey, recoveryAuthKey: recKey, amount: amount
         });
         vm.prank(user);
         vault.openVault(address(ancr), p, level);
@@ -175,8 +175,8 @@ contract LiveAttackVectorTests is Test {
         for (uint256 i = 0; i < 5; i++) {
             address mainKey = vm.addr(atkMainPk);
             address recKey = vm.addr(atkRecPk);
-            AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-                name: "FlashVault", mainAuthKey: mainKey, recoveryAuthKey: recKey, amount: amounts[i]
+            AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
+                mainAuthKey: mainKey, recoveryAuthKey: recKey, amount: amounts[i]
             });
             vm.prank(attacker);
             vault.openVault(address(ancr), p, uint8(i % 3));
@@ -206,8 +206,7 @@ contract LiveAttackVectorTests is Test {
         // emergency attacker уже задан в setUp (0xBADE)
         uint256 attackAmount = 1000 ether;
 
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "ReentrantVault",
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
             mainAuthKey: aMain,
             recoveryAuthKey: aRec,
             amount: attackAmount
@@ -236,8 +235,7 @@ contract LiveAttackVectorTests is Test {
         vm.prank(attacker);
         rToken.approve(address(vault), type(uint256).max);
 
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "ReentrantDeposit",
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
             mainAuthKey: aMain,
             recoveryAuthKey: aRec,
             amount: attackAmount
@@ -308,8 +306,8 @@ contract LiveAttackVectorTests is Test {
 
             address mainK = vm.addr(pk);
             address recK = vm.addr(pk + 1);
-            AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-                name: "Sybil", mainAuthKey: mainK, recoveryAuthKey: recK, amount: 100 ether
+            AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
+                mainAuthKey: mainK, recoveryAuthKey: recK, amount: 100 ether
             });
             vm.prank(u);
             vault.openVault(address(ancr), p, 0);

@@ -2,18 +2,18 @@
 pragma solidity ^0.8.26;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {AnchorVaultV45} from "../src/AnchorVaultV45.sol";
+import {AnchorVaultCoin} from "../src/AnchorVaultCoin.sol";
 import {MockANCR} from "./mocks/MockANCR.sol";
 import {MaliciousCallbackToken} from "./mocks/MaliciousCallbackToken.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
- * @title AnchorVaultV45 Extended Tests
+ * @title AnchorVaultCoin Extended Tests
  * @notice Добавленные категории: Fuzz, DoS/Gas, EIP-712 malleability,
  *         SecureTransfer edge, Multi-vault, Invariant, Stress.
  */
-contract AnchorVaultV45ExtendedTest is Test {
-    AnchorVaultV45 vault;
+contract AnchorVaultCoinExtendedTest is Test {
+    AnchorVaultCoin vault;
     MockANCR ancr;
 
     address creator = address(0xC0);
@@ -21,7 +21,9 @@ contract AnchorVaultV45ExtendedTest is Test {
     address payoutWallet = address(0xBEEF01);
     address alice;
     address aliceEmergency = address(0xE1);
-    address bob = address(0xB0B);
+    uint256 alicePk = 0xA11CE0000;
+    uint256 bobPk   = 0xB0B0000;
+    address bob;
     address bobEmergency = address(0xB0BE);
 
     uint256 aMainPk = 0xA11CE0001;
@@ -34,6 +36,8 @@ contract AnchorVaultV45ExtendedTest is Test {
     address bMain;
     address bRec;
 
+    bytes32 constant ACCEPT_TRANSFER_TYPEHASH =
+        keccak256("AcceptVaultTransfer(address from,uint256 vaultId,address to,address newMainKey,address newRecoveryKey,uint256 deadline)");
     bytes32 constant WITHDRAW_TYPEHASH =
         keccak256("Withdraw(address owner,uint256 vaultId,uint256 amount,address to,uint64 nonce,uint256 deadline)");
     bytes32 constant EARLY_CLOSE_TYPEHASH =
@@ -54,7 +58,8 @@ contract AnchorVaultV45ExtendedTest is Test {
         keccak256("RotateAuthKeys(address owner,uint256 vaultId,address newMainKey,address newRecoveryKey,uint64 nonce,uint256 deadline)");
 
     function setUp() public {
-        alice = address(0xA11CE);
+        alice = vm.addr(alicePk);
+        bob = vm.addr(bobPk);
         aMain = vm.addr(aMainPk);
         aRec  = vm.addr(aRecPk);
         bMain = vm.addr(bMainPk);
@@ -64,7 +69,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         ancr = new MockANCR(10_000_000 ether);
 
         vm.prank(creator);
-        vault = new AnchorVaultV45(address(ancr), guardian, payoutWallet);
+        vault = new AnchorVaultCoin(address(ancr), guardian, payoutWallet);
 
         vm.prank(creator);
         ancr.transfer(alice, 100_000 ether);
@@ -179,8 +184,8 @@ contract AnchorVaultV45ExtendedTest is Test {
     }
 
     function _openAliceVault(uint256 amount, uint8 level) internal returns (uint256 vid) {
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "AliceVault", mainAuthKey: aMain, recoveryAuthKey: aRec, amount: amount
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
+            mainAuthKey: aMain, recoveryAuthKey: aRec, amount: amount
         });
         vm.prank(alice);
         vault.openVault(address(ancr), p, level);
@@ -188,8 +193,8 @@ contract AnchorVaultV45ExtendedTest is Test {
     }
 
     function _openBobVault(uint256 amount, uint8 level) internal returns (uint256 vid) {
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "BobVault", mainAuthKey: bMain, recoveryAuthKey: bRec, amount: amount
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
+            mainAuthKey: bMain, recoveryAuthKey: bRec, amount: amount
         });
         vm.prank(bob);
         vault.openVault(address(ancr), p, level);
@@ -201,8 +206,8 @@ contract AnchorVaultV45ExtendedTest is Test {
         address recKey = vm.addr(pkRec);
         vm.prank(user);
         vault.setGlobalEmergency(emergency);
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "UserVault", mainAuthKey: mainKey, recoveryAuthKey: recKey, amount: amount
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
+            mainAuthKey: mainKey, recoveryAuthKey: recKey, amount: amount
         });
         vm.prank(user);
         vault.openVault(address(ancr), p, level);
@@ -223,8 +228,8 @@ contract AnchorVaultV45ExtendedTest is Test {
     /// @notice Открытие сейфа с разными суммами
     function testFuzz_OpenVault_DifferentAmounts(uint96 amount) public {
         amount = uint96(bound(uint256(amount), 0.1 ether, 50_000 ether));
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "FuzzVault", mainAuthKey: aMain, recoveryAuthKey: aRec, amount: amount
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
+            mainAuthKey: aMain, recoveryAuthKey: aRec, amount: amount
         });
         vm.prank(alice);
         vault.openVault(address(ancr), p, 0);
@@ -238,7 +243,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 vid = _openAliceVault(1000 ether, 0);
         vm.prank(alice);
         vault.depositToVault(vid, amount);
-        (,, uint120 vaultAmount,,, ) = vault.getVaultCore(alice, vid);
+        (,, uint120 vaultAmount,, ) = vault.getVaultCore(alice, vid);
         assertTrue(uint256(vaultAmount) > 0);
     }
 
@@ -246,7 +251,7 @@ contract AnchorVaultV45ExtendedTest is Test {
     function testFuzz_Withdraw_Percentages(uint64 pct) public {
         vm.assume(pct > 0 && pct <= 100);
         uint256 vid = _openAliceVault(1000 ether, 0);
-        (,, uint120 vAmount,,, ) = vault.getVaultCore(alice, vid);
+        (,, uint120 vAmount,, ) = vault.getVaultCore(alice, vid);
         uint256 wd = (uint256(vAmount) * pct) / 100;
         vm.assume(wd > 0);
         (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
@@ -316,7 +321,8 @@ contract AnchorVaultV45ExtendedTest is Test {
         vm.prank(alice); vault.depositToVault(vid, d2);
         vm.prank(alice); vault.depositToVault(vid, d3);
         uint256 lp = vault.lockedPrincipal(address(ancr));
-        assertTrue(lp > 998 ether);
+        // ANCV1-4: открытие SAFE теперь 50 bps → 995 ether от базового депозита.
+        assertTrue(lp > 995 ether);
     }
 
     /// @notice GlobalEmergency с разными адресами
@@ -376,8 +382,9 @@ contract AnchorVaultV45ExtendedTest is Test {
         (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signTransfer(alice, vid, bob, mk, rk, nonce, dl, aMainPk);
+        bytes memory accSig = _signAccept(alice, vid, bob, mk, rk, dl, bobPk);
         vm.prank(alice);
-        vault.transferVault(vid, bob, mk, rk, dl, sig);
+        vault.transferVault(vid, bob, mk, rk, dl, sig, accSig);
 
         (, address m, address r) = vault.getVaultAuth(bob, vault.activeVaultIdByToken(bob, address(ancr)));
         assertEq(m, mk);
@@ -427,9 +434,10 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signTransfer(alice, vid, bob, aMain, aRec, nonce, dl, aMainPk);
         bytes memory mal = _makeMalleable(sig);
+        bytes memory accSig = _signAccept(alice, vid, bob, aMain, aRec, dl, bobPk);
         vm.prank(alice);
         vm.expectRevert(bytes4(keccak256("ECDSAInvalidSignature()")));
-        vault.transferVault(vid, bob, aMain, aRec, dl, mal);
+        vault.transferVault(vid, bob, aMain, aRec, dl, mal, accSig);
     }
 
     function test_EIP712_MalleableRotateKeys_Reverts() public {
@@ -465,8 +473,9 @@ contract AnchorVaultV45ExtendedTest is Test {
             vm.prank(alice);
             vault.depositToVault(vid, 0.02 ether);
         }
-        (,, uint120 amount,,, ) = vault.getVaultCore(alice, vid);
-        assertTrue(uint256(amount) > 998 ether);
+        (,, uint120 amount,, ) = vault.getVaultCore(alice, vid);
+        // ANCV1-4: открытие SAFE теперь 50 bps → 995 ether, плюс микродепозиты.
+        assertTrue(uint256(amount) > 995 ether);
     }
 
     /// @notice 5 пользователей открывают сейфы
@@ -481,8 +490,7 @@ contract AnchorVaultV45ExtendedTest is Test {
             ancr.approve(address(vault), type(uint256).max);
             vm.prank(user);
             vault.setGlobalEmergency(em);
-            AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-                name: string(abi.encodePacked("V", vm.toString(user))),
+            AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
                 mainAuthKey: vm.addr(pk),
                 recoveryAuthKey: vm.addr(pk + 1_000_000),
                 amount: 100 ether
@@ -520,7 +528,7 @@ contract AnchorVaultV45ExtendedTest is Test {
             vm.prank(alice);
             vault.withdrawFromVault(vid, 30 ether, alice, dl, sig);
         }
-        (,, uint120 amount,,, ) = vault.getVaultCore(alice, vid);
+        (,, uint120 amount,, ) = vault.getVaultCore(alice, vid);
         assertTrue(uint256(amount) > 1000 ether);
     }
 
@@ -596,7 +604,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signInitSecure(alice, vid, address(0), address(0xBAD1), address(0xBAD2), nonce, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
+        vm.expectRevert(AnchorVaultCoin.InvalidAddress.selector);
         vault.initSecureTransfer(vid, address(0), address(0xBAD1), address(0xBAD2), dl, sig);
     }
 
@@ -606,7 +614,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signInitSecure(alice, vid, alice, address(0xBAD1), address(0xBAD2), nonce, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
+        vm.expectRevert(AnchorVaultCoin.InvalidAddress.selector);
         vault.initSecureTransfer(vid, alice, address(0xBAD1), address(0xBAD2), dl, sig);
     }
 
@@ -617,7 +625,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signInitSecure(alice, vid, charlie, address(0xBAD1), address(0xBAD2), nonce, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.NoEmergencySet.selector);
+        vm.expectRevert(AnchorVaultCoin.NoEmergencySet.selector);
         vault.initSecureTransfer(vid, charlie, address(0xBAD1), address(0xBAD2), dl, sig);
     }
 
@@ -625,7 +633,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 vid = _openAliceVault(100 ether, 0);
         (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
         uint256 dl = block.timestamp + 1 hours;
-        (,, uint120 vAmount,,, ) = vault.getVaultCore(alice, vid);
+        (,, uint120 vAmount,, ) = vault.getVaultCore(alice, vid);
         bytes memory sigW = _signWithdraw(alice, vid, uint256(vAmount), alice, nonce, dl, aMainPk);
         vm.prank(alice);
         vault.withdrawFromVault(vid, uint256(vAmount), alice, dl, sigW);
@@ -633,7 +641,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         (uint64 nonce2,,) = vault.getVaultAuth(alice, vid);
         bytes memory sig = _signInitSecure(alice, vid, bob, aMain, aRec, nonce2, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.NotActive.selector);
+        vm.expectRevert(AnchorVaultCoin.NotActive.selector);
         vault.initSecureTransfer(vid, bob, aMain, aRec, dl, sig);
     }
 
@@ -648,7 +656,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         (uint64 nonce2,,) = vault.getVaultAuth(alice, vid);
         bytes memory sig2 = _signInitSecure(alice, vid, bob, aMain, aRec, nonce2, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.NotActive.selector);
+        vm.expectRevert(AnchorVaultCoin.NotActive.selector);
         vault.initSecureTransfer(vid, bob, aMain, aRec, dl, sig2);
     }
 
@@ -662,7 +670,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         vm.prank(bob);
         vault.confirmSecureTransfer(tid);
         vm.prank(bob);
-        vm.expectRevert(AnchorVaultV45.TransferNotPending.selector);
+        vm.expectRevert(AnchorVaultCoin.TransferNotPending.selector);
         vault.confirmSecureTransfer(tid);
     }
 
@@ -677,7 +685,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         vault.cancelSecureTransfer(tid);
         vm.warp(block.timestamp + 49 hours);
         vm.prank(bob);
-        vm.expectRevert(AnchorVaultV45.TransferNotPending.selector);
+        vm.expectRevert(AnchorVaultCoin.TransferNotPending.selector);
         vault.reclaimExpiredTransfer(tid);
     }
 
@@ -690,7 +698,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 tid = vault.initSecureTransfer(vid, bob, aMain, aRec, dl, sig);
         vm.warp(block.timestamp + 49 hours);
         vm.prank(bob);
-        vm.expectRevert(AnchorVaultV45.TransferExpired.selector);
+        vm.expectRevert(AnchorVaultCoin.TransferExpired.selector);
         vault.confirmSecureTransfer(tid);
     }
 
@@ -704,8 +712,8 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signTransfer(alice, vid, address(0), aMain, aRec, nonce, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
-        vault.transferVault(vid, address(0), aMain, aRec, dl, sig);
+        vm.expectRevert(AnchorVaultCoin.InvalidAddress.selector);
+        vault.transferVault(vid, address(0), aMain, aRec, dl, sig, _noAccept());
     }
 
     function test_TransferVault_RevertIfToSelf() public {
@@ -714,8 +722,8 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signTransfer(alice, vid, alice, aMain, aRec, nonce, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
-        vault.transferVault(vid, alice, aMain, aRec, dl, sig);
+        vm.expectRevert(AnchorVaultCoin.InvalidAddress.selector);
+        vault.transferVault(vid, alice, aMain, aRec, dl, sig, _noAccept());
     }
 
     function test_TransferVault_RevertIfToVaultAddress() public {
@@ -724,8 +732,8 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signTransfer(alice, vid, address(vault), aMain, aRec, nonce, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
-        vault.transferVault(vid, address(vault), aMain, aRec, dl, sig);
+        vm.expectRevert(AnchorVaultCoin.InvalidAddress.selector);
+        vault.transferVault(vid, address(vault), aMain, aRec, dl, sig, _noAccept());
     }
 
     function test_TransferVault_RevertIfRecipientNoEmergency() public {
@@ -735,8 +743,8 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signTransfer(alice, vid, charlie, aMain, aRec, nonce, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.NoEmergencySet.selector);
-        vault.transferVault(vid, charlie, aMain, aRec, dl, sig);
+        vm.expectRevert(AnchorVaultCoin.NoEmergencySet.selector);
+        vault.transferVault(vid, charlie, aMain, aRec, dl, sig, _noAccept());
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -763,14 +771,16 @@ contract AnchorVaultV45ExtendedTest is Test {
         (uint64 nonce,,) = vault.getVaultAuth(alice, v1);
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signTransfer(alice, v1, bob, bMain, bRec, nonce, dl, aMainPk);
+        bytes memory accSig = _signAccept(alice, v1, bob, bMain, bRec, dl, bobPk);
         vm.prank(alice);
-        vault.transferVault(v1, bob, bMain, bRec, dl, sig);
+        vault.transferVault(v1, bob, bMain, bRec, dl, sig, accSig);
 
         uint256 bobVid = vault.activeVaultIdByToken(bob, address(ancr));
         (uint64 bNonce,,) = vault.getVaultAuth(bob, bobVid);
         bytes memory sig2 = _signTransfer(bob, bobVid, alice, aMain, aRec, bNonce, dl, bMainPk);
+        bytes memory accSig2 = _signAccept(bob, bobVid, alice, aMain, aRec, dl, alicePk);
         vm.prank(bob);
-        vault.transferVault(bobVid, alice, aMain, aRec, dl, sig2);
+        vault.transferVault(bobVid, alice, aMain, aRec, dl, sig2, accSig2);
 
         uint256 aliceVid2 = vault.activeVaultIdByToken(alice, address(ancr));
         assertTrue(aliceVid2 > 0);
@@ -778,7 +788,8 @@ contract AnchorVaultV45ExtendedTest is Test {
 
     /// @notice Alice + Bob + Charlie — 3 сейфа
     function test_MultiVault_ThreeUsers() public {
-        address charlie = address(0xCAFE);
+        uint256 charliePk = 0xC4A5711E;
+        address charlie = vm.addr(charliePk);
         address charlieEm = address(0xCAFE2);
         uint256 cPk = 0xCAFE01;
         vm.prank(creator);
@@ -791,8 +802,8 @@ contract AnchorVaultV45ExtendedTest is Test {
         _openAliceVault(100 ether, 0);
         _openBobVault(200 ether, 1);
 
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "CharlieVault", mainAuthKey: vm.addr(cPk), recoveryAuthKey: vm.addr(cPk + 1), amount: 300 ether
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
+            mainAuthKey: vm.addr(cPk), recoveryAuthKey: vm.addr(cPk + 1), amount: 300 ether
         });
         vm.prank(charlie);
         vault.openVault(address(ancr), p, 2);
@@ -800,12 +811,19 @@ contract AnchorVaultV45ExtendedTest is Test {
         assertTrue(vault.activeVaultIdByToken(alice, address(ancr)) > 0);
         assertTrue(vault.activeVaultIdByToken(bob, address(ancr)) > 0);
         assertTrue(vault.activeVaultIdByToken(charlie, address(ancr)) > 0);
-        assertEq(vault.lockedPrincipal(address(ancr)), 100 ether + 200 ether + 300 ether - ((100 ether * 20)/10000 + (200 ether * 20)/10000 + (300 ether * 20)/10000));
+        // ANCV1-4: у каждого сейфа своя ставка открытия по уровню:
+        // alice SAFE 50 bps, bob VAULT 150 bps, charlie FORTRESS 200 bps.
+        assertEq(
+            vault.lockedPrincipal(address(ancr)),
+            100 ether + 200 ether + 300 ether
+                - ((100 ether * 50) / 10000 + (200 ether * 150) / 10000 + (300 ether * 200) / 10000)
+        );
     }
 
     /// @notice Secure transfer multi-hop: Alice → Bob → Charlie
     function test_MultiVault_SecureMultiHop() public {
-        address charlie = address(0xCAFE);
+        uint256 charliePk = 0xC4A5711E;
+        address charlie = vm.addr(charliePk);
         address charlieEm = address(0xCAFE2);
         uint256 cPk = 0xCAFE01;
         vm.prank(creator);
@@ -830,8 +848,9 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 bobVid = vault.activeVaultIdByToken(bob, address(ancr));
         (uint64 bNonce,,) = vault.getVaultAuth(bob, bobVid);
         bytes memory sig2 = _signTransfer(bob, bobVid, charlie, vm.addr(cPk), vm.addr(cPk + 1), bNonce, dl, bMainPk);
+        bytes memory accSig = _signAccept(bob, bobVid, charlie, vm.addr(cPk), vm.addr(cPk + 1), dl, charliePk);
         vm.prank(bob);
-        vault.transferVault(bobVid, charlie, vm.addr(cPk), vm.addr(cPk + 1), dl, sig2);
+        vault.transferVault(bobVid, charlie, vm.addr(cPk), vm.addr(cPk + 1), dl, sig2, accSig);
 
         assertTrue(vault.activeVaultIdByToken(charlie, address(ancr)) > 0);
     }
@@ -842,14 +861,15 @@ contract AnchorVaultV45ExtendedTest is Test {
         (uint64 nonce,,) = vault.getVaultAuth(alice, v1);
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signTransfer(alice, v1, bob, bMain, bRec, nonce, dl, aMainPk);
+        bytes memory accSig = _signAccept(alice, v1, bob, bMain, bRec, dl, bobPk);
         vm.prank(alice);
-        vault.transferVault(v1, bob, bMain, bRec, dl, sig);
+        vault.transferVault(v1, bob, bMain, bRec, dl, sig, accSig);
 
         uint256 bobVid = vault.activeVaultIdByToken(bob, address(ancr));
         vm.prank(bob);
         vault.depositToVault(bobVid, 50 ether);
 
-        (,, uint120 amount,,, ) = vault.getVaultCore(bob, bobVid);
+        (,, uint120 amount,, ) = vault.getVaultCore(bob, bobVid);
         uint256 fee = (100 ether * 50) / 10000;
         uint256 depositFee = (50 ether * 20) / 10000;
         assertTrue(uint256(amount) > 100 ether - fee + 50 ether - depositFee - 100 ether); // more than transfer net
@@ -879,8 +899,9 @@ contract AnchorVaultV45ExtendedTest is Test {
         (uint64 nonce,,) = vault.getVaultAuth(alice, v1);
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signTransfer(alice, v1, bob, bMain, bRec, nonce, dl, aMainPk);
+        bytes memory accSig = _signAccept(alice, v1, bob, bMain, bRec, dl, bobPk);
         vm.prank(alice);
-        vault.transferVault(v1, bob, bMain, bRec, dl, sig);
+        vault.transferVault(v1, bob, bMain, bRec, dl, sig, accSig);
 
         uint256 bobVid = vault.activeVaultIdByToken(bob, address(ancr));
         (uint64 bNonce,,) = vault.getVaultAuth(bob, bobVid);
@@ -928,7 +949,9 @@ contract AnchorVaultV45ExtendedTest is Test {
         _openAliceVault(100 ether, 0);
         _openBobVault(200 ether, 1);
         uint256 lpAfter = vault.lockedPrincipal(address(ancr));
-        assertTrue(lpAfter > lpBefore + 300 ether - 3 * ((100 ether * 20)/10000) - 3 * ((200 ether * 20)/10000)); // больше чем сумма - комиссии
+        // ANCV1-4: ставки открытия по уровням — SAFE 50 bps, VAULT 150 bps.
+        uint256 fees = (100 ether * 50) / 10000 + (200 ether * 150) / 10000;
+        assertTrue(lpAfter >= lpBefore + 300 ether - fees);
     }
 
     /// @notice Nonce монотонно растёт
@@ -949,7 +972,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 vid = _openAliceVault(100 ether, 0);
         vm.prank(alice);
         vault.panicWithdraw(vid);
-        (,, uint120 amount,, uint8 status,) = vault.getVaultCore(alice, vid);
+        (,, uint120 amount, uint8 status,) = vault.getVaultCore(alice, vid);
         assertEq(status, 2);
         assertEq(uint256(amount), 0);
     }
@@ -968,11 +991,11 @@ contract AnchorVaultV45ExtendedTest is Test {
     /// @notice User cannot have 2 vaults for same token
     function test_Invariant_OneVaultPerToken() public {
         _openAliceVault(100 ether, 0);
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "Second", mainAuthKey: aMain, recoveryAuthKey: aRec, amount: 200 ether
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
+            mainAuthKey: aMain, recoveryAuthKey: aRec, amount: 200 ether
         });
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.VaultLimitReached.selector);
+        vm.expectRevert(AnchorVaultCoin.VaultLimitReached.selector);
         vault.openVault(address(ancr), p, 0);
     }
 
@@ -982,18 +1005,18 @@ contract AnchorVaultV45ExtendedTest is Test {
 
     /// @notice Нельзя открыть сейф с уровнем 99
     function test_Edge_InvalidLevel() public {
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "BadLevel", mainAuthKey: aMain, recoveryAuthKey: aRec, amount: 100 ether
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
+            mainAuthKey: aMain, recoveryAuthKey: aRec, amount: 100 ether
         });
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.InvalidLevel.selector);
+        vm.expectRevert(AnchorVaultCoin.InvalidLevel.selector);
         vault.openVault(address(ancr), p, 99);
     }
 
     /// @notice Нельзя перевести кому попало rescueERC20
     function test_Edge_RescueToVaultAddress() public {
         vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
+        vm.expectRevert(AnchorVaultCoin.InvalidAddress.selector);
         vault.rescueERC20(address(0x1234), address(vault), 1 ether);
     }
 
@@ -1008,49 +1031,49 @@ contract AnchorVaultV45ExtendedTest is Test {
     /// @notice Donate с нулём ревертит
     function test_Edge_DonateZero() public {
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.InvalidAmount.selector);
+        vm.expectRevert(AnchorVaultCoin.InvalidAmount.selector);
         vault.donateToRewardPool(address(ancr), 0);
     }
 
     /// @notice Creator withdraw: cancel без запроса
     function test_Edge_CancelCreatorWithdrawNoRequest() public {
         vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.NoAdminRequest.selector);
+        vm.expectRevert(AnchorVaultCoin.NoAdminRequest.selector);
         vault.cancelCreatorWithdraw(address(ancr));
     }
 
     /// @notice Reserve withdraw: cancel без запроса
     function test_Edge_CancelReserveWithdrawNoRequest() public {
         vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.NoAdminRequest.selector);
+        vm.expectRevert(AnchorVaultCoin.NoAdminRequest.selector);
         vault.cancelReserveWithdraw(address(ancr));
     }
 
     /// @notice Creator withdraw: execute без запроса
     function test_Edge_WithdrawCreatorNoRequest() public {
         vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.NoAdminRequest.selector);
+        vm.expectRevert(AnchorVaultCoin.NoAdminRequest.selector);
         vault.withdrawCreatorFees(address(ancr));
     }
 
     /// @notice Reserve withdraw: execute без запроса
     function test_Edge_WithdrawReserveNoRequest() public {
         vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.NoAdminRequest.selector);
+        vm.expectRevert(AnchorVaultCoin.NoAdminRequest.selector);
         vault.withdrawStrategicReserve(address(ancr));
     }
 
     /// @notice Creator withdraw: amount > fees
     function test_Edge_CreatorWithdrawExceedsFees() public {
         vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.InvalidAmount.selector);
+        vm.expectRevert(AnchorVaultCoin.InvalidAmount.selector);
         vault.requestCreatorWithdraw(address(ancr), creator, 100 ether);
     }
 
     /// @notice Reserve withdraw: amount > reserve
     function test_Edge_ReserveWithdrawExceedsReserve() public {
         vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.InvalidAmount.selector);
+        vm.expectRevert(AnchorVaultCoin.InvalidAmount.selector);
         vault.requestReserveWithdraw(address(ancr), creator, 100 ether);
     }
 
@@ -1066,7 +1089,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         bytes memory sig = _signWithdraw(alice, vid, 10 ether, alice, nonce, dl, aMainPk);
         vm.warp(block.timestamp + 2 hours);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.SignatureExpired.selector);
+        vm.expectRevert(AnchorVaultCoin.SignatureExpired.selector);
         vault.withdrawFromVault(vid, 10 ether, alice, dl, sig);
     }
 
@@ -1077,7 +1100,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signWithdraw(alice, vid, 10 ether, alice, nonce, dl, aRecPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.BadSignature.selector);
+        vm.expectRevert(AnchorVaultCoin.BadSignature.selector);
         vault.withdrawFromVault(vid, 10 ether, alice, dl, sig);
     }
 
@@ -1088,7 +1111,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signEarlyClose(alice, vid, nonce, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.BadSignature.selector);
+        vm.expectRevert(AnchorVaultCoin.BadSignature.selector);
         vault.earlyClose(vid, dl, sig);
     }
 
@@ -1102,7 +1125,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         vault.withdrawFromVault(vid, 10 ether, alice, dl, sig);
         // Replay
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.BadSignature.selector);
+        vm.expectRevert(AnchorVaultCoin.BadSignature.selector);
         vault.withdrawFromVault(vid, 10 ether, alice, dl, sig);
     }
 
@@ -1111,7 +1134,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         bytes32 ds = vault.domainSeparator();
         bytes32 expected = keccak256(abi.encode(
             keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-            keccak256("AnchorVault"),
+            keccak256("AnchorVaultCoin"),
             keccak256("45"),
             block.chainid,
             address(vault)
@@ -1126,7 +1149,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signRotateKeys(alice, vid, address(0xAA), address(0xBB), nonce, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.BadSignature.selector);
+        vm.expectRevert(AnchorVaultCoin.BadSignature.selector);
         vault.rotateAuthKeys(vid, address(0xAA), address(0xBB), dl, sig);
     }
 
@@ -1138,7 +1161,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         bytes memory sig = _signWithdraw(alice, vid, 10 ether, alice, nonce, dl, aMainPk);
         // Bob вызывает от своего имени
         vm.prank(bob);
-        vm.expectRevert(AnchorVaultV45.BadVaultId.selector);
+        vm.expectRevert(AnchorVaultCoin.BadVaultId.selector);
         vault.withdrawFromVault(vid, 10 ether, alice, dl, sig);
     }
 
@@ -1149,7 +1172,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = 0;
         bytes memory sig = _signWithdraw(alice, vid, 10 ether, alice, nonce, dl, aMainPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.SignatureExpired.selector);
+        vm.expectRevert(AnchorVaultCoin.SignatureExpired.selector);
         vault.withdrawFromVault(vid, 10 ether, alice, dl, sig);
     }
 
@@ -1169,7 +1192,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         (uint64 nonce2,,) = vault.getVaultAuth(alice, vid);
         bytes memory sig2 = _signEarlyClose(alice, vid, nonce2, dl, aRecPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.Locked.selector);
+        vm.expectRevert(AnchorVaultCoin.Locked.selector);
         vault.earlyClose(vid, dl, sig2);
     }
 
@@ -1183,7 +1206,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         vault.setVoluntaryLock(vid, block.timestamp + 7 days, dl, sig);
         vm.prank(alice);
         vault.panicWithdraw(vid);
-        (,, uint120 amount,,, ) = vault.getVaultCore(alice, vid);
+        (,, uint120 amount,, ) = vault.getVaultCore(alice, vid);
         assertEq(uint256(amount), 0);
     }
 
@@ -1286,7 +1309,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         vm.prank(guardian);
         vault.emergencyPause();
         vm.prank(guardian);
-        vm.expectRevert(AnchorVaultV45.NotCreator.selector);
+        vm.expectRevert(AnchorVaultCoin.NotCreator.selector);
         vault.unpause();
     }
 
@@ -1315,7 +1338,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         vault.requestPause();
         vm.warp(block.timestamp + 1 days);
         vm.prank(guardian);
-        vm.expectRevert(AnchorVaultV45.PauseTimeoutNotReached.selector);
+        vm.expectRevert(AnchorVaultCoin.PauseTimeoutNotReached.selector);
         vault.executePause();
     }
 
@@ -1356,7 +1379,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signEmergencyAny(alice, vid, address(vault), nonce, dl, aRecPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
+        vm.expectRevert(AnchorVaultCoin.InvalidAddress.selector);
         vault.emergencyWithdrawToAny(vid, address(vault), dl, sig);
     }
 
@@ -1367,7 +1390,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signEmergencyAny(alice, vid, address(0), nonce, dl, aRecPk);
         vm.prank(alice);
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
+        vm.expectRevert(AnchorVaultCoin.InvalidAddress.selector);
         vault.emergencyWithdrawToAny(vid, address(0), dl, sig);
     }
 
@@ -1389,11 +1412,11 @@ contract AnchorVaultV45ExtendedTest is Test {
         vm.prank(charlie);
         ancr.approve(address(vault), type(uint256).max);
 
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "NoEm", mainAuthKey: aMain, recoveryAuthKey: aRec, amount: 100 ether
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
+            mainAuthKey: aMain, recoveryAuthKey: aRec, amount: 100 ether
         });
         vm.prank(charlie);
-        vm.expectRevert(AnchorVaultV45.NoEmergencySet.selector);
+        vm.expectRevert(AnchorVaultCoin.NoEmergencySet.selector);
         vault.openVault(address(ancr), p, 0);
     }
 
@@ -1411,7 +1434,7 @@ contract AnchorVaultV45ExtendedTest is Test {
     /// @notice Welcome bonus > MAX ревертит
     function test_Bonus_SetExceedsMax() public {
         vm.prank(creator);
-        vm.expectRevert(AnchorVaultV45.BonusExceedsLimit.selector);
+        vm.expectRevert(AnchorVaultCoin.BonusExceedsLimit.selector);
         vault.setWelcomeBonus(0.01 ether, 100);
     }
 
@@ -1473,34 +1496,34 @@ contract AnchorVaultV45ExtendedTest is Test {
 
     function test_Constructor_RevertIfGuardianEqDeployer() public {
         vm.startPrank(creator);
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
-        new AnchorVaultV45(address(ancr), creator, payoutWallet);
+        vm.expectRevert(AnchorVaultCoin.InvalidAddress.selector);
+        new AnchorVaultCoin(address(ancr), creator, payoutWallet);
         vm.stopPrank();
     }
 
     function test_Constructor_RevertIfANCRZero() public {
-        vm.expectRevert(AnchorVaultV45.ZeroAddress.selector);
-        new AnchorVaultV45(address(0), guardian, payoutWallet);
+        vm.expectRevert(AnchorVaultCoin.ZeroAddress.selector);
+        new AnchorVaultCoin(address(0), guardian, payoutWallet);
     }
 
     function test_Constructor_RevertIfGuardianZero() public {
-        vm.expectRevert(AnchorVaultV45.ZeroAddress.selector);
-        new AnchorVaultV45(address(ancr), address(0), payoutWallet);
+        vm.expectRevert(AnchorVaultCoin.ZeroAddress.selector);
+        new AnchorVaultCoin(address(ancr), address(0), payoutWallet);
     }
 
     function test_Constructor_RevertIfPayoutZero() public {
-        vm.expectRevert(AnchorVaultV45.ZeroAddress.selector);
-        new AnchorVaultV45(address(ancr), guardian, address(0));
+        vm.expectRevert(AnchorVaultCoin.ZeroAddress.selector);
+        new AnchorVaultCoin(address(ancr), guardian, address(0));
     }
 
     function test_Constructor_RevertIfPayoutIsVault() public {
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
-        new AnchorVaultV45(address(ancr), guardian, address(vault));
+        vm.expectRevert(AnchorVaultCoin.InvalidAddress.selector);
+        new AnchorVaultCoin(address(ancr), guardian, address(vault));
     }
 
     function test_Constructor_RevertIfANCRisGuardian() public {
-        vm.expectRevert(AnchorVaultV45.InvalidAddress.selector);
-        new AnchorVaultV45(address(ancr), address(ancr), payoutWallet);
+        vm.expectRevert(AnchorVaultCoin.InvalidAddress.selector);
+        new AnchorVaultCoin(address(ancr), address(ancr), payoutWallet);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -1512,7 +1535,7 @@ contract AnchorVaultV45ExtendedTest is Test {
         uint256 vid = _openAliceVault(100 ether, 0);
         vm.prank(alice);
         vault.panicWithdraw(vid);
-        (,, uint120 amount,, uint8 status,) = vault.getVaultCore(alice, vid);
+        (,, uint120 amount, uint8 status,) = vault.getVaultCore(alice, vid);
         assertEq(uint256(amount), 0);
         assertEq(status, 2);
         assertEq(vault.activeVaultIdByToken(alice, address(ancr)), 0);
@@ -1524,10 +1547,11 @@ contract AnchorVaultV45ExtendedTest is Test {
         (uint64 nonce,,) = vault.getVaultAuth(alice, vid);
         uint256 dl = block.timestamp + 1 hours;
         bytes memory sig = _signTransfer(alice, vid, bob, aMain, aRec, nonce, dl, aMainPk);
+        bytes memory accSig = _signAccept(alice, vid, bob, aMain, aRec, dl, bobPk);
         vm.prank(alice);
-        vault.transferVault(vid, bob, aMain, aRec, dl, sig);
+        vault.transferVault(vid, bob, aMain, aRec, dl, sig, accSig);
 
-        vm.expectRevert(AnchorVaultV45.BadVaultId.selector);
+        vm.expectRevert(AnchorVaultCoin.BadVaultId.selector);
         vault.getVaultCore(alice, vid);
         assertTrue(vault.activeVaultIdByToken(bob, address(ancr)) > 0);
     }
@@ -1578,5 +1602,18 @@ contract AnchorVaultV45ExtendedTest is Test {
         vault.cancelReserveWithdraw(address(ancr));
 
         assertEq(vault.strategicReserve(address(ancr)), rs);
+    }
+
+    /// ANCV1-2: подпись согласия получателя на приём сейфа.
+    function _signAccept(address from, uint256 vid, address to, address newMain, address newRec, uint256 deadline, uint256 pk)
+        internal view returns (bytes memory)
+    {
+        bytes32 ah = keccak256(abi.encode(ACCEPT_TRANSFER_TYPEHASH, from, vid, to, newMain, newRec, deadline));
+        return _sign(pk, ah);
+    }
+
+    /// Заглушка для случаев, где вызов ревертится до проверки согласия.
+    function _noAccept() internal pure returns (bytes memory) {
+        return new bytes(65);
     }
 }

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {AnchorVaultV45} from "../../src/AnchorVaultV45.sol";
+import {AnchorVaultCoin} from "../../src/AnchorVaultCoin.sol";
 import {MockANCR} from "./MockANCR.sol";
 
 /**
  * @dev Токен с callback-реентерией — симулирует ElephantMoney-стиль атаки.
- *      При transferFrom вызывает openVault или depositToVault на AnchorVaultV45.
+ *      При transferFrom вызывает openVault или depositToVault на AnchorVaultCoin.
  */
 contract ReentrancyToken is MockANCR {
-    AnchorVaultV45 public targetVault;
+    AnchorVaultCoin public targetVault;
     address public underlyingToken;
 
     bool public doReenter;
@@ -21,7 +21,7 @@ contract ReentrancyToken is MockANCR {
     uint256 public reenterVid;
 
     constructor(address _vault, address _underlying) MockANCR(0) {
-        targetVault = AnchorVaultV45(payable(_vault));
+        targetVault = AnchorVaultCoin(payable(_vault));
         underlyingToken = _underlying;
     }
 
@@ -52,8 +52,7 @@ contract ReentrancyToken is MockANCR {
             if (reenterDeposit) {
                 targetVault.depositToVault(reenterVid, reenterAmount);
             } else {
-                AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-                    name: "Reentered",
+                AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
                     mainAuthKey: reenterMain,
                     recoveryAuthKey: reenterRec,
                     amount: reenterAmount

@@ -2,16 +2,16 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {AnchorVaultV45} from "../src/AnchorVaultV45.sol";
+import {AnchorVaultCoin} from "../src/AnchorVaultCoin.sol";
 import {MockANCR} from "./mocks/MockANCR.sol";
 
-/// @title Тесты бизнес-логики AnchorVaultV45
+/// @title Тесты бизнес-логики AnchorVaultCoin
 /// @notice Проверяют замысел, а не только код: изоляция средств от
 ///         скомпрометированного кошелька, 2FA (EOA + ключ), невозможность
 ///         тронуть чужой сейф, обход voluntary lock аварийными выходами,
 ///         фактические ставки комиссий.
 contract AnchorVaultBusinessLogicTest is Test {
-    AnchorVaultV45 internal vault;
+    AnchorVaultCoin internal vault;
     MockANCR internal ancr;
 
     // роли деплоя (адреса задаются в setUp)
@@ -28,7 +28,7 @@ contract AnchorVaultBusinessLogicTest is Test {
         guardian = vm.addr(0xA1);
         payout   = vm.addr(0xA2);
         ancr = new MockANCR(100_000_000 ether);
-        vault = new AnchorVaultV45(address(ancr), guardian, payout);
+        vault = new AnchorVaultCoin(address(ancr), guardian, payout);
     }
 
     // ───────────────────────── helpers ─────────────────────────
@@ -47,7 +47,7 @@ contract AnchorVaultBusinessLogicTest is Test {
     }
 
     function _amount(address owner, uint256 vid) internal view returns (uint120 a) {
-        (,, a,,,) = vault.getVaultCore(owner, vid);
+        (,, a,,) = vault.getVaultCore(owner, vid);
     }
 
     /// Открывает сейф уровня SAFE (timelock=0) на токене ANCR.
@@ -60,8 +60,7 @@ contract AnchorVaultBusinessLogicTest is Test {
         vm.startPrank(owner);
         ancr.approve(address(vault), amount);
         vault.setGlobalEmergency(emergency);
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "test",
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
             mainAuthKey: mainKey,
             recoveryAuthKey: recKey,
             amount: amount
@@ -103,7 +102,7 @@ contract AnchorVaultBusinessLogicTest is Test {
         // Вору не досталось НИЧЕГО.
         assertEq(ancr.balanceOf(attacker), atkBefore, "attacker must receive nothing");
         // Сейф закрыт.
-        (,, uint120 amtAfter,, uint8 status,) = vault.getVaultCore(owner, vid);
+        (,, uint120 amtAfter, uint8 status,) = vault.getVaultCore(owner, vid);
         assertEq(amtAfter, 0, "vault emptied");
         assertEq(status, 2, "vault closed");
     }
@@ -118,7 +117,7 @@ contract AnchorVaultBusinessLogicTest is Test {
         address attacker = vm.addr(0xBAD2);
         // attacker зовёт panic с чужим vid -> vaults[attacker][vid].id == 0 -> BadVaultId
         vm.prank(attacker);
-        vm.expectRevert(AnchorVaultV45.BadVaultId.selector);
+        vm.expectRevert(AnchorVaultCoin.BadVaultId.selector);
         vault.panicWithdraw(vid);
     }
 
@@ -139,7 +138,7 @@ contract AnchorVaultBusinessLogicTest is Test {
         // Подпись RECOVERY-ключом (неверный для withdraw) -> BadSignature.
         bytes memory wrongSig = _sign(recPk, sh);
         vm.prank(owner);
-        vm.expectRevert(AnchorVaultV45.BadSignature.selector);
+        vm.expectRevert(AnchorVaultCoin.BadSignature.selector);
         vault.withdrawFromVault(vid, amt, to, deadline, wrongSig);
 
         // Подпись MAIN-ключом -> успех.
@@ -166,7 +165,7 @@ contract AnchorVaultBusinessLogicTest is Test {
         // Вор подписывает своим ключом -> не совпадает с mainAuthKey -> BadSignature.
         bytes memory atkSig = _sign(attackerPk, sh);
         vm.prank(owner);
-        vm.expectRevert(AnchorVaultV45.BadSignature.selector);
+        vm.expectRevert(AnchorVaultCoin.BadSignature.selector);
         vault.withdrawFromVault(vid, amt, attacker, deadline, atkSig);
     }
 
@@ -195,7 +194,7 @@ contract AnchorVaultBusinessLogicTest is Test {
         bytes32 wSh = _withdrawStruct(owner, vid, amt, to, _nonce(owner, vid), dl2);
         bytes memory wSig = _sign(mainPk, wSh);
         vm.prank(owner);
-        vm.expectRevert(AnchorVaultV45.Locked.selector);
+        vm.expectRevert(AnchorVaultCoin.Locked.selector);
         vault.withdrawFromVault(vid, amt, to, dl2, wSig);
 
         // Паника (без подписи) -> проходит несмотря на блокировку.

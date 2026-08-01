@@ -1,12 +1,30 @@
+# AnchorVaultCoin
+
+Non-custodial multi-asset vault for ERC-20 tokens on Ethereum.
+
+Vault operations are authorized by **two dedicated keys**, neither of which is the
+owner's wallet. A compromised seed phrase does not give an attacker control of the
+vault: without the auth keys they cannot withdraw to an address of their choosing,
+transfer the vault, or rotate its keys.
+
+The one action available without a signature is `panicWithdraw` — and it pays out
+**only to the owner's own pre-set emergency address**, never to the caller, at a
+20% penalty. An attacker holding just the wallet key can therefore force an exit,
+but cannot steal: the funds land in the owner's backup address and 80% of the
+principal is preserved.
+
+**License:** BUSL-1.1 · **Status:** under external audit, not deployed to mainnet
+
+---
 
 ## ✨ Features
 
-- **Multi-token support** — any standard ERC-20 (USDC, USDT, DAI, WETH, ANCR, etc.)
-- **Adaptive minimum deposit** — `0.01 token` automatically calculated from `decimals()`
+- **Multi-token support** — ERC-20 tokens with `decimals()` between 6 and 18 (USDC, WBTC, WETH, DAI, ANCR, …)
+- **Adaptive minimum deposit** — `0.01 token`, derived from the token's own `decimals()`
 - **EIP-712 off-chain auth** — 2FA design (wallet + signing key), per-vault nonce, deadline
 - **Two security keys** — Main (daily ops) + Recovery (emergency ops)
 - **Vault levels** — SAFE / VAULT / FORTRESS with escalating fees & timelocks
-- **Flexible transfers** — Quick transfer (1-step) & Secure transfer (2-step escrow, 48h)
+- **Two transfer paths** — quick transfer (requires recipient's consent signature) and secure transfer (2-step escrow, 48 h)
 - **User-owned emergency address** — set once, change requires 7-day timelock
 - **Global pause** — 2-day delayed pause or immediate emergency pause; withdrawals stay available
 - **Voluntary lock** — up to 5 years, blocks main-key ops, can only be extended
@@ -18,38 +36,71 @@
 
 | Metric | Value |
 |--------|-------|
-| **Deployed bytecode** | **24,516 bytes** (spare: 60) |
+| **Deployed bytecode** | **24,152 bytes** (spare: 424) |
 | **EIP-170 limit** | 24,576 bytes |
 | **Solidity version** | 0.8.26 |
-| **Optimizer** | `runs = 1`, `via_ir = true` |
-| **Tests** | **351/351 passed** |
-| **Slither** | **0 High**, 0 Critical |
-| **Coverage** | >95% |
+| **Optimizer** | `runs = 1`, `via_ir = true`, `evm_version = cancun` |
+| **OpenZeppelin** | 5.6.1 |
+| **Unit & integration tests** | **365/365 passed** |
+| **Invariant tests** | **5/5 passed** (128,000 calls each) |
+| **Slither** | 0 High, 0 Critical |
 
 ---
 
-## ✅ Audit Status
+## 🔍 Audit Status
+
+An external security audit is **currently in progress** with
+[Hexens](https://hexens.io/) under their Builder Support Ecosystem Program.
+
+| Stage | Status |
+|-------|--------|
+| Initial report received | ✅ 31 Jul 2026 |
+| Findings remediated | ✅ 4 reported + 2 found by internal review |
+| Retest | ⏳ pending |
+| Final report | ⏳ pending |
+
+**Mainnet deployment is blocked until the final audit report is issued.**
+No claim of a completed audit is made until then.
+
+### Internal verification
 
 | Check | Status |
 |-------|--------|
-| Foundry tests | ✅ 351/351 |
-| Invariants | ✅ `lockedPrincipal` matches vault sum, `solvency` holds |
+| Foundry tests | ✅ 365/365 |
+| Invariants | ✅ solvency and `lockedPrincipal` consistency hold across all tokens |
 | Gas report | ✅ within expected ranges |
 | Slither (static analysis) | ✅ 0 High, 0 Critical |
 
-**Ready for audit and mainnet deployment.**
+Automated tooling and internal review are **not** a substitute for the auditor's verdict.
 
 ---
 
 ## 🛡️ Security
 
-- `wasSupported` — prevents rescue of tokens that were ever whitelisted (audit fix)
-- `ReentrancyGuard` on all external user operations
-- EIP-712 signatures with per-vault nonce (replay protection)
-- Role separation: `creator` ≠ `guardian`, 2-step role transfers with cooldowns
-- Non-custodial guarantee: withdrawals remain available even when paused
+**What the design protects against.** The threat model is compromise of the owner's
+wallet key — the most common way individual holders lose funds. Vault operations
+require EIP-712 signatures from keys that are never the wallet itself, so a stolen
+seed phrase is not enough to redirect funds.
 
-See [`SECURITY.md`](./SECURITY.md) for threat model, invariants, and accepted design decisions.
+**What it does not claim.** The vault is not immovable. `panicWithdraw` is a
+deliberate escape hatch that works without any signature, so a user who has lost
+their auth keys is never permanently locked out. Its destination is fixed to the
+owner's emergency address and it costs 20% — the price of keeping that exit open.
+Voluntary locks and timelocks likewise do not block the emergency paths.
+
+Implementation details:
+
+- Per-vault nonce + deadline + domain separator (chainId, contract address) — replay protection
+- Quick transfer requires a consent signature from the receiving address
+- Timelocked vaults cannot be moved through either transfer path
+- `wasSupported` — prevents rescue of tokens that were ever whitelisted
+- `ReentrancyGuard` on all external user operations
+- Role separation: `creator` ≠ `guardian`, 2-step role transfers with cooldowns
+- Withdrawals remain available while the contract is paused
+- `rewardPool` holds user funds and has no creator withdrawal path by design
+
+See [`SECURITY.md`](./SECURITY.md) for the threat model and accepted design decisions,
+and [`SECURITY_MODEL.md`](./SECURITY_MODEL.md) for the full rationale.
 
 ---
 
@@ -68,29 +119,18 @@ forge test --gas-report
 
 **Check contract size:**
 ```bash
-forge build --sizes | grep AnchorVaultV45
+forge build --sizes | grep AnchorVaultCoin
 ```
 
 **Run invariant tests:**
 ```bash
-forge test -vvv --match-contract AnchorVaultInvariantTest
+forge test --match-test invariant
 ```
 
----
-
-## 📦 Deployment (Sepolia)
-
-| Contract | Address |
-|----------|---------|
-| AnchorVaultV45 | `0x8E1F46fC913c4928303BbCEB92ccb7c54cD95BA4` |
-| ANCR token | `0x6a837125eeB63cc4D3d38E93e2adCd30a2603cF7` |
-| Creator / payout | `0x725F1408c2CDa5757d8B44a92a84EACc529F5150` |
-| Guardian | `0x0838238A55d846A2a92fC6889Cc96558533B68ab` |
-
-**Initial distribution:**
-- Reward pool: 500,000 ANCR
-- Strategic reserve: 300,000 ANCR
-- Payout wallet: 200,000 ANCR
+**Run audit-finding regression tests:**
+```bash
+forge test --match-path test/ANCV1_Findings.t.sol
+```
 
 ---
 
@@ -98,26 +138,34 @@ forge test -vvv --match-contract AnchorVaultInvariantTest
 
 ### Vault Levels
 
-| Level | Deposit Fee | Max Timelock |
-|-------|-------------|--------------|
-| SAFE | 0.50% | 0 h |
+| Level | Fee (open & deposit) | Max Timelock |
+|-------|----------------------|--------------|
+| SAFE | 0.50% | none |
 | VAULT | 1.50% | 72 h |
 | FORTRESS | 2.00% | 168 h |
 
+Opening a vault and topping it up are charged at the same rate, so closing and
+reopening a vault never costs less than a direct deposit.
+
 ### Fee & Penalty Structure
 
-| Operation | Fee |
-|-----------|-----|
-| Open vault | 0.20% |
-| Withdraw / Transfer / Secure transfer | 0.50% |
-| Early close | 5% |
-| Recover to safe | 10% |
-| Emergency withdraw to any | 15% |
-| Panic withdraw | 20% |
+| Operation | Fee | Authorization | Destination |
+|-----------|-----|---------------|-------------|
+| Open vault / deposit | per level | — | — |
+| Withdraw | 0.50% | main key | any address |
+| Quick transfer | 0.50% | main key + recipient consent | recipient |
+| Secure transfer | 0.50% | main key + recipient confirmation | recipient |
+| Early close | 5% | recovery key | owner |
+| Recover to emergency address | 10% | recovery key | owner's emergency address |
+| Emergency withdraw to any | 15% | recovery key | any address |
+| Panic withdraw | 20% | **none** | owner's emergency address only |
+
+Cost rises with the freedom the path grants. The no-signature path is the most
+expensive and the most constrained in destination.
 
 ### Penalty Distribution
 
-**For ANCR tokens:**
+**For ANCR:**
 - 20% burned
 - 25% creator fees
 - 20% strategic reserve
@@ -127,7 +175,9 @@ forge test -vvv --match-contract AnchorVaultInvariantTest
 - 50% creator fees
 - 50% strategic reserve
 
-**While paused:** ANCR penalties go 100% to reward pool; other tokens split 50/50 creator/reserve.
+**While paused:** ANCR penalties go 100% to the reward pool; other tokens split
+50/50 creator/reserve. Since the normal 0.5% withdrawal stays available while
+paused, users are never pushed toward the 20% exit.
 
 ---
 
@@ -135,14 +185,31 @@ forge test -vvv --match-contract AnchorVaultInvariantTest
 
 | Role | Capabilities |
 |------|--------------|
-| **Creator** | Withdraw fees/reserve (7-day timelock), add/remove tokens, set welcome bonus, unpause, transfer roles (2-step + cooldown). Cannot touch user principal. |
+| **Creator** | Withdraw fees/reserve (7-day timelock), add/remove tokens, set welcome bonus, unpause, transfer roles (2-step + cooldown). Cannot touch user principal or the reward pool. |
 | **Guardian** | Request delayed pause (2 days), execute emergency pause (immediate). Cannot unpause or move funds. |
 | **User (vault owner)** | Full control of own vaults via two auth keys. |
 
 ---
 
+## 📦 Deployment
+
+| Network | Status |
+|---------|--------|
+| Sepolia (testnet) | Earlier revision deployed; **not** the version currently under audit |
+| Mainnet | ⏳ blocked until the final audit report |
+
+**Initial distribution** (one-time, `initializeDistribution()`):
+- Reward pool: 500,000 ANCR
+- Strategic reserve: 300,000 ANCR
+- Payout wallet: 200,000 ANCR
+
+The distribution requires the contract to hold the full amount **in addition to**
+all balances already committed to users, so it can never be funded from user deposits.
+
+---
+
 ## 📄 License
 
-BUSL-1.1 — Licensor: Vitaliy — Copyright © 2026 AnchorVaultCoin.  
-Change Date: 2030-01-01 → GPL-2.0-or-later.  
-Imported OpenZeppelin files are MIT. Commercial use before Change Date requires written permission.' > README.md && git add README.md && git commit -m "docs: update README for v45 final (24516 bytes, 351 tests)" && git push
+BUSL-1.1 — Licensor: Vitaliy — Copyright © 2026 AnchorVaultCoin.
+Change Date: 2030-01-01 → GPL-2.0-or-later.
+Imported OpenZeppelin files are MIT. Commercial use before the Change Date requires written permission.

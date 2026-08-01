@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  ИНВАРИАНТ-ТЕСТ для AnchorVaultV45
+//  ИНВАРИАНТ-ТЕСТ для AnchorVaultCoin
 //
 //  Что он делает простыми словами:
 //  Foundry сам, случайным образом, тысячи раз вызывает действия из Handler
@@ -22,7 +22,7 @@ pragma solidity ^0.8.20;
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {Test} from "forge-std/Test.sol";
-import {AnchorVaultV45} from "../src/AnchorVaultV45.sol";
+import {AnchorVaultCoin} from "../src/AnchorVaultCoin.sol";
 import {MockANCR} from "./mocks/MockANCR.sol";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -31,7 +31,7 @@ import {MockANCR} from "./mocks/MockANCR.sol";
 //  поэтому Handler сам помнит: открыт сейф или нет, и его id.
 // ─────────────────────────────────────────────────────────────────────────────
 contract InvariantHandler is Test {
-    AnchorVaultV45 internal vault;
+    AnchorVaultCoin internal vault;
     MockANCR internal ancr;
 
     address public actor;            // Алиса
@@ -50,7 +50,7 @@ contract InvariantHandler is Test {
         keccak256("EarlyClose(address owner,uint256 vaultId,uint64 nonce,uint256 deadline)");
 
     constructor(
-        AnchorVaultV45 _vault,
+        AnchorVaultCoin _vault,
         MockANCR _ancr,
         address _actor,
         uint256 _aMainPk,
@@ -80,8 +80,7 @@ contract InvariantHandler is Test {
         if (bal < minD * 2) return;                 // не хватает на минимальный вклад
         amount = bound(amount, minD * 2, bal);      // запас, чтобы пройти комиссию открытия
 
-        AnchorVaultV45.VaultParams memory p = AnchorVaultV45.VaultParams({
-            name: "V",
+        AnchorVaultCoin.VaultParams memory p = AnchorVaultCoin.VaultParams({
             mainAuthKey: aMain,
             recoveryAuthKey: aRec,
             amount: amount
@@ -108,7 +107,7 @@ contract InvariantHandler is Test {
     // ── ДЕЙСТВИЕ 3: снять часть/всё (подпись основным ключом) ───────────────
     function withdraw(uint256 amount) public {
         if (!isOpen) return;
-        (,, uint120 amt,, uint8 status,) = vault.getVaultCore(actor, currentVid);
+        (,, uint120 amt, uint8 status,) = vault.getVaultCore(actor, currentVid);
         if (status != 0 || amt == 0) { isOpen = false; return; }
         amount = bound(amount, 1, amt);
 
@@ -127,7 +126,7 @@ contract InvariantHandler is Test {
     // ── ДЕЙСТВИЕ 4: досрочно закрыть (подпись ключом восстановления) ────────
     function earlyClose() public {
         if (!isOpen) return;
-        (,,,, uint8 status,) = vault.getVaultCore(actor, currentVid);
+        (,,, uint8 status,) = vault.getVaultCore(actor, currentVid);
         if (status != 0) { isOpen = false; return; }
 
         (uint64 nonce,,) = vault.getVaultAuth(actor, currentVid);
@@ -147,7 +146,7 @@ contract InvariantHandler is Test {
 //  действий и после каждого шага проверяет инварианты.
 // ─────────────────────────────────────────────────────────────────────────────
 contract AnchorVaultInvariantTest is Test {
-    AnchorVaultV45 vault;
+    AnchorVaultCoin vault;
     MockANCR ancr;
     InvariantHandler handler;
 
@@ -165,7 +164,7 @@ contract AnchorVaultInvariantTest is Test {
         ancr = new MockANCR(10_000_000 ether);
 
         vm.prank(creator);
-        vault = new AnchorVaultV45(address(ancr), guardian, payoutWallet);
+        vault = new AnchorVaultCoin(address(ancr), guardian, payoutWallet);
 
         vm.prank(creator);
         ancr.transfer(alice, 1_000_000 ether);
@@ -197,7 +196,7 @@ contract AnchorVaultInvariantTest is Test {
     function invariant_lockedMatchesVault() public view {
         uint256 locked = vault.lockedPrincipal(address(ancr));
         if (handler.isOpen()) {
-            (,, uint120 amt,,,) = vault.getVaultCore(handler.actor(), handler.currentVid());
+            (,, uint120 amt,,) = vault.getVaultCore(handler.actor(), handler.currentVid());
             assertEq(locked, amt, "lockedPrincipal != summa v seyfe");
         } else {
             assertEq(locked, 0, "lockedPrincipal dolzhen byt 0 pri zakrytom seyfe");

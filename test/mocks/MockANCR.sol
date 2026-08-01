@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IBurnable} from "../../src/AnchorVaultV45.sol";
+import {IBurnable} from "../../src/AnchorVaultCoin.sol";
 
 contract MockANCR is ERC20, IBurnable {
     constructor(uint256 initialSupply) ERC20("Mock ANCR", "ANCR") {

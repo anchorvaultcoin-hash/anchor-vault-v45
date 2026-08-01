@@ -21,3 +21,12 @@ deployer.json
 
 # build/test logs
 *.log
+
+# Local security-tool output (not part of the audit deliverable)
+slither_report.txt
+slither_results.json
+aderyn_raw.txt
+crytic-export/
+medusa-corpus/
+medusa.json
+foundry.lock

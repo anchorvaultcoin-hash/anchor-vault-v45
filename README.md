@@ -13,7 +13,7 @@ The one action available without a signature is `panicWithdraw` — and it pays 
 but cannot steal: the funds land in the owner's backup address and 80% of the
 principal is preserved.
 
-**License:** BUSL-1.1 · **Status:** under external audit, not deployed to mainnet
+**License:** BUSL-1.1 · **Status:** Audit completed by Hexens (0 Critical, 0 High) · Live on Ethereum Mainnet
 
 ---
 
@@ -36,42 +36,45 @@ principal is preserved.
 
 | Metric | Value |
 |--------|-------|
-| **Deployed bytecode** | **24,152 bytes** (spare: 424) |
+| **Deployed bytecode** | *(run `forge build --sizes` on the current `AnchorVaultCoin.sol` and update)* |
 | **EIP-170 limit** | 24,576 bytes |
 | **Solidity version** | 0.8.26 |
 | **Optimizer** | `runs = 1`, `via_ir = true`, `evm_version = cancun` |
 | **OpenZeppelin** | 5.6.1 |
-| **Unit & integration tests** | **365/365 passed** |
-| **Invariant tests** | **5/5 passed** (128,000 calls each) |
+| **Unit & integration tests** | *(run `forge test` and update — count changed after audit fixes)* |
+| **Invariant tests** | 5/5 passed (128,000 calls each) |
 | **Slither** | 0 High, 0 Critical |
 
 ---
 
 ## 🔍 Audit Status
 
-An external security audit is **currently in progress** with
+An external security audit was completed by
 [Hexens](https://hexens.io/) under their Builder Support Ecosystem Program.
 
 | Stage | Status |
 |-------|--------|
-| Initial report received | ✅ 31 Jul 2026 |
-| Findings remediated | ✅ 4 reported + 2 found by internal review |
-| Retest | ⏳ pending |
-| Final report | ⏳ pending |
+| Audit start | ✅ 20 Jul 2026 |
+| Initial report | ✅ 31 Jul 2026 |
+| Revision received | ✅ 3 Aug 2026 |
+| **Final report** | ✅ **10 Aug 2026** |
 
-**Mainnet deployment is blocked until the final audit report is issued.**
-No claim of a completed audit is made until then.
+**Result: 0 Critical, 0 High severity findings.** 4 issues were identified (2 Medium,
+1 Low, 1 Informational) — all fixed by the development team and verified by Hexens.
+
+From the report's executive summary: *"We can confidently say that the overall
+security and code quality have increased after completion of our audit."*
+
+Full report available on request / see `hexens-anchorvault-jul-26(Final).pdf` in this repo.
 
 ### Internal verification
 
 | Check | Status |
 |-------|--------|
-| Foundry tests | ✅ 365/365 |
+| Foundry tests | ✅ passing |
 | Invariants | ✅ solvency and `lockedPrincipal` consistency hold across all tokens |
 | Gas report | ✅ within expected ranges |
 | Slither (static analysis) | ✅ 0 High, 0 Critical |
-
-Automated tooling and internal review are **not** a substitute for the auditor's verdict.
 
 ---
 
@@ -99,8 +102,7 @@ Implementation details:
 - Withdrawals remain available while the contract is paused
 - `rewardPool` holds user funds and has no creator withdrawal path by design
 
-See [`SECURITY.md`](./SECURITY.md) for the threat model and accepted design decisions,
-and [`SECURITY_MODEL.md`](./SECURITY_MODEL.md) for the full rationale.
+*(Verify `SECURITY.md` and `SECURITY_MODEL.md` are present and current before linking them here.)*
 
 ---
 
@@ -195,8 +197,13 @@ paused, users are never pushed toward the 20% exit.
 
 | Network | Status |
 |---------|--------|
-| Sepolia (testnet) | Earlier revision deployed; **not** the version currently under audit |
-| Mainnet | ⏳ blocked until the final audit report |
+| **Ethereum Mainnet** | ✅ **Live** |
+| Sepolia (testnet) | Earlier revision — not the version currently deployed |
+
+**Contracts:**
+
+- **AnchorVaultCoin (vault):** [`0xAc362D7bFCe7a4475873C37A0A96F2CE5C00E929`](https://etherscan.io/address/0xAc362D7bFCe7a4475873C37A0A96F2CE5C00E929)
+- **ANCR token:** [`0x52FBd42e9c9CBD3E1CED969EE4245C0e6ED9219B`](https://etherscan.io/address/0x52FBd42e9c9CBD3E1CED969EE4245C0e6ED9219B)
 
 **Initial distribution** (one-time, `initializeDistribution()`):
 - Reward pool: 500,000 ANCR

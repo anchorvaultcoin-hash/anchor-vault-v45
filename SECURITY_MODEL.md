@@ -5,9 +5,11 @@
 > explicit by-design decisions / accepted trade-offs, so review effort can be
 > spent on calibration and edge cases rather than on rediscovering intent.
 >
-> Status: external audit in progress (Hexens, Builder Support Ecosystem Program).
-> Initial report received 31 Jul 2026; remediation complete; retest pending.
-> Not deployed to mainnet. Mainnet is gated on the final audit report and a TVL cap.
+> Status: external audit **completed** by Hexens (Builder Support Ecosystem
+> Program) — final report 10 Aug 2026, **0 Critical / 0 High**. All four findings
+> fixed and verified at commit `6fead3f`. The contract is live on Ethereum
+> Mainnet and its source is verified on Etherscan. For the current operational
+> status see [`SECURITY.md`](SECURITY.md).
 
 ---
 

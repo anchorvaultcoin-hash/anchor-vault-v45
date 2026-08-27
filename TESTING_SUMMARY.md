@@ -5,7 +5,15 @@
 **Contract:** AnchorVaultV45.sol
 **Chain:** Sepolia (testnet) — mainnet pending external audit
 
-> This is an internal testing summary collected during development. It is **not** an audit and makes no security guarantee. Mainnet deployment is gated on an external professional audit.
+> This is an internal testing summary collected during development. It is **not** an audit and makes no security guarantee.
+>
+> **Historical document — kept as a record of that stage, deliberately not updated.**
+> It was written on 2026-06-22 and describes `AnchorVaultV45.sol` on Sepolia. The
+> contract was subsequently audited by Hexens (final report 10 Aug 2026, 0 Critical /
+> 0 High), renamed to `AnchorVaultCoin.sol`, and deployed to Ethereum Mainnet with its
+> source verified on Etherscan. Statements below about pending audits and mainnet
+> gating describe the situation in June 2026, not today. For the current status see
+> [`SECURITY.md`](SECURITY.md).
 
 ---
 

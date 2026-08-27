@@ -36,12 +36,12 @@ principal is preserved.
 
 | Metric | Value |
 |--------|-------|
-| **Deployed bytecode** | *(run `forge build --sizes` on the current `AnchorVaultCoin.sol` and update)* |
+| **Deployed bytecode** | 24,152 bytes (424 bytes under the EIP-170 limit) |
 | **EIP-170 limit** | 24,576 bytes |
 | **Solidity version** | 0.8.26 |
 | **Optimizer** | `runs = 1`, `via_ir = true`, `evm_version = cancun` |
 | **OpenZeppelin** | 5.6.1 |
-| **Unit & integration tests** | *(run `forge test` and update — count changed after audit fixes)* |
+| **Unit & integration tests** | 370 passing, 0 failing, across 7 suites |
 | **Invariant tests** | 5/5 passed (128,000 calls each) |
 | **Slither** | 0 High, 0 Critical |
 
@@ -65,7 +65,7 @@ An external security audit was completed by
 From the report's executive summary: *"We can confidently say that the overall
 security and code quality have increased after completion of our audit."*
 
-Full report available on request / see `hexens-anchorvault-jul-26(Final).pdf` in this repo.
+Full report (PDF, 3.2 MB): [**hexens-audit-anchorvaultcoin-2026-08-10.pdf**](https://anchorvaultcoin-hash.github.io/anchor-vault-frontend/hexens-audit-anchorvaultcoin-2026-08-10.pdf)
 
 ### Internal verification
 
@@ -102,7 +102,7 @@ Implementation details:
 - Withdrawals remain available while the contract is paused
 - `rewardPool` holds user funds and has no creator withdrawal path by design
 
-*(Verify `SECURITY.md` and `SECURITY_MODEL.md` are present and current before linking them here.)*
+Further detail: [`SECURITY.md`](SECURITY.md) — reporting policy and disclosure scope · [`SECURITY_MODEL.md`](SECURITY_MODEL.md) — full threat model.
 
 ---
 
@@ -202,8 +202,12 @@ paused, users are never pushed toward the 20% exit.
 
 **Contracts:**
 
-- **AnchorVaultCoin (vault):** [`0xAc362D7bFCe7a4475873C37A0A96F2CE5C00E929`](https://etherscan.io/address/0xAc362D7bFCe7a4475873C37A0A96F2CE5C00E929)
-- **ANCR token:** [`0x52FBd42e9c9CBD3E1CED969EE4245C0e6ED9219B`](https://etherscan.io/address/0x52FBd42e9c9CBD3E1CED969EE4245C0e6ED9219B)
+- **AnchorVaultCoin (vault):** [`0xAc362D7bFCe7a4475873C37A0A96F2CE5C00E929`](https://etherscan.io/address/0xAc362D7bFCe7a4475873C37A0A96F2CE5C00E929#code) — source verified on Etherscan, **exact match**
+- **ANCR token:** [`0x52FBd42e9c9CBD3E1CED969EE4245C0e6ED9219B`](https://etherscan.io/address/0x52FBd42e9c9CBD3E1CED969EE4245C0e6ED9219B#code) — source verified on Etherscan
+
+Both contracts are verified with the exact compiler settings listed above, so the
+bytecode running on mainnet provably corresponds to the source in this repository
+— the same code Hexens reviewed at commit `6fead3f`.
 
 **Initial distribution** (one-time, `initializeDistribution()`):
 - Reward pool: 500,000 ANCR

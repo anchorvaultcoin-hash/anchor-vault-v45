@@ -30,3 +30,6 @@ crytic-export/
 medusa-corpus/
 medusa.json
 foundry.lock
+
+# Etherscan verification input (regenerate with forge, never commit)
+verify-input*.json

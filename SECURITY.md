@@ -8,18 +8,21 @@
 | `src/AnchorCoin.sol` (ANCR token) | ✅ Fixed supply, no mint after deployment |
 | OpenZeppelin libraries | ⚠️ Out of scope (assumed trusted) |
 | Tests & deployment scripts | ⚠️ Out of scope |
-| Frontend (`docs/pulse.html`) | ⚠️ Out of scope |
+| Frontend (maintained in a separate repository) | ⚠️ Out of scope |
 
 ---
 
 ## 🔍 Audit Status
 
-External audit **in progress** with [Hexens](https://hexens.io/) under their Builder
-Support Ecosystem Program. Initial report delivered 31 Jul 2026; remediation complete;
-retest and final report pending.
+External audit **completed** by [Hexens](https://hexens.io/) under their Builder
+Support Ecosystem Program. Audit started 20 Jul 2026; initial report 31 Jul 2026;
+**final report 10 Aug 2026**.
 
-**No completed-audit claim is made until the final report is issued.**
-Mainnet deployment is blocked until then.
+**Result: 0 Critical, 0 High.** Four findings (2 Medium, 1 Low, 1 Informational) —
+all fixed by the development team and verified by Hexens on commit `6fead3f`.
+
+Full report (PDF, 3.2 MB):
+https://anchorvaultcoin-hash.github.io/anchor-vault-frontend/hexens-audit-anchorvaultcoin-2026-08-10.pdf
 
 ---
 
@@ -148,15 +151,53 @@ ERC-1271 support was omitted to stay within the EIP-170 bytecode limit.
 
 | Network | Status |
 |---------|--------|
-| Sepolia (testnet) | Earlier revision deployed; **not** the version currently under audit |
-| Mainnet | ⏳ Blocked until the final audit report |
+| Sepolia (testnet) | Earlier revision; **not** the audited version |
+| Ethereum Mainnet | ✅ **Live** — source verified on Etherscan (exact match) |
+
+**Contracts:**
+
+- Vault — `0xAc362D7bFCe7a4475873C37A0A96F2CE5C00E929`
+- ANCR token — `0x52FBd42e9c9CBD3E1CED969EE4245C0e6ED9219B`
+
+Both are verified on Etherscan with the exact compiler settings used to build them,
+so the bytecode running on mainnet provably corresponds to the source in this
+repository — the same code Hexens reviewed at commit `6fead3f`.
+
+---
+
+## 🔑 Operational Incident — Creator key (18–27 Aug 2026)
+
+Disclosed here because the role change is permanently visible on-chain.
+
+On 18 Aug 2026 the private key of the **Creator role** was exposed through operator
+error: it was pasted into a request to a third-party API in place of an API key.
+This was a key-handling mistake by the operator, **not a contract vulnerability** —
+no flaw in the code was involved.
+
+**Response.** The role was handed over to a new address using the contract's own
+two-step transfer: requested 18 Aug, accepted 27 Aug 2026 after the 7-day cooldown.
+The previous address now holds no privileges of any kind.
+
+**Impact on users: none.** The Creator role cannot touch user principal or the
+reward pool (see the trust model above), so user funds were never reachable
+through this key at any point.
+
+One thing worth stating plainly: the two-step role transfer with cooldown described
+in DD-3 was exercised on mainnet under real conditions, and it did what it was
+designed to do.
 
 ---
 
 ## 📢 Reporting a Vulnerability
 
-Please report security issues privately rather than through public issues.
-Do not disclose details publicly until a fix is available.
+Please report security issues **privately**, using GitHub's private advisory
+channel: the **Security** tab of this repository → **Report a vulnerability**.
+
+Do not open a public issue, and please do not disclose details publicly until a fix
+is available. Disclosure will be coordinated with you.
+
+An external audit shows the code was sound at the time it was reviewed. It is not a
+promise that nothing will ever be found, which is why this channel exists.
 
 ---
 
